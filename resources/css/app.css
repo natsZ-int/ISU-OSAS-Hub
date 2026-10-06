@@ -1,0 +1,46 @@
+/* ── User Management ─────────────────────────────── */
+.page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem}
+.page-header h2{color:var(--primary-dark)}
+.filter-card{margin-bottom:1rem}
+.filter-form .filter-row{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end}
+.filter-form .form-group{flex:1;min-width:160px;margin-bottom:0}
+.filter-actions{display:flex;gap:.5rem;align-items:flex-end;padding-bottom:.15rem}
+.table-card{overflow-x:auto}
+.table-responsive{overflow-x:auto}
+.data-table{width:100%;border-collapse:collapse;font-size:.9rem}
+.data-table th,.data-table td{padding:.65rem .75rem;text-align:left;border-bottom:1px solid var(--border)}
+.data-table th{background:#f9fafb;font-weight:700;color:var(--primary-dark);white-space:nowrap}
+.data-table tbody tr:hover{background:#f0fdf4}
+.actions-cell{white-space:nowrap;display:flex;gap:.35rem;flex-wrap:wrap}
+.inline-form{display:inline}
+.badge{display:inline-block;padding:.2rem .6rem;border-radius:999px;font-size:.75rem;font-weight:700;text-transform:uppercase}
+.badge-admin{background:#dbeafe;color:#1e40af}
+.badge-counselor{background:#fef3c7;color:#92400e}
+.badge-student{background:#dcfce7;color:#166534}
+.badge-active{background:#dcfce7;color:#166534}
+.badge-inactive{background:#fee2e2;color:#991b1b}
+.btn-sm{padding:.3rem .6rem;font-size:.8rem}
+.btn-danger{background:#dc2626;color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-success{background:#16a34a;color:#fff}
+.btn-success:hover{background:#15803d}
+.btn-outline-dark{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline-dark:hover{background:#f3f4f6}
+.form-row{display:flex;gap:1rem;flex-wrap:wrap}
+.form-row .form-group{flex:1;min-width:200px}
+fieldset{border:1px solid var(--border);border-radius:8px;padding:1.25rem;margin-bottom:1.25rem}
+legend{font-weight:700;color:var(--primary-dark);padding:0 .5rem;font-size:1rem}
+textarea{width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;font-size:1rem;font-family:inherit;resize:vertical}
+select{width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:6px;font-size:1rem;background:#fff}
+.pagination-wrapper{margin-top:1rem;display:flex;justify-content:center}
+.pagination-wrapper nav a,.pagination-wrapper nav span{padding:.35rem .65rem;border:1px solid var(--border);margin:0 2px;border-radius:4px;font-size:.85rem;text-decoration:none;color:var(--text)}
+.pagination-wrapper nav span[aria-current="page"]{background:var(--primary);color:#fff;border-color:var(--primary)}
+.empty-state{text-align:center;padding:2rem;color:var(--muted);font-size:1rem}
+.nav-link{color:rgba(255,255,255,.85);text-decoration:none;font-weight:600;font-size:.9rem;padding:.35rem .6rem;border-radius:4px;transition:.15s}
+.nav-link:hover{background:rgba(255,255,255,.15);color:#fff}
+@media (max-width:640px){
+    .filter-form .filter-row{flex-direction:column}
+    .form-row{flex-direction:column}
+    .page-header{flex-direction:column;align-items:flex-start}
+    .actions-cell{flex-direction:column}
+}
