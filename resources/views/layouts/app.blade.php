@@ -25,6 +25,7 @@
                 <a href="{{ route('admin.student-service-requests.index') }}" class="nav-link">Service Requests</a>
                 <a href="{{ route('admin.service-types.index') }}" class="nav-link">Service Types</a>
                 <a href="{{ route('admin.audit-logs.index') }}" class="nav-link">Audit Logs</a>
+                <a href="{{ route('admin.analytics.index') }}" class="nav-link">Analytics</a>
             @elseif (auth()->user()->isCounselor())
                 <a href="{{ route('counselor.dashboard') }}" class="nav-link">Dashboard</a>
             @elseif (auth()->user()->isStudent())

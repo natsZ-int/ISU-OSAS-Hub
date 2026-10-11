@@ -32,16 +32,25 @@ Route::get('/', fn () => redirect()->route('login'));
 // ─── Guest ─────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/login',  [LoginController::class, 'show'])->name('login');
-    Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:5,1')->name('login.store');
 });
 
 // ─── Authenticated ─────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
-    // ─── Admin ─────────────────────────────────────────────────────────
-    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        // ─── Admin ─────────────────────────────────────────────────────────
+        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
+    
+            // Analytics (Admin Only, Active Account Required)
+        Route::middleware('active')->prefix('analytics')->name('analytics.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('index');
+            Route::get('/scholarships', [\App\Http\Controllers\Admin\AnalyticsController::class, 'scholarships'])->name('scholarships');
+            Route::get('/guidance', [\App\Http\Controllers\Admin\AnalyticsController::class, 'guidance'])->name('guidance');
+            Route::get('/student-services', [\App\Http\Controllers\Admin\AnalyticsController::class, 'services'])->name('services');
+            Route::get('/export', [\App\Http\Controllers\Admin\AnalyticsController::class, 'export'])->name('export');
+        });
 
         // Matching Weights
         Route::get('/scholarship-matching/weights', [MatchingWeightController::class, 'edit'])->name('scholarship-matching.weights.edit');

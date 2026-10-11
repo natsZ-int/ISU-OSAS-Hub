@@ -42,8 +42,12 @@ class ApplicationReviewController extends Controller
             });
         }
 
-        if ($status = $request->filled('status') ? $request->input('status') : null) {
-            $query->where('status', $status);
+                if ($status = $request->filled('status') ? $request->input('status') : null) {
+            $allowedStatuses = array_column(\App\Enums\ScholarshipApplicationStatus::cases(), 'value');
+            $allowedStatuses[] = \App\Models\ScholarshipApplication::STATUS_DRAFT;
+            if (in_array($status, $allowedStatuses, true)) {
+                $query->where('status', $status);
+            }
         }
 
         $applications = $query->orderBy('submitted_at', 'desc')

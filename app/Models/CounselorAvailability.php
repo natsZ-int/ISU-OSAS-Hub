@@ -39,19 +39,16 @@ class CounselorAvailability extends Model
         return $this->belongsTo(User::class, 'counselor_id');
     }
 
-    // Only active availability windows
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('is_available', true);
     }
 
-    // Availability for a specific day
     public function scopeForDay(Builder $query, int $dayOfWeek): Builder
     {
         return $query->where('day_of_week', $dayOfWeek);
     }
 
-    // Check if this window overlaps with another time range
     public function overlapsWith(string $startTime, string $endTime): bool
     {
         return $this->start_time < $endTime && $this->end_time > $startTime;

@@ -28,7 +28,7 @@ class ServiceType extends Model
 
     public function requirements(): HasMany
     {
-        return $this->hasMany(ServiceTypeRequirement::class)->orderBy('display_order');
+        return $this->hasMany(ServiceTypeRequirement::class);
     }
 
     public function serviceRequests(): HasMany

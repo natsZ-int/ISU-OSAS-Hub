@@ -35,7 +35,6 @@ class GuidanceAppointmentType extends Model
         return $query->where('is_active', true)->orderBy('display_order');
     }
 
-    // Check if this type is used by any appointments
     public function isInUse(): bool
     {
         return $this->appointments()->exists();

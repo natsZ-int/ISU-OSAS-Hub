@@ -18,6 +18,7 @@
             <a href="{{ route('admin.scholarship-applications.index') }}" class="btn btn-outline" style="text-decoration: none; padding: 0.75rem; text-align: center; font-size: 0.85rem; font-weight: 600;">Review Applications</a>
             <a href="{{ route('admin.student-service-requests.index') }}" class="btn btn-outline" style="text-decoration: none; padding: 0.75rem; text-align: center; font-size: 0.85rem; font-weight: 600;">Service Requests</a>
             <a href="{{ route('admin.audit-logs.index') }}" class="btn btn-outline" style="text-decoration: none; padding: 0.75rem; text-align: center; font-size: 0.85rem; font-weight: 600;">System Audit Logs</a>
+            <a href="{{ route('admin.analytics.index') }}" class="btn btn-outline" style="text-decoration: none; padding: 0.75rem; text-align: center; font-size: 0.85rem; font-weight: 600;">Analytics &amp; Reports</a>
         </div>
     </div>
 

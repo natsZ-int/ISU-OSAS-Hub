@@ -17,7 +17,7 @@ class GuidanceController extends Controller
         protected GuidanceAppointmentWorkflowService $workflowService,
     ) {}
 
-    // ── Availability ────────────────────────────────
+    // ── Availability ──────────────────────────────────────
 
     public function availability(Request $request): View
     {
@@ -45,12 +45,10 @@ class GuidanceController extends Controller
         $startTime = $request->start_time . ':00';
         $endTime = $request->end_time . ':00';
 
-        // Check office hours
         if ($startTime < $settings->office_start_time || $endTime > $settings->office_end_time) {
             return back()->withErrors(['time' => 'Availability must be within office hours.']);
         }
 
-        // Check overlap with existing availability
         $overlaps = CounselorAvailability::where('counselor_id', $counselor->id)
             ->where('day_of_week', $request->day_of_week)
             ->active()
@@ -90,7 +88,7 @@ class GuidanceController extends Controller
         return back()->with('success', 'Availability deactivated.');
     }
 
-    // ── Appointments ────────────────────────────────
+    // ── Appointments ──────────────────────────────────────
 
     public function appointments(Request $request): View
     {
