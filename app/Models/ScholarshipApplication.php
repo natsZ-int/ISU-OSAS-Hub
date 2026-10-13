@@ -18,6 +18,20 @@ class ScholarshipApplication extends Model
      * The FSM formally begins at SUBMITTED.
      */
     public const STATUS_DRAFT = 'draft';
+    public const STATUS_SUBMITTED = 'submitted';
+    public const STATUS_UNDER_REVIEW = 'under_review';
+    public const STATUS_DOCUMENT_VERIFICATION = 'document_verification';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_REJECTED = 'rejected';
+
+    public const ALLOWED_STATUSES = [
+        self::STATUS_DRAFT,
+        self::STATUS_SUBMITTED,
+        self::STATUS_UNDER_REVIEW,
+        self::STATUS_DOCUMENT_VERIFICATION,
+        self::STATUS_APPROVED,
+        self::STATUS_REJECTED,
+    ];
 
     protected $fillable = [
         'application_number',
@@ -32,7 +46,7 @@ class ScholarshipApplication extends Model
         'submitted_at' => 'datetime',
     ];
 
-    // ── Relationships ────────────────────────────────
+    // ── Relationships ──────────────────────────────────────────
 
     public function studentProfile(): BelongsTo
     {
@@ -54,7 +68,7 @@ class ScholarshipApplication extends Model
         return $this->hasMany(ApplicationStatusHistory::class)->orderBy('created_at', 'asc');
     }
 
-    // ── Helpers ──────────────────────────────────────
+    // ── Helpers ────────────────────────────────────────────────
 
     public function isDraft(): bool
     {
@@ -97,7 +111,7 @@ class ScholarshipApplication extends Model
         return is_string($raw) ? ScholarshipApplicationStatus::tryFrom($raw) : null;
     }
 
-    // ── Scopes ───────────────────────────────────────
+    // ── Scopes ─────────────────────────────────────────────────
 
     public function scopeForStudent(Builder $query, int $studentProfileId): Builder
     {

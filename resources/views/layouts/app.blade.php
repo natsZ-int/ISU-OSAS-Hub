@@ -8,39 +8,43 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <header class="site-header">
         <div class="brand">
             <h1>ISU OSAS Hub</h1>
             <p>Office of Student Affairs and Services Hub</p>
         </div>
         @auth
-        <nav class="site-nav">
-            {{-- Role-aware navigation --}}
+        <nav class="site-nav" aria-label="Main navigation">
             @if (auth()->user()->isAdmin())
                 <a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a>
                 <a href="{{ route('admin.users.index') }}" class="nav-link">Users</a>
                 <a href="{{ route('admin.scholarships.index') }}" class="nav-link">Scholarships</a>
                 <a href="{{ route('admin.scholarship-applications.index') }}" class="nav-link">Applications</a>
                 <a href="{{ route('admin.scholarship-matching.weights.edit') }}" class="nav-link">Weights</a>
+                <a href="{{ route('admin.guidance.appointments') }}" class="nav-link">Guidance</a>
                 <a href="{{ route('admin.student-service-requests.index') }}" class="nav-link">Service Requests</a>
                 <a href="{{ route('admin.service-types.index') }}" class="nav-link">Service Types</a>
                 <a href="{{ route('admin.audit-logs.index') }}" class="nav-link">Audit Logs</a>
                 <a href="{{ route('admin.analytics.index') }}" class="nav-link">Analytics</a>
             @elseif (auth()->user()->isCounselor())
                 <a href="{{ route('counselor.dashboard') }}" class="nav-link">Dashboard</a>
+                <a href="{{ route('counselor.guidance.appointments') }}" class="nav-link">My Appointments</a>
+                <a href="{{ route('counselor.guidance.availability') }}" class="nav-link">Availability</a>
             @elseif (auth()->user()->isStudent())
                 <a href="{{ route('student.dashboard') }}" class="nav-link">Dashboard</a>
                 <a href="{{ route('student.scholarships.index') }}" class="nav-link">Scholarships</a>
                 <a href="{{ route('student.scholarships.recommendations') }}" class="nav-link">Recommended</a>
                 <a href="{{ route('student.applications.index') }}" class="nav-link">My Applications</a>
+                <a href="{{ route('student.guidance.appointments') }}" class="nav-link">Guidance Appointments</a>
                 <a href="{{ route('student.services.catalog') }}" class="nav-link">OSAS Services</a>
             @endif
 
-            {{-- Notification Bell --}}
-            <a href="{{ route('notifications.index') }}" class="nav-link" style="position: relative; display: inline-flex; align-items: center; gap: 0.25rem;" aria-label="Notifications">
-                &#128276; Notifications
-                @if(isset($unreadNotificationCount) && $unreadNotificationCount > 0)
-                    <span style="background: #dc2626; color: #fff; font-size: 0.65rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 9999px; min-width: 1.2rem; text-align: center; line-height: 1.3;">
+            <a href="{{ route('notifications.index') }}" class="nav-link notification-bell" aria-label="Notifications">
+                <span aria-hidden="true">&#128276;</span> Notifications
+                @if (isset($unreadNotificationCount) && $unreadNotificationCount > 0)
+                    <span class="notification-count">
                         {{ $unreadNotificationCount > 99 ? '99+' : $unreadNotificationCount }}
                     </span>
                 @endif
@@ -58,18 +62,19 @@
         @endauth
     </header>
 
-    <main class="site-main">
+    <main class="site-main" id="main-content">
         @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
+            <x-alert type="success">{{ session('status') }}</x-alert>
         @endif
         @if (session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
+            <x-alert type="error">{{ session('error') }}</x-alert>
         @endif
+
         @yield('content')
     </main>
 
     <footer class="site-footer">
-        <small>&copy; {{ date('Y') }} Isabela State University — OSAS Hub. All rights reserved.</small>
+        <small>&copy; {{ date('Y') }} Isabela State University - OSAS Hub. All rights reserved.</small>
     </footer>
 </body>
 </html>
