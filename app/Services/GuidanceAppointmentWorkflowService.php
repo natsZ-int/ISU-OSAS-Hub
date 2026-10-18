@@ -101,7 +101,7 @@ class GuidanceAppointmentWorkflowService
             }
         }
 
-        return DB::transaction(function () use ($appointment, $targetState, $actor, $remarks) {
+        $result = DB::transaction(function () use ($appointment, $targetState, $actor, $remarks) {
             $previousStatus = $appointment->status;
 
             $updateData = ['status' => $targetState];
@@ -126,11 +126,13 @@ class GuidanceAppointmentWorkflowService
                 userId: $actor->id,
             );
 
-            // ── Send Notification ──
-            $this->sendNotification($appointment, $targetState, $actor);
-
             return $appointment->fresh();
         });
+
+        // ── Notify only after the transaction commits ──
+        $this->sendNotification($result, $targetState, $actor);
+
+        return $result;
     }
 
     protected function validateCancellationNotice(GuidanceAppointment $appointment): void
@@ -156,43 +158,87 @@ class GuidanceAppointmentWorkflowService
         $studentUser = $appointment->studentProfile?->user;
         $counselorUser = $appointment->counselor;
 
-        [$type, $recipient, $title, $message] = match ($newStatus) {
+        $dateLabel = $appointment->appointment_date?->format('F j, Y') ?? 'the scheduled date';
+        $timeLabel = $this->formatTimeRange($appointment);
+        $whenLabel = trim("{$dateLabel} at {$timeLabel}");
+
+        [$type, $recipient, $title, $message, $nextStep] = match ($newStatus) {
             GuidanceAppointment::STATUS_CONFIRMED => [
                 NotificationType::GUIDANCE_APPOINTMENT_CONFIRMED,
                 $studentUser,
                 'Appointment Confirmed',
-                'Your guidance appointment has been confirmed by the counselor.',
+                "Your guidance appointment on {$whenLabel} has been confirmed by the counselor.",
+                'Please arrive on time and bring any requirements. Log in for complete details.',
             ],
             GuidanceAppointment::STATUS_REJECTED => [
                 NotificationType::GUIDANCE_APPOINTMENT_REJECTED,
                 $studentUser,
                 'Appointment Rejected',
-                'Your guidance appointment request was not approved. Please check the details.',
+                "Your guidance appointment request on {$whenLabel} was not approved. Please check the details.",
+                'You may book another available schedule from your dashboard.',
             ],
             GuidanceAppointment::STATUS_CANCELLED => [
                 NotificationType::GUIDANCE_APPOINTMENT_CANCELLED,
                 $actor->isStudent() ? $counselorUser : $studentUser,
                 'Appointment Cancelled',
-                'A guidance appointment has been cancelled.',
+                "A guidance appointment on {$whenLabel} has been cancelled.",
+                'No further action is required. Log in for complete details.',
             ],
             GuidanceAppointment::STATUS_COMPLETED => [
                 NotificationType::GUIDANCE_APPOINTMENT_COMPLETED,
                 $studentUser,
                 'Appointment Completed',
-                'Your guidance appointment has been marked as completed.',
+                "Your guidance appointment on {$whenLabel} has been marked as completed.",
+                'No further action is required. Log in for complete details.',
             ],
-            default => [null, null, null, null],
+            default => [null, null, null, null, null],
         };
 
-        if ($type && $recipient) {
-            $this->notificationService->notifyUser(
-                $recipient,
-                $type,
-                $title,
-                $message,
-                'GuidanceAppointment',
-                $appointment->id
-            );
+        if (! $type || ! $recipient) {
+            return;
         }
+
+        // Deliberately exclude counseling notes and other confidential case details.
+        $url = $recipient->isCounselor()
+            ? route('counselor.guidance.appointments.show', $appointment->id)
+            : route('student.guidance.appointments.show', $appointment->id);
+
+        $this->notificationService->notifyUser(
+            $recipient,
+            $type,
+            $title,
+            $message,
+            'GuidanceAppointment',
+            $appointment->id,
+            [
+                'reference'       => 'APT-' . $appointment->id,
+                'reference_label' => 'Appointment No.',
+                'status'          => ucfirst($newStatus),
+                'date'            => $dateLabel,
+                'time'            => $timeLabel,
+                'next_step'       => $nextStep,
+                'url'             => $url,
+            ],
+            sendEmail: true,
+        );
+    }
+
+    /**
+     * Human-readable appointment time range (e.g. "9:00 AM – 9:30 AM").
+     */
+    protected function formatTimeRange(GuidanceAppointment $appointment): string
+    {
+        $start = $appointment->start_time
+            ? \Carbon\Carbon::parse($appointment->start_time)->format('g:i A')
+            : null;
+        $end = $appointment->end_time
+            ? \Carbon\Carbon::parse($appointment->end_time)->format('g:i A')
+            : null;
+
+        return match (true) {
+            $start && $end => "{$start} – {$end}",
+            (bool) $start  => $start,
+            default        => 'the scheduled time',
+        };
     }
 }

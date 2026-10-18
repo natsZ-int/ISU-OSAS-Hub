@@ -95,7 +95,7 @@ class StudentServiceRequestWorkflowService
             throw new InvalidArgumentException("Completion remarks are required when marking a request completed.");
         }
 
-        return DB::transaction(function () use ($request, $targetStatus, $actor, $remarks, $internalRemarks) {
+        $result = DB::transaction(function () use ($request, $targetStatus, $actor, $remarks, $internalRemarks) {
             $lockedRequest = StudentServiceRequest::where('id', $request->id)->lockForUpdate()->firstOrFail();
             $previousStatus = $lockedRequest->status;
 
@@ -137,14 +137,49 @@ class StudentServiceRequestWorkflowService
                 userId: $actor->id
             );
 
-            $this->sendNotification($lockedRequest, $targetStatus, $actor);
-
             return $lockedRequest->fresh();
         });
+
+        // ── Notify the student only after the transaction commits ──
+        $this->sendNotification($result, $targetStatus, $actor, $remarks);
+
+        return $result;
     }
 
-    protected function sendNotification(StudentServiceRequest $request, string $newStatus, User $actor): void
+    /**
+     * Notify the student that their request has been assigned for processing.
+     *
+     * Safe to call repeatedly: the in-app dedupe + `emailed_at` guard prevent
+     * duplicate notifications when a request is re-assigned.
+     */
+    public function notifyAssigned(StudentServiceRequest $request, User $handler): void
     {
+        $studentUser = $request->studentProfile?->user;
+
+        if (! $studentUser) {
+            return;
+        }
+
+        $this->notificationService->notifyUser(
+            $studentUser,
+            NotificationType::STUDENT_SERVICE_REQUEST_PROCESSING,
+            'Request Assigned for Processing',
+            "Your service request {$request->request_number} has been assigned and is now being processed by OSAS.",
+            'StudentServiceRequest',
+            $request->id,
+            $this->emailData($request, StudentServiceRequest::STATUS_PROCESSING, [
+                'next_step' => 'No action is required at this time. Your request is being processed.',
+            ]),
+            sendEmail: true,
+        );
+    }
+
+    protected function sendNotification(
+        StudentServiceRequest $request,
+        string $newStatus,
+        User $actor,
+        ?string $remarks = null,
+    ): void {
         $studentUser = $request->studentProfile?->user;
 
         if (!$studentUser) {
@@ -153,21 +188,24 @@ class StudentServiceRequestWorkflowService
 
         $reqNumber = $request->request_number;
 
-        [$type, $title, $message] = match ($newStatus) {
+        [$type, $title, $message, $nextStep] = match ($newStatus) {
             StudentServiceRequest::STATUS_PROCESSING => [
                 NotificationType::STUDENT_SERVICE_REQUEST_PROCESSING,
                 'Request Under Processing',
                 "Your service request {$reqNumber} is now being processed by OSAS.",
+                'No action is required at this time. Your request is being processed.',
             ],
             StudentServiceRequest::STATUS_REQUIRES_INFORMATION => [
                 NotificationType::STUDENT_SERVICE_ADDITIONAL_INFO_REQUIRED,
                 'Action Required: Service Request',
                 "Additional information is needed for request {$reqNumber}. Please check the remarks.",
+                'Please log in and provide the requested information or documents.',
             ],
             StudentServiceRequest::STATUS_COMPLETED => [
                 NotificationType::STUDENT_SERVICE_REQUEST_COMPLETED,
                 'Service Request Completed',
                 "Your service request {$reqNumber} has been completed.",
+                filled($remarks) ? trim((string) $remarks) : 'Your request has been completed. Check your dashboard for any collection instructions.',
             ],
             StudentServiceRequest::STATUS_CANCELLED => [
                 NotificationType::STUDENT_SERVICE_REQUEST_CANCELLED,
@@ -175,19 +213,66 @@ class StudentServiceRequestWorkflowService
                 $actor->id === $studentUser->id
                     ? "You cancelled your service request {$reqNumber}."
                     : "Your service request {$reqNumber} was cancelled by OSAS.",
+                'No further action is required.',
             ],
-            default => [null, null, null],
+            default => [null, null, null, null],
         };
 
-        if ($type) {
-            $this->notificationService->notifyUser(
-                $studentUser,
-                $type,
-                $title,
-                $message,
-                'StudentServiceRequest',
-                $request->id
-            );
+        if (! $type) {
+            return;
         }
+
+        // Include an authorized staff explanation when the workflow requires one.
+        $reason = in_array($newStatus, [
+            StudentServiceRequest::STATUS_REQUIRES_INFORMATION,
+            StudentServiceRequest::STATUS_COMPLETED,
+        ], true) && filled($remarks)
+            ? trim((string) $remarks)
+            : null;
+
+        $this->notificationService->notifyUser(
+            $studentUser,
+            $type,
+            $title,
+            $message,
+            'StudentServiceRequest',
+            $request->id,
+            $this->emailData($request, $newStatus, [
+                'next_step' => $nextStep,
+                'reason'    => $reason,
+            ]),
+            sendEmail: true,
+        );
+    }
+
+    /**
+     * Build the non-confidential metadata shared by service-request emails.
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    protected function emailData(StudentServiceRequest $request, string $status, array $overrides = []): array
+    {
+        $serviceName = $request->serviceType?->name;
+
+        return array_merge([
+            'reference'       => $request->request_number,
+            'reference_label' => 'Request No.',
+            'status'          => $this->statusLabel($status),
+            'service'         => $serviceName,
+            'url'             => route('student.services.show', $request->id),
+        ], $overrides);
+    }
+
+    protected function statusLabel(string $status): string
+    {
+        return match ($status) {
+            StudentServiceRequest::STATUS_SUBMITTED            => 'Submitted',
+            StudentServiceRequest::STATUS_PROCESSING           => 'Processing',
+            StudentServiceRequest::STATUS_REQUIRES_INFORMATION => 'Additional Information Required',
+            StudentServiceRequest::STATUS_COMPLETED            => 'Completed',
+            StudentServiceRequest::STATUS_CANCELLED            => 'Cancelled',
+            default                                            => ucfirst(str_replace('_', ' ', $status)),
+        };
     }
 }

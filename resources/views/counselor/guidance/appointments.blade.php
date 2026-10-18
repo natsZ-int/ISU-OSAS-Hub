@@ -8,6 +8,10 @@
     </x-slot:actions>
 </x-page-header>
 
+@if ($errors->any())
+    <x-alert type="error">{{ $errors->first() }}</x-alert>
+@endif
+
 <x-card class="filter-card">
     <form method="GET" action="{{ route('counselor.guidance.appointments') }}" class="filter-form">
         <div class="filter-row">

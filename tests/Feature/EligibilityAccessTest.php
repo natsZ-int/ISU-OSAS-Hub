@@ -36,6 +36,7 @@ class EligibilityAccessTest extends TestCase
             'name' => 'S', 'email' => 's@t.local', 'password' => Hash::make('pw'),
             'role_id' => Role::where('name', 'student')->first()->id, 'is_active' => true,
         ]);
+        $user->forceFill(['email_verified_at' => now()])->save();
         StudentProfile::create([
             'user_id' => $user->id, 'student_number' => '2025-1',
             'first_name' => 'S', 'last_name' => 'T', 'year_level' => 3, 'gwa' => 1.50,

@@ -46,11 +46,13 @@ class GuidanceAppointment extends Model
         'student_notes',
         'cancelled_at',
         'cancelled_by',
+        'reminder_sent_at',
     ];
 
     protected $casts = [
-        'appointment_date' => 'date',
-        'cancelled_at'     => 'datetime',
+        'appointment_date'  => 'date',
+        'cancelled_at'      => 'datetime',
+        'reminder_sent_at'  => 'datetime',
     ];
 
     // ── Relationships ───────────────────────────────

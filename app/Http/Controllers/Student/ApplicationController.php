@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Student;
 
+use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Models\ApplicationStatusHistory;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
 use App\Services\ApplicationNumberGenerator;
 use App\Services\AuditLogService;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,10 @@ use Illuminate\View\View;
 
 class ApplicationController extends Controller
 {
+    public function __construct(protected NotificationService $notificationService)
+    {
+    }
+
     public function index(Request $request): View
     {
         $profile = $request->user()->studentProfile;
@@ -74,7 +80,7 @@ class ApplicationController extends Controller
 
         if ($existing) {
             return redirect()->route('student.applications.show', $existing)
-                ->with('info', 'You already have an application for this scholarship.');
+                ->with('status', 'You already have an application for this scholarship.');
         }
 
         DB::beginTransaction();
@@ -95,8 +101,8 @@ class ApplicationController extends Controller
                 'created_at'                 => now(),
             ]);
 
-            DB::commit();
-
+            // Audit inside the transaction so a failure rolls back with the
+            // business action instead of reporting a false "failed to create".
             AuditLogService::log(
                 action: 'Application Started',
                 module: 'Scholarship Application',
@@ -106,8 +112,10 @@ class ApplicationController extends Controller
                 request: $request
             );
 
+            DB::commit();
+
             return redirect()->route('student.applications.show', $application)
-                ->with('success', 'Application draft created. Please upload the required documents.');
+                ->with('status', 'Application draft created. Please upload the required documents.');
 
         } catch (\Illuminate\Database\QueryException $e) {
             DB::rollBack();
@@ -166,8 +174,26 @@ class ApplicationController extends Controller
                 request: $request
             );
 
+            // Notify the student only after the transaction has committed.
+            $this->notificationService->notifyUser(
+                $request->user(),
+                NotificationType::SCHOLARSHIP_APPLICATION_SUBMITTED,
+                'Application Submitted',
+                "Your application {$scholarshipApplication->application_number} for {$scholarship->title} has been submitted successfully.",
+                'ScholarshipApplication',
+                $scholarshipApplication->id,
+                [
+                    'reference'       => $scholarshipApplication->application_number,
+                    'reference_label' => 'Application No.',
+                    'status'          => 'Submitted',
+                    'next_step'       => 'Wait for OSAS to review your application. You will be notified of any updates.',
+                    'url'             => route('student.applications.show', $scholarshipApplication->id),
+                ],
+                sendEmail: true,
+            );
+
             return redirect()->route('student.applications.show', $scholarshipApplication)
-                ->with('success', 'Application submitted successfully!');
+                ->with('status', 'Application submitted successfully!');
 
         } catch (\Exception $e) {
             DB::rollBack();

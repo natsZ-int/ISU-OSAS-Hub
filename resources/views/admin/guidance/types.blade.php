@@ -7,6 +7,10 @@
     <a href="{{ route('admin.guidance.settings') }}" class="btn btn-outline-dark">Scheduling Settings</a>
 </div>
 
+@if ($errors->any())
+    <x-alert type="error">{{ $errors->first() }}</x-alert>
+@endif
+
 {{-- Create New Type Form --}}
 <div class="card" style="max-width: 600px; margin-bottom: 2rem;">
     <h3>Add Appointment Type</h3>

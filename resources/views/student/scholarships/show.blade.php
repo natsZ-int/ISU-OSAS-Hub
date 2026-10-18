@@ -85,8 +85,8 @@
             Check My Eligibility
         </a>
 
-        @if ($existingApplication)
-            <a href="{{ route('student.applications.show', $existingApplication) }}" class="btn btn-primary">
+        @if ($application)
+            <a href="{{ route('student.applications.show', $application) }}" class="btn btn-primary">
                 View My Application
             </a>
         @elseif ($scholarship->isOpenForApplication())

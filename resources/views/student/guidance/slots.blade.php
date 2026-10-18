@@ -6,13 +6,17 @@
     <a href="{{ route('student.guidance.counselors') }}" class="btn btn-outline-dark">Back to Counselors</a>
 </div>
 
+@if ($errors->any())
+    <x-alert type="error">{{ $errors->first() }}</x-alert>
+@endif
+
 <div class="card filter-card">
     <form method="GET" action="{{ route('student.guidance.slots', $counselor) }}" class="filter-form">
         <div class="filter-row">
             <div class="form-group">
                 <label for="date">Select Date</label>
                 <input type="date" id="date" name="date" value="{{ $date->toDateString() }}"
-                       min="{{ now()->toDateString() }}" max="{{ now()->addDays(30)->toDateString() }}">
+                       min="{{ now()->toDateString() }}" max="{{ now()->addDays($maxBookingDays)->toDateString() }}">
             </div>
             <div class="form-group">
                 <label for="type">Appointment Type</label>

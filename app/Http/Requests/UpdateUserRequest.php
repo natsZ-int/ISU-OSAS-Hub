@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\EnrollmentStatus;
 use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -34,6 +35,7 @@ class UpdateUserRequest extends FormRequest
             'gwa'            => ['nullable', 'numeric', 'min:1.00', 'max:5.00'],
             'family_income'  => ['nullable', 'numeric', 'min:0'],
             'address'        => ['nullable', 'string', 'max:1000'],
+            'enrollment_status' => ['nullable', Rule::in(EnrollmentStatus::values())],
         ];
     }
 }

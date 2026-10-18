@@ -9,6 +9,7 @@ use App\Enums\OverallEligibility;
 use App\Enums\RecommendationCategory;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
+use App\Models\ScholarshipMatchingWeight;
 use App\Models\StudentProfile;
 use Illuminate\Support\Collection;
 
@@ -30,9 +31,16 @@ class ScholarshipRecommendationService
             ->with(['requirements' => fn ($q) => $q->where('is_required', true)])
             ->get();
 
+        // Eager load everything the per-scholarship evaluation reads so the
+        // loop below stays at a fixed number of queries as applications grow.
         $applications = ScholarshipApplication::where('student_profile_id', $profile->id)
+            ->with(['documents', 'scholarship.requirements'])
             ->get()
             ->keyBy('scholarship_id');
+
+        // Matching weights change rarely and are identical for every
+        // scholarship: read them once instead of once per scholarship.
+        $weights = ScholarshipMatchingWeight::active();
 
         $recommendations = collect();
 
@@ -49,7 +57,7 @@ class ScholarshipRecommendationService
                 continue;
             }
 
-            $rec = $this->evaluateRecommendation($profile, $scholarship, $application);
+            $rec = $this->evaluateRecommendation($profile, $scholarship, $application, $weights);
             $recommendations->push($rec);
         }
 
@@ -58,17 +66,21 @@ class ScholarshipRecommendationService
 
     /**
      * Evaluate a single scholarship for recommendation.
+     *
+     * @param  ScholarshipMatchingWeight|null  $weights  Preloaded matching weights,
+     *                                                   so batch callers do not re-query them per scholarship.
      */
     public function evaluateRecommendation(
         StudentProfile $profile,
         Scholarship $scholarship,
-        ?ScholarshipApplication $application = null
+        ?ScholarshipApplication $application = null,
+        ?ScholarshipMatchingWeight $weights = null
     ): ScholarshipRecommendationResult {
         // 1. Evaluate mandatory eligibility (existing engine)
         $eligibilityResult = $this->eligibilityService->evaluate($profile, $scholarship, $application);
 
         // 2. Calculate matching score (existing engine)
-        $matchResult = $this->matchingService->evaluateMatch($profile, $scholarship, $application);
+        $matchResult = $this->matchingService->evaluateMatch($profile, $scholarship, $application, $weights);
 
         // 3. Evaluate requirement readiness
         $readiness = $this->evaluateRequirementReadiness($scholarship, $application);

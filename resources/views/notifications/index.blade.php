@@ -34,10 +34,31 @@
                         <span class="notification-category">{{ $notification->getCategoryLabel() }}</span>
                     </div>
                     <p class="notification-message">{{ $notification->message }}</p>
-                    <small class="notification-time">{{ $notification->created_at->diffForHumans() }}</small>
 
-                    @if ($notification->getActionUrl())
-                        <a href="{{ $notification->getActionUrl() }}" class="notification-action">View Details &rarr;</a>
+                    @if ($notification->reference() || $notification->statusLabel())
+                        <p class="notification-time" style="margin-top:0.15rem;">
+                            @if ($notification->reference())
+                                <span><strong>{{ $notification->referenceLabel() ?: 'Reference' }}:</strong> {{ $notification->reference() }}</span>
+                            @endif
+                            @if ($notification->statusLabel())
+                                <span> &middot; <strong>Status:</strong> {{ $notification->statusLabel() }}</span>
+                            @endif
+                        </p>
+                    @endif
+
+                    <small class="notification-time">
+                        Updated {{ $notification->created_at->format('M j, Y g:i A') }}
+                        ({{ $notification->created_at->diffForHumans() }})
+                    </small>
+
+                    @if ($notification->staffExplanation())
+                        <p class="notification-message" style="color:#6b7280;">
+                            <strong>Explanation:</strong> {{ $notification->staffExplanation() }}
+                        </p>
+                    @endif
+
+                    @if ($notification->getDetailUrl())
+                        <a href="{{ $notification->getDetailUrl() }}" class="notification-action">View Details &rarr;</a>
                     @endif
                 </div>
 

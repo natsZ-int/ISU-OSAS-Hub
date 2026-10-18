@@ -50,9 +50,9 @@
                 <td>{{ $req->display_order }}</td>
                 <td>{{ $req->requirement_name }}</td>
                 <td>{{ $req->is_required ? 'Yes' : 'No' }}</td>
-                <td>{{ $req->documents->count() }}</td>
+                <td>{{ $req->documents_count }}</td>
                 <td class="actions-cell">
-                    @if ($req->documents->count() === 0)
+                    @if ($req->documents_count === 0)
                         <form method="POST" action="{{ route('admin.scholarships.requirements.destroy', [$scholarship, $req]) }}" class="inline-form" onsubmit="return confirm('Delete this requirement?')">
                             @csrf @method('DELETE')
                             <button class="btn btn-sm btn-danger">Delete</button>

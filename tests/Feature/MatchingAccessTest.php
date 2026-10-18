@@ -27,6 +27,7 @@ class MatchingAccessTest extends TestCase
     private function admin(): User { return User::create(['name'=>'A','email'=>'a@t.l','password'=>Hash::make('p'),'role_id'=>Role::where('name','admin')->first()->id,'is_active'=>true]); }
     private function studentUser(): User {
         $u = User::create(['name'=>'S','email'=>'s@t.l','password'=>Hash::make('p'),'role_id'=>Role::where('name','student')->first()->id,'is_active'=>true]);
+        $u->forceFill(['email_verified_at' => now()])->save();
         StudentProfile::create(['user_id'=>$u->id,'student_number'=>'S1','first_name'=>'S','last_name'=>'T','year_level'=>3,'gwa'=>1.50]);
         return $u;
     }
@@ -59,7 +60,7 @@ class MatchingAccessTest extends TestCase
         $this->put('/admin/scholarship-matching/weights', [
             'academic_weight' => 40, 'financial_weight' => 20, 'program_weight' => 20,
             'year_level_weight' => 10, 'document_readiness_weight' => 10,
-        ])->assertSessionHas('success');
+        ])->assertSessionHas('status');
     }
 
     public function test_admin_cannot_save_invalid_total(): void {

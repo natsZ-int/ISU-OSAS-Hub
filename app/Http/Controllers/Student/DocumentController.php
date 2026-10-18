@@ -51,7 +51,11 @@ class DocumentController extends Controller
             'local'
         );
 
-        ApplicationDocument::create([
+        if ($path === false) {
+            return back()->withErrors(['error' => 'The document could not be stored. Please try again.']);
+        }
+
+        $document = ApplicationDocument::create([
             'scholarship_application_id' => $scholarshipApplication->id,
             'scholarship_requirement_id' => $requirementId,
             'file_path'                  => $path,
@@ -65,12 +69,12 @@ class DocumentController extends Controller
             action: 'Document Uploaded',
             module: 'Scholarship Application',
             recordType: 'ApplicationDocument',
-            recordId: $scholarshipApplication->id,
+            recordId: $document->id,
             description: "Document uploaded for application '{$scholarshipApplication->application_number}', requirement '{$requirement->requirement_name}'.",
             request: $request
         );
 
-        return back()->with('success', 'Document uploaded successfully.');
+        return back()->with('status', 'Document uploaded successfully.');
     }
 
     public function destroy(ScholarshipApplication $scholarshipApplication, ApplicationDocument $applicationDocument): RedirectResponse
@@ -88,7 +92,16 @@ class DocumentController extends Controller
         Storage::disk('local')->delete($applicationDocument->file_path);
         $applicationDocument->delete();
 
-        return back()->with('success', 'Document removed.');
+        AuditLogService::log(
+            action: 'Document Removed',
+            module: 'Scholarship Application',
+            recordType: 'ApplicationDocument',
+            recordId: $applicationDocument->id,
+            description: "Document removed from application '{$scholarshipApplication->application_number}'.",
+            request: request()
+        );
+
+        return back()->with('status', 'Document removed.');
     }
 
     public function download(ApplicationDocument $applicationDocument): StreamedResponse

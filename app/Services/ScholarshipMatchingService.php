@@ -35,8 +35,9 @@ class ScholarshipMatchingService
             ->with('requirements')
             ->get();
 
-        // Get student's existing applications
+        // Get student's existing applications (relationships used by scoring eager loaded)
         $applications = ScholarshipApplication::where('student_profile_id', $profile->id)
+            ->with(['documents', 'scholarship.requirements'])
             ->get()
             ->keyBy('scholarship_id');
 

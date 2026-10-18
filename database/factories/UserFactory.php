@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -30,6 +31,12 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            // users.role_id is NOT NULL — default to a student role so bare
+            // User::factory() calls remain usable in tests and seeders.
+            'role_id' => Role::firstOrCreate(
+                ['name' => Role::STUDENT],
+                ['label' => 'Student']
+            )->id,
         ];
     }
 

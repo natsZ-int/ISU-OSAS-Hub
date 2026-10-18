@@ -87,7 +87,7 @@ class ScholarshipController extends Controller
         );
 
         return redirect()->route('admin.scholarships.index')
-            ->with('success', "Scholarship '{$scholarship->title}' created successfully.");
+            ->with('status', "Scholarship '{$scholarship->title}' created successfully.");
     }
 
     /**
@@ -125,7 +125,7 @@ class ScholarshipController extends Controller
         );
 
         return redirect()->route('admin.scholarships.edit', $scholarship)
-            ->with('success', 'Scholarship updated successfully.');
+            ->with('status', 'Scholarship updated successfully.');
     }
 
     /**
@@ -146,7 +146,7 @@ class ScholarshipController extends Controller
             request: $request
         );
 
-        return back()->with('success', 'Scholarship has been activated.');
+        return back()->with('status', 'Scholarship has been activated.');
     }
 
     /**
@@ -167,7 +167,7 @@ class ScholarshipController extends Controller
             request: $request
         );
 
-        return back()->with('success', 'Scholarship has been deactivated.');
+        return back()->with('status', 'Scholarship has been deactivated.');
     }
 
     /**

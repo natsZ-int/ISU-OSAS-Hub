@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="card auth-card">
-    <h2>Sign in to your account</h2>
+    <h1>Sign in to your account</h1>
     <p class="muted">Enter your credentials to continue.</p>
 
     @if ($errors->any())
@@ -25,7 +25,11 @@
 
         <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
+            <div class="password-field">
+                <input type="password" id="password" name="password" required autocomplete="current-password">
+                <button type="button" class="password-toggle" data-toggle-password="#password"
+                        aria-label="Show password" aria-pressed="false">Show</button>
+            </div>
         </div>
 
         <div class="form-check">
@@ -36,5 +40,9 @@
 
         <button type="submit" class="btn btn-primary btn-block">Sign in</button>
     </form>
+
+    <p class="auth-alt-link muted">
+        New student? <a href="{{ route('register') }}">Create a student account</a>
+    </p>
 </div>
 @endsection

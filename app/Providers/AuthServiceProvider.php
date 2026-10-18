@@ -25,5 +25,9 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('access-student-panel', function ($user) {
             return $user->isStudent() && $user->isActive();
         });
+
+        Gate::define('manage-enrollment-verifications', function ($user) {
+            return ($user->isAdmin() || $user->isCounselor()) && $user->isActive();
+        });
     }
 }

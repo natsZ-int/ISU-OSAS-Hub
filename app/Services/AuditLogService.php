@@ -31,8 +31,8 @@ class AuditLogService
             'record_type' => $recordType,
             'record_id'   => $recordId,
             'description' => $description,
-            'ip_address'  => $request?->ip(),
-            'user_agent'  => $request?->userAgent(),
+            'ip_address'  => $request?->ip() ?? request()?->ip(),
+            'user_agent'  => $request?->userAgent() ?? request()?->userAgent(),
             'created_at'  => now(),
         ]);
     }

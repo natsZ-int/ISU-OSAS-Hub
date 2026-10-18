@@ -61,6 +61,7 @@
                     <th>Email</th>
                     <th>Role</th>
                     <th>Student No.</th>
+                    <th>Enrollment</th>
                     <th>Status</th>
                     <th>Created</th>
                     <th>Actions</th>
@@ -77,6 +78,16 @@
                         </span>
                     </td>
                     <td>{{ $user->studentProfile?->student_number ?? '—' }}</td>
+                    <td>
+                        @if ($user->studentProfile)
+                            @php $es = \App\Enums\EnrollmentStatus::tryFrom($user->studentProfile->enrollment_status ?? 'unknown'); @endphp
+                            <span class="badge badge-{{ $es?->value ?? 'unknown' }}">
+                                {{ $es?->label() ?? 'Unknown' }}
+                            </span>
+                        @else
+                            —
+                        @endif
+                    </td>
                     <td>
                         @if ($user->is_active)
                             <span class="badge badge-active">Active</span>

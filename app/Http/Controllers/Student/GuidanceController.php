@@ -34,7 +34,7 @@ class GuidanceController extends Controller
     // Show available slots for a counselor on a selected date
     public function slots(Request $request, User $counselor): View
     {
-        abort_unless($counselor->isCounselor(), 404);
+        abort_unless($counselor->isCounselor() && $counselor->is_active, 404);
 
         $date = $request->input('date')
             ? Carbon::parse($request->input('date'))
@@ -45,8 +45,9 @@ class GuidanceController extends Controller
 
         $slots = $this->schedulingService->getAvailableSlots($counselor, $date, $appointmentType);
         $types = GuidanceAppointmentType::active()->get();
+        $maxBookingDays = \App\Models\GuidanceSchedulingSettings::getActive()->maximum_future_booking_days;
 
-        return view('student.guidance.slots', compact('counselor', 'date', 'slots', 'types', 'appointmentType'));
+        return view('student.guidance.slots', compact('counselor', 'date', 'slots', 'types', 'appointmentType', 'maxBookingDays'));
     }
 
     // Book an appointment
@@ -68,7 +69,7 @@ class GuidanceController extends Controller
         }
 
         $counselor = User::findOrFail($request->counselor_id);
-        abort_unless($counselor->isCounselor(), 403);
+        abort_unless($counselor->isCounselor() && $counselor->is_active, 403);
 
         $appointmentType = GuidanceAppointmentType::active()->findOrFail($request->appointment_type_id);
         $date = Carbon::parse($request->appointment_date);
@@ -81,7 +82,7 @@ class GuidanceController extends Controller
             );
 
             return redirect()->route('student.guidance.appointments')
-                ->with('success', 'Appointment requested successfully.');
+                ->with('status', 'Appointment requested successfully.');
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['booking' => $e->getMessage()]);
         }
@@ -126,7 +127,7 @@ class GuidanceController extends Controller
                 $user
             );
 
-            return back()->with('success', 'Appointment cancelled.');
+            return back()->with('status', 'Appointment cancelled.');
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['cancel' => $e->getMessage()]);
         }

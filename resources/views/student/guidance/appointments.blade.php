@@ -8,6 +8,10 @@
     </x-slot:actions>
 </x-page-header>
 
+@if ($errors->any())
+    <x-alert type="error">{{ $errors->first() }}</x-alert>
+@endif
+
 @if ($appointments->count() > 0)
     <div class="table-responsive">
         <table class="data-table">

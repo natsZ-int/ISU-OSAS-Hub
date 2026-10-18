@@ -22,7 +22,7 @@ class StudentProfileFactory extends Factory
             'college'           => 'College of Computing Studies',
             'program'           => 'BSIT',
             'year_level'        => fake()->numberBetween(1, 4),
-            'enrollment_status' => 'regular',
+            'enrollment_status' => 'enrolled',
             'gwa'               => fake()->randomFloat(2, 1.0, 2.5),
             'family_income'     => fake()->numberBetween(100000, 400000),
             'address'           => fake()->address(),

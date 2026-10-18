@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Administrator Dashboard - OSAS Hub')
+@section('title', 'Administrator Dashboard — ISU OSAS Hub')
 
 @section('content')
 <div class="welcome-banner">
-    <h2>Welcome, {{ Auth::user()->name }}!</h2>
+    <h1>Welcome, {{ Auth::user()->name }}!</h1>
     <p>Here is an operational overview of the ISU Office of Student Affairs and Services Hub.</p>
 </div>
 
@@ -14,8 +14,8 @@
         <a href="{{ route('admin.scholarships.index') }}" class="btn btn-outline-dark quick-action-btn">Manage Scholarships</a>
         <a href="{{ route('admin.scholarship-applications.index') }}" class="btn btn-outline-dark quick-action-btn">Review Applications</a>
         <a href="{{ route('admin.student-service-requests.index') }}" class="btn btn-outline-dark quick-action-btn">Service Requests</a>
-        <a href="{{ route('admin.audit-logs.index') }}" class="btn btn-outline-dark quick-action-btn">System Audit Logs</a>
-        <a href="{{ route('admin.analytics.index') }}" class="btn btn-outline-dark quick-action-btn">Analytics &amp; Reports</a>
+        <a href="{{ route('admin.guidance.appointments') }}" class="btn btn-outline-dark quick-action-btn">Guidance Management</a>
+        <a href="{{ route('admin.analytics.index') }}" class="btn btn-primary quick-action-btn">Analytics &amp; Reports</a>
     </div>
 </div>
 
@@ -107,14 +107,14 @@
             <a href="{{ route('admin.audit-logs.index') }}">View All Logs &rarr;</a>
         </div>
 
-        <div class="table-responsive">
+        <x-table-wrapper label="Recent audit actions">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Timestamp</th>
-                        <th>Actor</th>
-                        <th>Module / Action</th>
-                        <th>Details</th>
+                        <th scope="col">Timestamp</th>
+                        <th scope="col">Actor</th>
+                        <th scope="col">Module / Action</th>
+                        <th scope="col">Details</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -138,18 +138,19 @@
                     @endforelse
                 </tbody>
             </table>
-        </div>
+        </x-table-wrapper>
     </div>
 
     <div class="dashboard-panel">
         <div class="dashboard-panel-header">
             <h3>Nearest Upcoming Appointments</h3>
+            <a href="{{ route('admin.guidance.appointments') }}">View all &rarr;</a>
         </div>
 
         @forelse ($metrics['guidance']['upcoming_items'] as $appt)
             <div class="appointment-mini-card">
                 <div class="appointment-mini-head">
-                    <strong style="font-size:.85rem;color:var(--text);">
+                    <strong style="font-size:.9rem;">
                         {{ $appt->studentProfile?->first_name }} {{ $appt->studentProfile?->last_name }}
                     </strong>
                     <x-status-badge :status="$appt->status" />

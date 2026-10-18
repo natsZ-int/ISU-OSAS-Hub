@@ -84,6 +84,10 @@ class UserController extends Controller
                 'is_active' => $request->boolean('is_active', true),
             ]);
 
+            // Admin-created accounts are treated as email-verified; only
+            // self-registered accounts go through the OTP verification flow.
+            $user->forceFill(['email_verified_at' => now()])->save();
+
             // Create student profile if role is student
             if ($user->isStudent()) {
                 StudentProfile::create([
@@ -114,7 +118,7 @@ class UserController extends Controller
             );
 
             return redirect()->route('admin.users.index')
-                ->with('success', "User '{$user->name}' created successfully.");
+                ->with('status', "User '{$user->name}' created successfully.");
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -156,6 +160,10 @@ class UserController extends Controller
                     'gwa', 'family_income', 'address',
                 ]);
 
+                if ($request->filled('enrollment_status')) {
+                    $profileData['enrollment_status'] = $request->enrollment_status;
+                }
+
                 if ($user->studentProfile) {
                     $user->studentProfile->update($profileData);
                 } elseif ($request->filled('student_number')) {
@@ -185,7 +193,7 @@ class UserController extends Controller
             );
 
             return redirect()->route('admin.users.index')
-                ->with('success', "User '{$user->name}' updated successfully.");
+                ->with('status', "User '{$user->name}' updated successfully.");
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -209,7 +217,7 @@ class UserController extends Controller
         );
 
         return redirect()->route('admin.users.index')
-            ->with('success', "User '{$user->name}' has been activated.");
+            ->with('status', "User '{$user->name}' has been activated.");
     }
 
     public function deactivate(Request $request, User $user): RedirectResponse
@@ -246,7 +254,7 @@ class UserController extends Controller
         );
 
         return redirect()->route('admin.users.index')
-            ->with('success', "User '{$user->name}' has been deactivated.");
+            ->with('status', "User '{$user->name}' has been deactivated.");
     }
 
     public function showResetPasswordForm(User $user): View
@@ -274,6 +282,6 @@ class UserController extends Controller
         );
 
         return redirect()->route('admin.users.index')
-            ->with('success', "Password for '{$user->name}' has been reset successfully.");
+            ->with('status', "Password for '{$user->name}' has been reset successfully.");
     }
 }

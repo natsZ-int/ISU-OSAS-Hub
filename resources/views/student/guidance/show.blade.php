@@ -6,6 +6,10 @@
     <a href="{{ route('student.guidance.appointments') }}" class="btn btn-outline-dark">Back to Appointments</a>
 </div>
 
+@if ($errors->any())
+    <x-alert type="error">{{ $errors->first() }}</x-alert>
+@endif
+
 <div class="card" style="max-width: 600px;">
     <p><strong>Counselor:</strong> {{ $appointment->counselor->name }}</p>
     <p><strong>Type:</strong> {{ $appointment->appointment_type }}</p>

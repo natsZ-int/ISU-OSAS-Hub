@@ -19,7 +19,8 @@ class RequirementController extends Controller
     {
         Gate::authorize('manage-users');
 
-        $scholarship->load('requirements');
+        // withCount avoids one documents query per requirement in the view
+        $scholarship->load(['requirements' => fn ($q) => $q->withCount('documents')]);
 
         return view('admin.scholarships.requirements', compact('scholarship'));
     }
@@ -39,7 +40,7 @@ class RequirementController extends Controller
             request: $request
         );
 
-        return back()->with('success', 'Requirement added.');
+        return back()->with('status', 'Requirement added.');
     }
 
     public function update(UpdateRequirementRequest $request, Scholarship $scholarship, ScholarshipRequirement $scholarshipRequirement): RedirectResponse
@@ -61,7 +62,7 @@ class RequirementController extends Controller
             request: $request
         );
 
-        return back()->with('success', 'Requirement updated.');
+        return back()->with('status', 'Requirement updated.');
     }
 
     public function destroy(Request $request, Scholarship $scholarship, ScholarshipRequirement $scholarshipRequirement): RedirectResponse
@@ -90,6 +91,6 @@ class RequirementController extends Controller
             request: $request
         );
 
-        return back()->with('success', 'Requirement removed.');
+        return back()->with('status', 'Requirement removed.');
     }
 }

@@ -33,6 +33,11 @@ class StudentServiceRequestPolicy
         return false;
     }
 
+    public function assign(User $user, StudentServiceRequest $request): bool
+    {
+        return $user->isAdmin();
+    }
+
     public function downloadDocument(User $user, StudentServiceRequest $request): bool
     {
         if ($user->isAdmin()) {

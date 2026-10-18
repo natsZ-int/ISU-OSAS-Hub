@@ -1,8 +1,11 @@
 @props(['title', 'subtitle' => null])
 
 <div class="page-header">
-    <div>
-        <h2>{{ $title }}</h2>
+    <div class="page-header-title">
+        @isset($breadcrumb)
+            {{ $breadcrumb }}
+        @endisset
+        <h1>{{ $title }}</h1>
         @if ($subtitle)
             <p class="muted">{{ $subtitle }}</p>
         @endif

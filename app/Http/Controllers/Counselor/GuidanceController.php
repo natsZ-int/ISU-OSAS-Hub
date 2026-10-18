@@ -75,7 +75,7 @@ class GuidanceController extends Controller
             userId: $counselor->id,
         );
 
-        return back()->with('success', 'Availability added.');
+        return back()->with('status', 'Availability added.');
     }
 
     public function destroyAvailability(Request $request, CounselorAvailability $availability): RedirectResponse
@@ -85,7 +85,16 @@ class GuidanceController extends Controller
 
         $availability->update(['is_available' => false]);
 
-        return back()->with('success', 'Availability deactivated.');
+        \App\Services\AuditLogService::log(
+            action: 'Availability Deactivated',
+            module: 'Guidance Scheduling',
+            recordType: 'CounselorAvailability',
+            recordId: $availability->id,
+            description: "Counselor deactivated availability on day {$availability->day_of_week}.",
+            userId: $counselor->id,
+        );
+
+        return back()->with('status', 'Availability deactivated.');
     }
 
     // ── Appointments ──────────────────────────────────────
@@ -130,7 +139,7 @@ class GuidanceController extends Controller
                 GuidanceAppointment::STATUS_CONFIRMED,
                 $counselor
             );
-            return back()->with('success', 'Appointment confirmed.');
+            return back()->with('status', 'Appointment confirmed.');
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['transition' => $e->getMessage()]);
         }
@@ -150,7 +159,7 @@ class GuidanceController extends Controller
                 $counselor,
                 $request->rejection_reason
             );
-            return back()->with('success', 'Appointment rejected.');
+            return back()->with('status', 'Appointment rejected.');
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['transition' => $e->getMessage()]);
         }
@@ -167,7 +176,7 @@ class GuidanceController extends Controller
                 GuidanceAppointment::STATUS_COMPLETED,
                 $counselor
             );
-            return back()->with('success', 'Appointment marked as completed.');
+            return back()->with('status', 'Appointment marked as completed.');
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['transition' => $e->getMessage()]);
         }

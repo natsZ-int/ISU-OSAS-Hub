@@ -10,6 +10,7 @@ use App\Models\ScholarshipApplication;
 use App\Models\StudentServiceRequest;
 use App\Models\User;
 use App\Enums\ScholarshipApplicationStatus;
+use Illuminate\Database\Eloquent\Builder;
 
 class AdminDashboardService
 {
@@ -46,16 +47,24 @@ class AdminDashboardService
 
     protected function getScholarshipMetrics(): array
     {
+        // One grouped query replaces four separate COUNT(*) queries.
+        $counts = $this->statusCounts(ScholarshipApplication::query());
+
+        $pending = 0;
+        foreach ([
+            ScholarshipApplicationStatus::SUBMITTED->value,
+            ScholarshipApplicationStatus::UNDER_REVIEW->value,
+            ScholarshipApplicationStatus::DOCUMENT_VERIFICATION->value,
+        ] as $status) {
+            $pending += $counts[$status] ?? 0;
+        }
+
         return [
-            'active_count'         => Scholarship::where('status', Scholarship::STATUS_OPEN)->count(),
-            'total_applications'   => ScholarshipApplication::count(),
-            'pending_applications' => ScholarshipApplication::whereIn('status', [
-                ScholarshipApplicationStatus::SUBMITTED->value,
-                ScholarshipApplicationStatus::UNDER_REVIEW->value,
-                ScholarshipApplicationStatus::DOCUMENT_VERIFICATION->value,
-            ])->count(),
-            'approved_applications' => ScholarshipApplication::where('status', ScholarshipApplicationStatus::APPROVED->value)->count(),
-            'rejected_applications' => ScholarshipApplication::where('status', ScholarshipApplicationStatus::REJECTED->value)->count(),
+            'active_count'          => Scholarship::where('status', Scholarship::STATUS_OPEN)->count(),
+            'total_applications'    => array_sum($counts),
+            'pending_applications'  => $pending,
+            'approved_applications' => $counts[ScholarshipApplicationStatus::APPROVED->value] ?? 0,
+            'rejected_applications' => $counts[ScholarshipApplicationStatus::REJECTED->value] ?? 0,
         ];
     }
 
@@ -69,24 +78,45 @@ class AdminDashboardService
             ->take(5)
             ->get();
 
+        // One grouped query replaces the separate pending/completed counts.
+        $counts = $this->statusCounts(GuidanceAppointment::query());
+
         return [
-            'upcoming_count'        => GuidanceAppointment::whereIn('status', [GuidanceAppointment::STATUS_REQUESTED, GuidanceAppointment::STATUS_CONFIRMED])
+            'upcoming_count'  => GuidanceAppointment::whereIn('status', [GuidanceAppointment::STATUS_REQUESTED, GuidanceAppointment::STATUS_CONFIRMED])
                 ->whereDate('appointment_date', '>=', now()->toDateString())
                 ->count(),
-            'upcoming_items'        => $upcomingAppointments,
-            'pending_count'         => GuidanceAppointment::where('status', GuidanceAppointment::STATUS_REQUESTED)->count(),
-            'completed_count'       => GuidanceAppointment::where('status', GuidanceAppointment::STATUS_COMPLETED)->count(),
+            'upcoming_items'  => $upcomingAppointments,
+            'pending_count'   => $counts[GuidanceAppointment::STATUS_REQUESTED] ?? 0,
+            'completed_count' => $counts[GuidanceAppointment::STATUS_COMPLETED] ?? 0,
         ];
     }
 
     protected function getStudentServiceMetrics(): array
     {
+        // One grouped query replaces four separate COUNT(*) queries.
+        $counts = $this->statusCounts(StudentServiceRequest::query());
+
         return [
-            'pending_count'            => StudentServiceRequest::where('status', StudentServiceRequest::STATUS_SUBMITTED)->count(),
-            'processing_count'         => StudentServiceRequest::where('status', StudentServiceRequest::STATUS_PROCESSING)->count(),
-            'requires_info_count'      => StudentServiceRequest::where('status', StudentServiceRequest::STATUS_REQUIRES_INFORMATION)->count(),
-            'completed_count'          => StudentServiceRequest::where('status', StudentServiceRequest::STATUS_COMPLETED)->count(),
+            'pending_count'       => $counts[StudentServiceRequest::STATUS_SUBMITTED] ?? 0,
+            'processing_count'    => $counts[StudentServiceRequest::STATUS_PROCESSING] ?? 0,
+            'requires_info_count' => $counts[StudentServiceRequest::STATUS_REQUIRES_INFORMATION] ?? 0,
+            'completed_count'     => $counts[StudentServiceRequest::STATUS_COMPLETED] ?? 0,
         ];
+    }
+
+    /**
+     * Count every status of a table in a single GROUP BY query.
+     *
+     * @return array<string, int>
+     */
+    protected function statusCounts(Builder $query): array
+    {
+        return $query
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->map(fn ($total) => (int) $total)
+            ->all();
     }
 
     protected function getRecentActivity(): array

@@ -1,346 +1,269 @@
 @extends('layouts.app')
 
-@section('title', 'Student Dashboard')
+@section('title', 'Student Dashboard — ISU OSAS Hub')
 
 @section('content')
-<div class="container py-4">
 
-    {{-- Unread Notifications Callout Banner --}}
-    @if($unreadNotificationCount > 0)
-        <div class="alert alert-primary d-flex justify-content-between align-items-center mb-4" role="alert">
-            <div>
-                <i class="bi bi-bell-fill me-2"></i>
-                You have <strong>{{ $unreadNotificationCount }}</strong> unread {{ Str::plural('notification', $unreadNotificationCount) }}.
+    @if ($unreadNotificationCount > 0)
+        <x-alert type="info">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;width:100%;">
+                <span>
+                    You have <strong>{{ $unreadNotificationCount }}</strong>
+                    unread {{ Str::plural('notification', $unreadNotificationCount) }}.
+                </span>
+                <a href="{{ route('notifications.index') }}" class="btn btn-primary btn-sm">View Notifications</a>
             </div>
-            <a href="{{ route('notifications.index') }}" class="btn btn-primary btn-sm">
-                View All
-            </a>
-        </div>
+        </x-alert>
     @endif
 
-    {{-- Profile Setup Prompt (If Profile is Missing) --}}
-    @if(!$profile)
-        <div class="card border-warning mb-4 shadow-sm">
-            <div class="card-body text-center py-5">
-                <i class="bi bi-exclamation-triangle-fill text-warning fs-1 mb-3"></i>
-                <h4 class="card-title text-warning fw-bold">Student Profile Required</h4>
-                <p class="card-text text-muted max-w-lg mx-auto">
-                    To access automated scholarship evaluations, custom recommendations, counseling bookings, and student request features, you must first complete your student profile.
+    @if (! $profile)
+        <x-card>
+            <div class="empty-state-block">
+                <div class="empty-state-icon" style="background:var(--warning-bg);color:var(--warning);" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+                        <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
+                        <path d="M12 9v4"></path>
+                        <path d="M12 17h.01"></path>
+                    </svg>
+                </div>
+                <p class="empty-state-title" style="color:var(--warning);">Student Profile Required</p>
+                <p class="empty-state-message">
+                    To access automated scholarship evaluations, custom recommendations, counselling bookings,
+                    and student request features, you must first complete your student profile.
                 </p>
-                <div class="mt-4">
-                    <span class="text-secondary">Please contact your administrator to register your Student Profile.</span>
-                </div>
+                <p style="font-size:.85rem;color:var(--muted);">
+                    Please contact your administrator to register your student profile.
+                </p>
             </div>
-        </div>
+        </x-card>
     @else
-        {{-- Welcome & Student Profile Header Section --}}
-        <div class="card mb-4 bg-light shadow-sm">
-            <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                <div>
-                    <span class="text-uppercase tracking-wider text-muted font-monospace small">Student Portal</span>
-                    <h2 class="h3 fw-bold mb-1 text-primary">Welcome, {{ $profile->first_name }} {{ $profile->last_name }}</h2>
-                    <p class="text-muted mb-0">
-                        Campus System Overview &bull; Keep track of your applications and scheduler appointments.
-                    </p>
-                </div>
-                <div class="bg-white border p-3 rounded shadow-sm">
-                    <div class="row g-2">
-                        <div class="col-6 font-semibold text-secondary small">Student No:</div>
-                        <div class="col-6 text-dark font-monospace small text-end">{{ $profile->student_number }}</div>
-                        <div class="col-6 font-semibold text-secondary small">Program & Yr:</div>
-                        <div class="col-6 text-dark small text-end">{{ $profile->program }} - Yr {{ $profile->year_level }}</div>
-                    </div>
-                </div>
-            </div>
+
+        <div class="welcome-banner">
+            <h1>Welcome, {{ $profile->first_name }} {{ $profile->last_name }}!</h1>
+            <p>
+                Student Portal &bull; Keep track of your applications, appointments, and service requests.
+            </p>
+            <p style="margin-top:.65rem;font-size:.85rem;opacity:.95;">
+                Student No: <strong class="font-monospace">{{ $profile->student_number }}</strong>
+                &nbsp;&bull;&nbsp;
+                Program: <strong>{{ $profile->program }} - Yr {{ $profile->year_level }}</strong>
+            </p>
         </div>
 
-        {{-- Core Metrics Grid --}}
-        <div class="row g-3 mb-4">
-            {{-- Metric Box: Active Applications --}}
-            <div class="col-md-3">
-                <div class="card h-100 border-start border-primary border-4 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-uppercase text-secondary font-semibold small">Active Applications</span>
-                            <i class="bi bi-file-earmark-text text-primary fs-4"></i>
-                        </div>
-                        <h3 class="fw-bold mb-1">{{ $scholarshipData['activeCount'] }}</h3>
-                        <p class="text-muted small mb-0">Submitted & under review</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Metric Box: Draft Applications --}}
-            <div class="col-md-3">
-                <div class="card h-100 border-start border-warning border-4 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-uppercase text-secondary font-semibold small">Draft Applications</span>
-                            <i class="bi bi-pencil-square text-warning fs-4"></i>
-                        </div>
-                        <h3 class="fw-bold mb-1">{{ $scholarshipData['draftCount'] }}</h3>
-                        <p class="text-muted small mb-0">Requires upload & submission</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Metric Box: Active Service Requests --}}
-            <div class="col-md-3">
-                <div class="card h-100 border-start border-info border-4 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-uppercase text-secondary font-semibold small">Service Requests</span>
-                            <i class="bi bi-gear text-info fs-4"></i>
-                        </div>
-                        <h3 class="fw-bold mb-1">{{ $servicesData['activeCount'] }}</h3>
-                        <p class="text-muted small mb-0">Awaiting processing</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Metric Box: Notifications Count --}}
-            <div class="col-md-3">
-                <div class="card h-100 border-start border-secondary border-4 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-uppercase text-secondary font-semibold small">Unread Alerts</span>
-                            <i class="bi bi-bell text-secondary fs-4"></i>
-                        </div>
-                        <h3 class="fw-bold mb-1">{{ $unreadNotificationCount }}</h3>
-                        <p class="text-muted small mb-0">Personal system notifications</p>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-grid">
+            <x-metric-card
+                label="Active Applications"
+                :value="$scholarshipData['activeCount']"
+                :href="route('student.applications.index')"
+                hint="Submitted &amp; under review"
+            />
+            <x-metric-card
+                label="Draft Applications"
+                :value="$scholarshipData['draftCount']"
+                tone="warning"
+                :href="route('student.applications.index')"
+                hint="Requires upload &amp; submission"
+            />
+            <x-metric-card
+                label="Service Requests"
+                :value="$servicesData['activeCount']"
+                tone="info"
+                :href="route('student.services.index')"
+                hint="Awaiting processing"
+            />
+            <x-metric-card
+                label="Unread Alerts"
+                :value="$unreadNotificationCount"
+                tone="neutral"
+                :href="route('notifications.index')"
+                hint="Personal system notifications"
+            />
         </div>
 
-        {{-- Quick Actions & Details Area --}}
-        <div class="row g-4">
-            
-            {{-- Left Area: Quick Actions & Live Dynamic Modules --}}
-            <div class="col-lg-8">
-                
-                {{-- Module A: Recommended Scholarships --}}
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                        <h5 class="mb-0 fw-bold text-dark">
-                            <i class="bi bi-award text-primary me-2"></i>Recommended Scholarships
-                        </h5>
-                        <a href="{{ route('student.scholarships.recommendations') }}" class="btn btn-outline-primary btn-sm">
-                            View All Recommendation Details
-                        </a>
+        <div class="dashboard-columns">
+
+            <div>
+                {{-- Recommended Scholarships --}}
+                <div class="dashboard-panel" style="margin-bottom:1.35rem;">
+                    <div class="dashboard-panel-header">
+                        <h3>Recommended Scholarships</h3>
+                        <a href="{{ route('student.scholarships.recommendations') }}">View all &rarr;</a>
                     </div>
-                    <div class="card-body p-0">
-                        @if($scholarshipData['recommendations']->isEmpty())
-                            <div class="text-center py-5 text-muted">
-                                <i class="bi bi-journal-x fs-2 text-secondary mb-2"></i>
-                                <p class="mb-0">No eligible matched scholarships found matching your profile currently.</p>
+
+                    @if ($scholarshipData['recommendations']->isEmpty())
+                        <x-empty-state
+                            title="No recommended scholarships yet."
+                            message="Complete your student profile to receive scholarship matches that fit your qualifications."
+                            :actionUrl="route('student.scholarships.recommendations')"
+                            actionLabel="View Recommendations"
+                        />
+                    @else
+                        @foreach ($scholarshipData['recommendations'] as $rec)
+                            <div class="appointment-mini-card">
+                                <div class="appointment-mini-head">
+                                    <strong style="font-size:.92rem;">{{ $rec->scholarshipTitle }}</strong>
+                                    <span class="badge badge-success">{{ $rec->matchScore }}% Match</span>
+                                </div>
+                                <div class="appointment-mini-details" style="margin-bottom:.55rem;">
+                                    <span>Provider: {{ $rec->provider }}</span>
+                                    <span>Deadline: <strong>{{ $rec->deadline }}</strong></span>
+                                </div>
+                                <div class="button-row">
+                                    <a href="{{ route('student.scholarships.show', $rec->scholarshipId) }}" class="btn btn-light btn-sm">View Details</a>
+                                    @if (! $rec->existingApplicationId)
+                                        <form action="{{ route('student.applications.store', $rec->scholarshipId) }}" method="POST" class="inline-form">
+                                            @csrf
+                                            <button type="submit" class="btn btn-primary btn-sm">Apply Now</button>
+                                        </form>
+                                    @else
+                                        <span class="muted" style="font-size:.8rem;margin:0;">Application started</span>
+                                    @endif
+                                </div>
                             </div>
-                        @else
-                            <div class="list-group list-group-flush">
-                                @foreach($scholarshipData['recommendations'] as $rec)
-                                    <div class="list-group-item p-4">
-                                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start gap-2 mb-2">
-                                            <div>
-                                                <h6 class="mb-1 fw-bold text-dark">{{ $rec->scholarshipTitle }}</h6>
-                                                <p class="text-muted small mb-0">Provider: {{ $rec->provider }}</p>
-                                            </div>
-                                            <span class="badge bg-success-subtle text-success border border-success px-2 py-1">
-                                                {{ $rec->matchScore }}% Match Score
-                                            </span>
-                                        </div>
-                                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 text-secondary small">
-                                            <div>
-                                                <i class="bi bi-calendar-event me-1"></i> Deadline: 
-                                                <span class="text-dark font-monospace">{{ $rec->deadline }}</span>
-                                            </div>
-                                            <div class="d-flex gap-2">
-                                                <a href="{{ route('student.scholarships.show', $rec->scholarshipId) }}" class="btn btn-light btn-sm text-primary">
-                                                    View Details
-                                                </a>
-                                                @if(!$rec->existingApplicationId)
-                                                    <form action="{{ route('student.applications.store', $rec->scholarshipId) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-primary btn-sm">Apply Now</button>
-                                                    </form>
-                                                @else
-                                                    <span class="text-muted small mt-1">Application Started</span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                        @endforeach
+                    @endif
+                </div>
+
+                {{-- Upcoming Guidance Appointment --}}
+                <div class="dashboard-panel" style="margin-bottom:1.35rem;">
+                    <div class="dashboard-panel-header">
+                        <h3>Upcoming Guidance Appointment</h3>
+                        <a href="{{ route('student.guidance.appointments') }}">All appointments &rarr;</a>
+                    </div>
+
+                    @if (! $guidanceData['upcoming'])
+                        <x-empty-state
+                            title="No upcoming guidance appointment."
+                            message="Book a counselling session when you need guidance support."
+                            :actionUrl="route('student.guidance.counselors')"
+                            actionLabel="Book an Appointment"
+                        />
+                    @else
+                        @php $appt = $guidanceData['upcoming']; @endphp
+                        <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;">
+                            <div class="date-tile" aria-hidden="true">
+                                <span class="date-tile-month">{{ $appt->appointment_date->format('M') }}</span>
+                                <span class="date-tile-day">{{ $appt->appointment_date->format('d') }}</span>
                             </div>
-                        @endif
+                            <div style="flex:1;min-width:200px;">
+                                <h4 style="margin-bottom:.25rem;">{{ $appt->appointmentType?->name ?? $appt->appointment_type ?? 'General Counselling' }}</h4>
+                                <p class="muted" style="font-size:.85rem;margin-bottom:.35rem;">
+                                    Counselor: <strong>{{ $appt->counselor?->name }}</strong>
+                                </p>
+                                <p style="font-size:.85rem;color:var(--text);margin-bottom:.65rem;">
+                                    <strong class="font-monospace">
+                                        {{ \Carbon\Carbon::parse($appt->start_time)->format('h:i A') }}
+                                        &ndash;
+                                        {{ \Carbon\Carbon::parse($appt->end_time)->format('h:i A') }}
+                                    </strong>
+                                </p>
+                                <div class="button-row">
+                                    <x-status-badge :status="$appt->status" />
+                                    <a href="{{ route('student.guidance.appointments.show', $appt->id) }}" class="btn btn-outline-dark btn-sm">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Completed Service Requests --}}
+                <div class="dashboard-panel">
+                    <div class="dashboard-panel-header">
+                        <h3>Completed Service Requests</h3>
+                        <a href="{{ route('student.services.index') }}">All requests &rarr;</a>
+                    </div>
+
+                    @if (! $servicesData['recentCompleted'])
+                        <x-empty-state
+                            title="No completed service requests."
+                            message="Service requests you have submitted will appear here."
+                            :actionUrl="route('student.services.catalog')"
+                            actionLabel="Browse OSAS Services"
+                        />
+                    @else
+                        @php $req = $servicesData['recentCompleted']; @endphp
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+                            <div>
+                                <h4 style="margin-bottom:.2rem;">{{ $req->serviceType?->name }}</h4>
+                                <p class="muted" style="font-size:.82rem;margin-bottom:.3rem;">
+                                    Request ref: <span class="font-monospace">{{ $req->request_number }}</span>
+                                </p>
+                                <p style="font-size:.84rem;color:var(--success);font-weight:600;margin:0;">
+                                    Completed on {{ $req->completed_at?->format('M d, Y') }}
+                                </p>
+                            </div>
+                            <a href="{{ route('student.services.show', $req->id) }}" class="btn btn-light btn-sm">View Details</a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div>
+                {{-- Quick Shortcuts --}}
+                <div class="welcome-banner" style="padding:1.35rem;margin-bottom:1.35rem;">
+                    <h2 style="font-size:1.05rem;">Quick Shortcuts</h2>
+                    <div style="display:flex;flex-direction:column;gap:.55rem;margin-top:.85rem;">
+                        <a href="{{ route('student.scholarships.index') }}" class="btn btn-white btn-sm" style="justify-content:flex-start;">Find Scholarships</a>
+                        <a href="{{ route('student.guidance.counselors') }}" class="btn btn-white btn-sm" style="justify-content:flex-start;">Book Appointments</a>
+                        <a href="{{ route('student.services.catalog') }}" class="btn btn-white btn-sm" style="justify-content:flex-start;">Request OSAS Service</a>
                     </div>
                 </div>
 
-                {{-- Module B: Guidance Scheduling Overview --}}
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="mb-0 fw-bold text-dark">
-                            <i class="bi bi-calendar3-event text-primary me-2"></i>Upcoming Guidance Appointment
-                        </h5>
+                {{-- Active Application Track --}}
+                <div class="dashboard-panel">
+                    <div class="dashboard-panel-header">
+                        <h3>Active Application Track</h3>
                     </div>
-                    <div class="card-body">
-                        @if(!$guidanceData['upcoming'])
-                            <div class="text-center py-4 text-muted">
-                                <i class="bi bi-calendar-x fs-2 text-secondary mb-2"></i>
-                                <p class="mb-2">No upcoming guidance appointment scheduled.</p>
-                                <a href="{{ route('student.guidance.counselors') }}" class="btn btn-primary btn-sm mt-1">
-                                    Book an Appointment
-                                </a>
+
+                    @if (! $scholarshipData['recent'])
+                        <x-empty-state
+                            title="No active applications."
+                            message="Applications under review will appear here with their progress."
+                            :actionUrl="route('student.scholarships.index')"
+                            actionLabel="Browse Scholarships"
+                        />
+                    @else
+                        @php $app = $scholarshipData['recent']; @endphp
+                        <p class="muted" style="font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">
+                            Ref #<span class="font-monospace">{{ $app->application_number }}</span>
+                        </p>
+                        <h4 style="margin-bottom:.25rem;">{{ $app->scholarship?->title }}</h4>
+                        <p class="muted" style="font-size:.82rem;">
+                            Last updated {{ $app->updated_at?->diffForHumans() }}
+                        </p>
+
+                        <div style="margin:1rem 0 .5rem;">
+                            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.35rem;">
+                                <span class="muted">Current status:</span>
+                                <x-status-badge :status="$app->status" />
                             </div>
-                        @else
                             @php
-                                $appt = $guidanceData['upcoming'];
+                                $percent = 33;
+                                $statusStr = is_object($app->status) ? $app->status->value : (string) $app->status;
+                                if ($statusStr === 'under_review') {
+                                    $percent = 66;
+                                }
+                                if ($statusStr === 'document_verification') {
+                                    $percent = 90;
+                                }
+                                if ($statusStr === 'approved') {
+                                    $percent = 100;
+                                }
                             @endphp
-                            <div class="row align-items-center">
-                                <div class="col-md-7 mb-3 mb-md-0">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-primary text-white px-3 py-2 rounded text-center me-3">
-                                            <span class="d-block small text-uppercase">{{ $appt->appointment_date->format('M') }}</span>
-                                            <span class="d-block h4 fw-bold mb-0">{{ $appt->appointment_date->format('d') }}</span>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-1 fw-bold text-dark">{{ $appt->appointmentType->name ?? $appt->appointment_type }}</h6>
-                                            <p class="text-muted small mb-0">Counselor: <strong>{{ $appt->counselor->name }}</strong></p>
-                                        </div>
-                                    </div>
-                                    <div class="text-secondary small">
-                                        <i class="bi bi-clock me-1"></i> Time: 
-                                        <span class="text-dark font-monospace">
-                                            {{ \Carbon\Carbon::parse($appt->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($appt->end_time)->format('h:i A') }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-md-5 text-md-end">
-                                    <div class="mb-3">
-                                        @if($appt->status === 'confirmed')
-                                            <span class="badge bg-success-subtle text-success border border-success px-2 py-1">Confirmed</span>
-                                        @else
-                                            <span class="badge bg-warning-subtle text-warning border border-warning px-2 py-1">Requested</span>
-                                        @endif
-                                    </div>
-                                    <a href="{{ route('student.guidance.appointments.show', $appt->id) }}" class="btn btn-outline-secondary btn-sm">
-                                        View Appointment details
-                                    </a>
-                                </div>
+                            <div class="progress" role="progressbar" aria-valuenow="{{ $percent }}" aria-valuemin="0" aria-valuemax="100" aria-label="Application progress">
+                                <div class="progress-bar" style="width: {{ $percent }}%"></div>
                             </div>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- Module C: Recent Completed Request --}}
-                <div class="card mb-4 shadow-sm">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="mb-0 fw-bold text-dark">
-                            <i class="bi bi-check-circle text-primary me-2"></i>Completed Service Requests
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        @if(!$servicesData['recentCompleted'])
-                            <div class="text-center py-4 text-muted">
-                                <i class="bi bi-journal-check fs-2 text-secondary mb-2"></i>
-                                <p class="mb-0">No service requests have been completed yet.</p>
-                            </div>
-                        @else
-                            @php $req = $servicesData['recentCompleted']; @endphp
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-1 fw-bold text-dark">{{ $req->serviceType->name }}</h6>
-                                    <p class="text-muted small mb-1">Request Ref: <span class="font-monospace">{{ $req->request_number }}</span></p>
-                                    <p class="text-success small mb-0">
-                                        <i class="bi bi-calendar-check me-1"></i> Completed on {{ $req->completed_at->format('M d, Y') }}
-                                    </p>
-                                </div>
-                                <a href="{{ route('student.services.show', $req->id) }}" class="btn btn-light btn-sm text-primary">
-                                    View Details
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-            </div>
-
-            {{-- Right Area: Sidebar for Quick Navigation & Active Trackers --}}
-            <div class="col-lg-4">
-                
-                {{-- Navigation Block: Student Quick Links --}}
-                <div class="card mb-4 shadow-sm border-0 bg-primary text-white">
-                    <div class="card-body py-4">
-                        <h5 class="card-title fw-bold mb-3">Quick Shortcuts</h5>
-                        <div class="d-grid gap-2">
-                            <a href="{{ route('student.scholarships.index') }}" class="btn btn-white text-primary text-start font-semibold d-flex align-items-center justify-content-between">
-                                <span><i class="bi bi-search me-2"></i>Find Scholarships</span>
-                                <i class="bi bi-arrow-right-short fs-5"></i>
-                            </a>
-                            <a href="{{ route('student.guidance.counselors') }}" class="btn btn-white text-primary text-start font-semibold d-flex align-items-center justify-content-between">
-                                <span><i class="bi bi-calendar-plus me-2"></i>Book Appointments</span>
-                                <i class="bi bi-arrow-right-short fs-5"></i>
-                            </a>
-                            <a href="{{ route('student.services.catalog') }}" class="btn btn-white text-primary text-start font-semibold d-flex align-items-center justify-content-between">
-                                <span><i class="bi bi-file-earmark-plus me-2"></i>Request Service</span>
-                                <i class="bi bi-arrow-right-short fs-5"></i>
-                            </a>
                         </div>
-                    </div>
+
+                        <a href="{{ route('student.applications.show', $app->id) }}" class="btn btn-outline-primary btn-sm" style="width:100%;margin-top:.75rem;">
+                            Track Complete Progress
+                        </a>
+                    @endif
                 </div>
-
-                {{-- Module D: Application FSM Track Status Card --}}
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-white py-3 border-bottom">
-                        <h5 class="mb-0 fw-bold text-dark">
-                            <i class="bi bi-hourglass-split text-primary me-2"></i>Active Application Track
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        @if(!$scholarshipData['recent'])
-                            <div class="text-center py-4 text-secondary small">
-                                <i class="bi bi-inbox fs-3 text-muted mb-2 d-block"></i>
-                                No active applications under FSM workflow currently.
-                            </div>
-                        @else
-                            @php $app = $scholarshipData['recent']; @endphp
-                            <div class="mb-3">
-                                <span class="text-uppercase tracking-wider font-monospace text-muted small d-block mb-1">
-                                    REF #{{ $app->application_number }}
-                                </span>
-                                <h6 class="fw-bold text-dark mb-1">{{ $app->scholarship->title }}</h6>
-                                <p class="text-muted small mb-0">Last Updated: {{ $app->updated_at->diffForHumans() }}</p>
-                            </div>
-                            
-                            <hr class="my-3">
-
-                            {{-- Active Tracker Indicator Elements --}}
-                            <div class="mb-4">
-                                <div class="d-flex justify-content-between text-secondary small mb-2">
-                                    <span>Current Status:</span>
-                                    <span class="fw-bold text-primary">{{ is_object($app->status) ? $app->status->label() : ucfirst($app->status) }}</span>
-                                </div>
-                                <div class="progress" style="height: 8px;">
-                                    @php
-                                        $percent = 33;
-                                        $statusStr = is_object($app->status) ? $app->status->value : $app->status;
-                                        if($statusStr === 'under_review') $percent = 66;
-                                        if($statusStr === 'document_verification') $percent = 100;
-                                    @endphp
-                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: {{ $percent }}%" aria-valuenow="{{ $percent }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                </div>
-                            </div>
-
-                            <div class="d-grid">
-                                <a href="{{ route('student.applications.show', $app->id) }}" class="btn btn-outline-primary btn-sm">
-                                    Track Complete Progress
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
             </div>
 
         </div>
+
     @endif
-</div>
+
 @endsection

@@ -40,6 +40,7 @@ class StudentDashboardTest extends TestCase
             'role_id' => $this->studentRole->id,
             'is_active' => true,
         ]);
+        $this->studentUser->forceFill(['email_verified_at' => now()])->save();
 
         // Create student profile
         $this->studentProfile = StudentProfile::create([

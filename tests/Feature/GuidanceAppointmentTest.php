@@ -46,7 +46,7 @@ class GuidanceAppointmentTest extends TestCase
             'college'           => 'CCS',
             'program'           => 'BSIT',
             'year_level'        => 3,
-            'enrollment_status' => 'regular',
+            'enrollment_status' => 'enrolled',
             'gwa'               => 1.75,
             'family_income'     => 200000,
         ]);
@@ -187,8 +187,6 @@ class GuidanceAppointmentTest extends TestCase
        $response = $this->actingAs($this->counselorUser)
     ->from(route('counselor.guidance.appointments.show', $appointment))
     ->patch(route('counselor.guidance.appointments.confirm', $appointment));
-
-        dump($response->status(), session()->all());
 
         $response->assertSessionHasNoErrors();
         $this->assertEquals('confirmed', $appointment->fresh()->status);

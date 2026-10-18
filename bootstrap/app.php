@@ -12,8 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'role'   => \App\Http\Middleware\EnsureRole::class,
-            'active' => \App\Http\Middleware\EnsureActive::class,
+            'role'               => \App\Http\Middleware\EnsureRole::class,
+            'active'             => \App\Http\Middleware\EnsureActive::class,
+            'verified.email'     => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'enrollment.verified' => \App\Http\Middleware\EnsureCurrentEnrollmentVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

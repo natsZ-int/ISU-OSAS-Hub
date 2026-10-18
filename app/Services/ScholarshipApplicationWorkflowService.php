@@ -135,7 +135,7 @@ class ScholarshipApplicationWorkflowService
             throw new InvalidTransitionException('The requested status is not a valid FSM state.');
         }
 
-        return DB::transaction(function () use ($application, $target, $actor, $remarks, $request) {
+        $result = DB::transaction(function () use ($application, $target, $actor, $remarks, $request) {
             $locked = ScholarshipApplication::where('id', $application->id)
                 ->lockForUpdate()
                 ->first();
@@ -199,20 +199,26 @@ class ScholarshipApplicationWorkflowService
                 action: $actionLabel,
                 module: 'Scholarship Application Workflow',
                 recordType: 'ScholarshipApplication',
+                recordId: $locked->id,
                 description: "Application '{$locked->application_number}' transitioned from '{$previousStatus}' to '{$target->value}' by {$actor->name}.",
                 userId: $actor->id,
                 request: $request
             );
 
-            // ── Send Notification to Student ──
-            $this->sendNotification($locked, $target);
-
             return $locked->fresh();
         });
+
+        // ── Notify the student only after the transaction commits ──
+        $this->sendNotification($result, $target, $remarks);
+
+        return $result;
     }
 
-    protected function sendNotification(ScholarshipApplication $application, ScholarshipApplicationStatus $newStatus): void
-    {
+    protected function sendNotification(
+        ScholarshipApplication $application,
+        ScholarshipApplicationStatus $newStatus,
+        ?string $remarks = null,
+    ): void {
         $studentUser = $application->studentProfile?->user;
 
         if (!$studentUser) {
@@ -221,39 +227,59 @@ class ScholarshipApplicationWorkflowService
 
         $appNumber = $application->application_number;
 
-        [$type, $title, $message] = match ($newStatus) {
+        [$type, $title, $message, $nextStep] = match ($newStatus) {
             ScholarshipApplicationStatus::UNDER_REVIEW => [
                 NotificationType::SCHOLARSHIP_APPLICATION_UNDER_REVIEW,
                 'Application Under Review',
                 "Your scholarship application {$appNumber} is now under review.",
+                'No action is required at this time. We will notify you of any updates.',
             ],
             ScholarshipApplicationStatus::DOCUMENT_VERIFICATION => [
                 NotificationType::SCHOLARSHIP_DOCUMENT_VERIFICATION,
                 'Document Verification',
                 "Your scholarship application {$appNumber} has entered document verification.",
+                'Your submitted documents are being verified. Please wait for further updates.',
             ],
             ScholarshipApplicationStatus::APPROVED => [
                 NotificationType::SCHOLARSHIP_APPLICATION_APPROVED,
                 'Application Approved',
                 "Congratulations! Your scholarship application {$appNumber} has been approved.",
+                'Please watch for follow-up instructions from OSAS regarding the next steps.',
             ],
             ScholarshipApplicationStatus::REJECTED => [
                 NotificationType::SCHOLARSHIP_APPLICATION_REJECTED,
                 'Application Rejected',
                 "Your scholarship application {$appNumber} was not approved. Please check the application details.",
+                'You may review the application details in your dashboard. Contact OSAS if you have questions.',
             ],
-            default => [null, null, null],
+            default => [null, null, null, null],
         };
 
-        if ($type) {
-            $this->notificationService->notifyUser(
-                $studentUser,
-                $type,
-                $title,
-                $message,
-                'ScholarshipApplication',
-                $application->id
-            );
+        if (! $type) {
+            return;
         }
+
+        // Only include an authorized staff explanation when one was actually provided.
+        $reason = $newStatus === ScholarshipApplicationStatus::REJECTED && filled($remarks)
+            ? trim((string) $remarks)
+            : null;
+
+        $this->notificationService->notifyUser(
+            $studentUser,
+            $type,
+            $title,
+            $message,
+            'ScholarshipApplication',
+            $application->id,
+            [
+                'reference'       => $appNumber,
+                'reference_label' => 'Application No.',
+                'status'          => $newStatus->label(),
+                'next_step'       => $nextStep,
+                'url'             => route('student.applications.show', $application->id),
+                'reason'          => $reason,
+            ],
+            sendEmail: true,
+        );
     }
 }

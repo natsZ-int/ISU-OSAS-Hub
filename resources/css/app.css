@@ -19,6 +19,9 @@
 .badge-student{background:#dcfce7;color:#166534}
 .badge-active{background:#dcfce7;color:#166534}
 .badge-inactive{background:#fee2e2;color:#991b1b}
+.badge-enrolled{background:#dcfce7;color:#166534}
+.badge-not_enrolled{background:#fee2e2;color:#991b1b}
+.badge-unknown{background:#f3f4f6;color:#6b7280}
 .btn-sm{padding:.3rem .6rem;font-size:.8rem}
 .btn-danger{background:#dc2626;color:#fff}
 .btn-danger:hover{background:#b91c1c}

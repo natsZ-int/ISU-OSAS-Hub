@@ -112,4 +112,66 @@ class UserManagementTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_admin_can_update_student_enrollment_status(): void
+    {
+        $admin  = $this->createAdmin();
+        $student = $this->createStudent();
+        $student->studentProfile()->create([
+            'student_number' => '2024-0001',
+            'first_name'     => 'Test',
+            'last_name'      => 'Student',
+            'year_level'     => 1,
+        ]);
+
+        $this->actingAs($admin);
+        $this->put("/admin/users/{$student->id}", [
+            'name'              => $student->name,
+            'email'             => $student->email,
+            'role_id'           => $student->role_id,
+            'student_number'    => '2024-0001',
+            'enrollment_status' => 'enrolled',
+        ])->assertRedirect(route('admin.users.index'));
+
+        $this->assertSame('enrolled', $student->fresh()->studentProfile->enrollment_status);
+    }
+
+    public function test_admin_sees_enrollment_status_on_users_index(): void
+    {
+        $admin   = $this->createAdmin();
+        $student = $this->createStudent();
+        $student->studentProfile()->create([
+            'student_number'   => '2024-0002',
+            'first_name'       => 'Test',
+            'last_name'        => 'Student',
+            'year_level'       => 1,
+            'enrollment_status' => 'enrolled',
+        ]);
+
+        $this->actingAs($admin);
+        $this->get('/admin/users')
+             ->assertOk()
+             ->assertSee('Enrolled');
+    }
+
+    public function test_update_rejects_invalid_enrollment_status(): void
+    {
+        $admin   = $this->createAdmin();
+        $student = $this->createStudent();
+        $student->studentProfile()->create([
+            'student_number' => '2024-0003',
+            'first_name'     => 'Test',
+            'last_name'      => 'Student',
+            'year_level'     => 1,
+        ]);
+
+        $this->actingAs($admin);
+        $this->put("/admin/users/{$student->id}", [
+            'name'              => $student->name,
+            'email'             => $student->email,
+            'role_id'           => $student->role_id,
+            'student_number'    => '2024-0003',
+            'enrollment_status' => 'graduated',
+        ])->assertSessionHasErrors('enrollment_status');
+    }
 }

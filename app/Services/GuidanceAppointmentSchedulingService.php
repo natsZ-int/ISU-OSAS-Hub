@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\NotificationType;
 use App\Models\CounselorAvailability;
 use App\Models\GuidanceAppointment;
 use App\Models\GuidanceAppointmentType;
@@ -17,6 +18,7 @@ class GuidanceAppointmentSchedulingService
 {
     public function __construct(
         protected GuidanceAppointmentWorkflowService $workflowService,
+        protected NotificationService $notificationService,
     ) {}
 
     // ── Get Available Slots ─────────────────────────
@@ -83,7 +85,7 @@ class GuidanceAppointmentSchedulingService
         $duration = $this->getDuration($appointmentType, $settings);
         $endTime = Carbon::parse($startTime)->addMinutes($duration)->format('H:i:s');
 
-        return DB::transaction(function () use (
+        $appointment = DB::transaction(function () use (
             $studentProfile, $counselor, $appointmentType,
             $date, $startTime, $endTime, $reason, $actor, $settings
         ) {
@@ -143,18 +145,30 @@ class GuidanceAppointmentSchedulingService
                 userId: $actor->id,
             );
 
-            // 9. Notification to counselor
-            \App\Models\Notification::create([
-                'user_id'      => $counselor->id,
-                'type'         => 'guidance_appointment',
-                'title'        => 'New Appointment Request',
-                'message'      => "A student has requested an appointment on {$date->format('M d, Y')} at {$startTime}.",
-                'related_type' => 'GuidanceAppointment',
-                'related_id'   => $appointment->id,
-            ]);
-
             return $appointment;
         });
+
+        // Notify the counselor only after the transaction commits. This is an
+        // in-app notification; the required email events are confirmation,
+        // rescheduling, cancellation and reminders handled by the workflow.
+        $this->notificationService->notifyUser(
+            $counselor,
+            NotificationType::GUIDANCE_APPOINTMENT_REQUESTED,
+            'New Appointment Request',
+            "A student has requested an appointment on {$date->format('M d, Y')} at {$startTime}.",
+            'GuidanceAppointment',
+            $appointment->id,
+            [
+                'reference'       => 'APT-' . $appointment->id,
+                'reference_label' => 'Appointment No.',
+                'status'          => 'Requested',
+                'next_step'       => 'Review and confirm or reject the appointment request.',
+                'url'             => route('counselor.guidance.appointments.show', $appointment->id),
+            ],
+            sendEmail: false,
+        );
+
+        return $appointment;
     }
 
     // ── Conflict Checks ─────────────────────────────

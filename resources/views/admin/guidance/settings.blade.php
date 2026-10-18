@@ -7,6 +7,10 @@
     <a href="{{ route('admin.guidance.types') }}" class="btn btn-outline-dark">Appointment Types</a>
 </div>
 
+@if ($errors->any())
+    <x-alert type="error">{{ $errors->first() }}</x-alert>
+@endif
+
 <div class="card" style="max-width: 600px;">
     <form method="POST" action="{{ route('admin.guidance.settings.update') }}">
         @csrf @method('PATCH')

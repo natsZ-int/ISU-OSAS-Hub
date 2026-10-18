@@ -44,6 +44,6 @@ class MatchingWeightController extends Controller
             request: $request
         );
 
-        return back()->with('success', 'Matching weights updated successfully.');
+        return back()->with('status', 'Matching weights updated successfully.');
     }
 }

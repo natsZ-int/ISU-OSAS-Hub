@@ -1,62 +1,89 @@
-<form method="GET" action="{{ $filterAction ?? route('admin.analytics.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1.5rem;">
-    <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
-        <div>
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 0.25rem;">Date From</label>
-            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}" style="padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem;">
-        </div>
-        <div>
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 0.25rem;">Date To</label>
-            <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}" style="padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem;">
-        </div>
+@php
+    $filters = $filters ?? [];
+    $filterOptions = $filterOptions ?? [
+        'scholarships'      => collect(),
+        'serviceTypes'      => collect(),
+        'appointmentTypes'  => collect(),
+    ];
+@endphp
 
-        @if(!empty($filterOptions['scholarships']) && ($showScholarshipFilter ?? false))
-        <div>
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 0.25rem;">Scholarship</label>
-            <select name="scholarship_id" style="padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem;">
-                <option value="">All Scholarships</option>
-                @foreach($filterOptions['scholarships'] as $id => $title)
-                    <option value="{{ $id }}" {{ ($filters['scholarship_id'] ?? '') == $id ? 'selected' : '' }}>{{ $title }}</option>
+<x-filter-bar :action="$filterAction ?? route('admin.analytics.index')">
+    <x-filter-field label="Date From" for-id="filter_date_from">
+        <input
+            type="date"
+            id="filter_date_from"
+            name="date_from"
+            value="{{ $filters['date_from'] ?? '' }}"
+            max="{{ date('Y-m-d') }}"
+        >
+    </x-filter-field>
+
+    <x-filter-field label="Date To" for-id="filter_date_to">
+        <input
+            type="date"
+            id="filter_date_to"
+            name="date_to"
+            value="{{ $filters['date_to'] ?? '' }}"
+            max="{{ date('Y-m-d') }}"
+        >
+    </x-filter-field>
+
+    @if (($showScholarshipFilter ?? false) && ! empty($filterOptions['scholarships']) && $filterOptions['scholarships']->isNotEmpty())
+        <x-filter-field label="Scholarship" for-id="filter_scholarship_id">
+            <select id="filter_scholarship_id" name="scholarship_id">
+                <option value="">All scholarships</option>
+                @foreach ($filterOptions['scholarships'] as $id => $title)
+                    <option value="{{ $id }}" {{ ($filters['scholarship_id'] ?? '') == $id ? 'selected' : '' }}>
+                        {{ $title }}
+                    </option>
                 @endforeach
             </select>
-        </div>
-        @endif
-
-        @if(!empty($filterOptions['appointmentTypes']) && ($showAppointmentFilter ?? false))
-        <div>
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 0.25rem;">Appointment Type</label>
-            <select name="appointment_type_id" style="padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem;">
-                <option value="">All Types</option>
-                @foreach($filterOptions['appointmentTypes'] as $id => $name)
-                    <option value="{{ $id }}" {{ ($filters['appointment_type_id'] ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                @endforeach
-            </select>
-        </div>
-        @endif
-
-        @if(!empty($filterOptions['serviceTypes']) && ($showServiceFilter ?? false))
-        <div>
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 0.25rem;">Service Type</label>
-            <select name="service_type_id" style="padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem;">
-                <option value="">All Types</option>
-                @foreach($filterOptions['serviceTypes'] as $id => $name)
-                    <option value="{{ $id }}" {{ ($filters['service_type_id'] ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                @endforeach
-            </select>
-        </div>
-        @endif
-
-        <div style="display: flex; gap: 0.5rem;">
-            <button type="submit" style="padding: 0.45rem 1rem; background: #2563eb; color: #fff; border: none; border-radius: 4px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Apply Filters</button>
-            <a href="{{ $filterAction ?? route('admin.analytics.index') }}" style="padding: 0.45rem 1rem; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem; text-decoration: none; font-weight: 600;">Clear</a>
-        </div>
-    </div>
-
-    @if(!empty($filters))
-        <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
-            Active filters:
-            @foreach($filters as $key => $val)
-                <span style="background: #e0f2fe; color: #0369a1; padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.25rem;">{{ $key }}: {{ $val }}</span>
-            @endforeach
-        </div>
+        </x-filter-field>
     @endif
-</form>
+
+    @if (($showAppointmentFilter ?? false) && ! empty($filterOptions['appointmentTypes']) && $filterOptions['appointmentTypes']->isNotEmpty())
+        <x-filter-field label="Appointment Type" for-id="filter_appointment_type_id">
+            <select id="filter_appointment_type_id" name="appointment_type_id">
+                <option value="">All appointment types</option>
+                @foreach ($filterOptions['appointmentTypes'] as $id => $name)
+                    <option value="{{ $id }}" {{ ($filters['appointment_type_id'] ?? '') == $id ? 'selected' : '' }}>
+                        {{ $name }}
+                    </option>
+                @endforeach
+            </select>
+        </x-filter-field>
+    @endif
+
+    @if (($showServiceFilter ?? false) && ! empty($filterOptions['serviceTypes']) && $filterOptions['serviceTypes']->isNotEmpty())
+        <x-filter-field label="Service Type" for-id="filter_service_type_id">
+            <select id="filter_service_type_id" name="service_type_id">
+                <option value="">All service types</option>
+                @foreach ($filterOptions['serviceTypes'] as $id => $name)
+                    <option value="{{ $id }}" {{ ($filters['service_type_id'] ?? '') == $id ? 'selected' : '' }}>
+                        {{ $name }}
+                    </option>
+                @endforeach
+            </select>
+        </x-filter-field>
+    @endif
+
+    <x-slot:actions>
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-primary btn-sm" data-loading-label="Applying filters…">
+                Apply Filters
+            </button>
+            <a href="{{ $filterAction ?? route('admin.analytics.index') }}" class="btn btn-outline-dark btn-sm">
+                Clear Filters
+            </a>
+        </div>
+
+        @if (! empty($filters))
+            <div class="filter-chips">
+                <span class="filter-chip-label">Active filters:</span>
+                @foreach ($filters as $key => $value)
+                    <span class="filter-chip">{{ ucwords(str_replace('_', ' ', $key)) }}: {{ $value }}</span>
+                @endforeach
+            </div>
+        @endif
+    </x-slot:actions>
+</x-filter-bar>

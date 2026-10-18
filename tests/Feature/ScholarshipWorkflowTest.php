@@ -132,7 +132,7 @@ class ScholarshipWorkflowTest extends TestCase
 
         $this->patch("/admin/scholarship-applications/{$app->id}/transition", [
             'status' => 'under_review',
-        ])->assertSessionHas('success');
+        ])->assertSessionHas('status');
 
         $this->assertEquals('under_review', $app->fresh()->getRawOriginal('status'));
         $this->assertDatabaseHas('application_status_histories', [
@@ -192,7 +192,7 @@ class ScholarshipWorkflowTest extends TestCase
         $this->patch("/admin/scholarship-applications/{$app->id}/transition", [
             'status'  => 'rejected',
             'remarks' => 'Does not meet eligibility criteria.',
-        ])->assertSessionHas('success');
+        ])->assertSessionHas('status');
 
         $this->assertEquals('rejected', $app->fresh()->getRawOriginal('status'));
     }
@@ -242,7 +242,7 @@ class ScholarshipWorkflowTest extends TestCase
         $this->actingAs($this->admin());
         $this->patch("/admin/scholarship-applications/{$app->id}/transition", [
             'status' => 'approved',
-        ])->assertSessionHas('success');
+        ])->assertSessionHas('status');
 
         $this->assertEquals('approved', $app->fresh()->getRawOriginal('status'));
     }

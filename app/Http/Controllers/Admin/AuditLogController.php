@@ -21,9 +21,13 @@ class AuditLogController extends Controller
         'scholarship',
         'Scholarship Management',
         'Scholarship Eligibility',
+        'Scholarship Application',
         'Scholarship Application Workflow',
+        'Scholarship Review',
+        'Scholarship Matching',
         'guidance',
         'Guidance Appointment',
+        'Guidance Scheduling',
         'student_services',
         'Student Services',
         'notifications',
@@ -73,12 +77,14 @@ class AuditLogController extends Controller
             $query->dateTo($request->input('date_to'));
         }
 
-        $totalCount = $query->count();
-
+        // Paginate once: the paginator runs the filtered count itself, so no
+        // separate COUNT(*) query is needed for the "total" display.
         $logs = $query->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(20)
             ->withQueryString();
+
+        $totalCount = $logs->total();
 
         // Filter dropdown data
         $users = User::orderBy('name')->get(['id', 'name', 'email']);

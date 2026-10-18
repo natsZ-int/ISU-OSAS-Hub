@@ -91,6 +91,8 @@ class ServiceRequestController extends Controller
             return redirect()->back()->with('error', 'Cannot assign a student to handle service requests.');
         }
 
+        $previousStatus = $studentServiceRequest->status;
+
         $studentServiceRequest->update([
             'handled_by' => $handler->id,
             'status'     => $studentServiceRequest->status === StudentServiceRequest::STATUS_SUBMITTED
@@ -105,6 +107,13 @@ class ServiceRequestController extends Controller
             recordId: $studentServiceRequest->id,
             description: "Request [{$studentServiceRequest->request_number}] assigned to [{$handler->name}]."
         );
+
+        // Only notify the student on the first assignment (submitted -> processing),
+        // not on internal re-assignments between staff.
+        if ($previousStatus === StudentServiceRequest::STATUS_SUBMITTED
+            && $studentServiceRequest->status === StudentServiceRequest::STATUS_PROCESSING) {
+            $this->workflowService->notifyAssigned($studentServiceRequest, $handler);
+        }
 
         return redirect()->back()->with('status', "Request assigned to {$handler->name} successfully.");
     }

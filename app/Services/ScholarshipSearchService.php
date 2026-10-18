@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OverallEligibility;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
+use App\Models\ScholarshipMatchingWeight;
 use App\Models\StudentProfile;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -34,25 +35,33 @@ class ScholarshipSearchService
     {
         $sort = $this->normalizeSort($request->input('sort'));
 
+        // Matching weights are identical for every scholarship in this request:
+        // read them once instead of once per evaluated scholarship.
+        $weights = ScholarshipMatchingWeight::active();
+
         // Match-score sort requires in-memory sorting
         if ($sort === 'match_score' && $profile) {
-            return $this->searchWithMatchScoreSort($request, $profile);
+            return $this->searchWithMatchScoreSort($request, $profile, $weights);
         }
 
         // Eligibility filter requires in-memory evaluation
         $eligibility = $this->normalizeEligibility($request->input('eligibility'));
         if ($eligibility !== 'all' && $profile) {
-            return $this->searchWithEligibilityFilter($request, $profile, $eligibility, $sort);
+            return $this->searchWithEligibilityFilter($request, $profile, $eligibility, $sort, $weights);
         }
 
         // Default: fast database sort
-        return $this->searchWithDatabaseSort($request, $sort, $profile);
+        return $this->searchWithDatabaseSort($request, $sort, $profile, $weights);
     }
 
     // ── Fast Path: Database Sort ────────────────────
 
-    protected function searchWithDatabaseSort(Request $request, string $sort, ?StudentProfile $profile): LengthAwarePaginator
-    {
+    protected function searchWithDatabaseSort(
+        Request $request,
+        string $sort,
+        ?StudentProfile $profile,
+        ?ScholarshipMatchingWeight $weights
+    ): LengthAwarePaginator {
         $query = $this->buildBaseQuery($request);
         $this->applyDatabaseSort($query, $sort);
 
@@ -60,7 +69,7 @@ class ScholarshipSearchService
 
         // Attach match scores for view display only
         if ($profile) {
-            $this->attachMatchScores($paginator->getCollection(), $profile);
+            $this->attachMatchScores($paginator->getCollection(), $profile, weights: $weights);
         }
 
         return $paginator;
@@ -68,17 +77,20 @@ class ScholarshipSearchService
 
     // ── Match-Score Sort Path (PHP) ─────────────────
 
-    protected function searchWithMatchScoreSort(Request $request, StudentProfile $profile): LengthAwarePaginator
-    {
+    protected function searchWithMatchScoreSort(
+        Request $request,
+        StudentProfile $profile,
+        ?ScholarshipMatchingWeight $weights
+    ): LengthAwarePaginator {
         $candidates = $this->buildBaseQuery($request)
             ->limit(self::MAX_CANDIDATE_LIMIT)
             ->get();
 
         $applications = $this->getStudentApplications($profile);
 
-        $scored = $candidates->map(function (Scholarship $s) use ($profile, $applications) {
+        $scored = $candidates->map(function (Scholarship $s) use ($profile, $applications, $weights) {
             $app = $applications->get($s->id);
-            $result = $this->matchingService->evaluateMatch($profile, $s, $app);
+            $result = $this->matchingService->evaluateMatch($profile, $s, $app, $weights);
             $s->match_result = $result;
             $s->match_score  = $result->matchScore;
             return $s;
@@ -108,8 +120,13 @@ class ScholarshipSearchService
 
     // ── Eligibility Filter Path (PHP) ───────────────
 
-    protected function searchWithEligibilityFilter(Request $request, StudentProfile $profile, string $eligibility, string $sort): LengthAwarePaginator
-    {
+    protected function searchWithEligibilityFilter(
+        Request $request,
+        StudentProfile $profile,
+        string $eligibility,
+        string $sort,
+        ?ScholarshipMatchingWeight $weights
+    ): LengthAwarePaginator {
         $candidates = $this->buildBaseQuery($request)
             ->limit(self::MAX_CANDIDATE_LIMIT)
             ->get();
@@ -137,7 +154,7 @@ class ScholarshipSearchService
             default  => $filtered->sortBy('application_deadline')->values(),
         };
 
-        $this->attachMatchScores($sorted, $profile);
+        $this->attachMatchScores($sorted, $profile, $applications, $weights);
 
         return $this->paginateCollection($sorted, $request);
     }
@@ -282,13 +299,17 @@ class ScholarshipSearchService
 
     // ── Score Attachment ────────────────────────────
 
-    protected function attachMatchScores(Collection $scholarships, StudentProfile $profile): void
-    {
-        $applications = $this->getStudentApplications($profile);
+    protected function attachMatchScores(
+        Collection $scholarships,
+        StudentProfile $profile,
+        ?Collection $applications = null,
+        ?ScholarshipMatchingWeight $weights = null
+    ): void {
+        $applications ??= $this->getStudentApplications($profile);
 
         foreach ($scholarships as $scholarship) {
             $app = $applications->get($scholarship->id);
-            $result = $this->matchingService->evaluateMatch($profile, $scholarship, $app);
+            $result = $this->matchingService->evaluateMatch($profile, $scholarship, $app, $weights);
             $scholarship->match_result = $result;
             $scholarship->match_score  = $result->matchScore;
         }
@@ -331,7 +352,10 @@ class ScholarshipSearchService
 
     protected function getStudentApplications(StudentProfile $profile): Collection
     {
+        // Relationships read during match/eligibility scoring are eager loaded
+        // so evaluation never issues per-application queries inside the loop.
         return ScholarshipApplication::where('student_profile_id', $profile->id)
+            ->with(['documents', 'scholarship.requirements'])
             ->get()
             ->keyBy('scholarship_id');
     }

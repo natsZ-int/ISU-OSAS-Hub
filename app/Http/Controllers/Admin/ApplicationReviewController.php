@@ -97,7 +97,7 @@ class ApplicationReviewController extends Controller
                 request: $request
             );
 
-            return back()->with('success', 'Application status updated successfully.');
+            return back()->with('status', 'Application status updated successfully.');
 
         } catch (InvalidTransitionException $e) {
             return back()->withErrors(['transition' => $e->getMessage()]);

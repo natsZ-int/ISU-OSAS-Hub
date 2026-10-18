@@ -60,6 +60,16 @@
                         @endfor
                     </select>
                 </div>
+                <div class="form-group">
+                    <label for="enrollment_status">Enrollment Status</label>
+                    <select id="enrollment_status" name="enrollment_status">
+                        @foreach (\App\Enums\EnrollmentStatus::cases() as $es)
+                            <option value="{{ $es->value }}" {{ old('enrollment_status', $user->studentProfile->enrollment_status ?? 'unknown') === $es->value ? 'selected' : '' }}>
+                                {{ $es->label() }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
             <div class="form-row">
                 <div class="form-group">

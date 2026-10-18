@@ -43,7 +43,7 @@ class GuidanceController extends Controller
             request: $request,
         );
 
-        return back()->with('success', 'Appointment type created.');
+        return back()->with('status', 'Appointment type created.');
     }
 
     public function updateType(Request $request, GuidanceAppointmentType $type): RedirectResponse
@@ -57,13 +57,32 @@ class GuidanceController extends Controller
 
         $type->update($data);
 
-        return back()->with('success', 'Appointment type updated.');
+        AuditLogService::log(
+            action: 'Appointment Type Updated',
+            module: 'Guidance Scheduling',
+            recordType: 'GuidanceAppointmentType',
+            recordId: $type->id,
+            description: "Updated appointment type '{$type->name}'.",
+            request: $request,
+        );
+
+        return back()->with('status', 'Appointment type updated.');
     }
 
     public function toggleType(GuidanceAppointmentType $type, Request $request): RedirectResponse
     {
         $type->update(['is_active' => ! $type->is_active]);
-        return back()->with('success', 'Appointment type ' . ($type->is_active ? 'activated' : 'deactivated') . '.');
+
+        AuditLogService::log(
+            action: 'Appointment Type ' . ($type->is_active ? 'Activated' : 'Deactivated'),
+            module: 'Guidance Scheduling',
+            recordType: 'GuidanceAppointmentType',
+            recordId: $type->id,
+            description: "Appointment type '{$type->name}' " . ($type->is_active ? 'activated' : 'deactivated') . '.',
+            request: $request,
+        );
+
+        return back()->with('status', 'Appointment type ' . ($type->is_active ? 'activated' : 'deactivated') . '.');
     }
 
     // ── Scheduling Settings ─────────────────────────
@@ -105,7 +124,7 @@ class GuidanceController extends Controller
             request: $request,
         );
 
-        return back()->with('success', 'Scheduling settings updated.');
+        return back()->with('status', 'Scheduling settings updated.');
     }
 
     // ── All Appointments ────────────────────────────

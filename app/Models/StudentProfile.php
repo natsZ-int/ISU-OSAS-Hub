@@ -53,4 +53,9 @@ class StudentProfile extends Model
     {
         return $this->hasMany(StudentServiceRequest::class);
     }
+
+    public function enrollmentVerifications(): HasMany
+    {
+        return $this->hasMany(StudentEnrollmentVerification::class);
+    }
 }

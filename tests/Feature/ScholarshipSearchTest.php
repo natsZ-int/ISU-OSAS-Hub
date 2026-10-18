@@ -35,6 +35,7 @@ class ScholarshipSearchTest extends TestCase
             'role_id' => Role::where('name', 'student')->first()->id,
             'is_active' => true,
         ]);
+        $u->forceFill(['email_verified_at' => now()])->save();
         StudentProfile::create([
             'user_id' => $u->id, 'student_number' => "S-{$unique}",
             'first_name' => 'T', 'last_name' => 'S',

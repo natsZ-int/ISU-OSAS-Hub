@@ -25,7 +25,7 @@
         'processing'                       => ['label' => 'Processing',         'class' => 'info'],
         'completed'                        => ['label' => 'Completed',          'class' => 'success'],
         'cancelled'                        => ['label' => 'Cancelled',          'class' => 'neutral'],
-        'requires_additional_information'  => ['label' => 'Needs More Info',    'class' => 'warning'],
+        'requires_information'            => ['label' => 'Needs More Info',    'class' => 'warning'],
 
         'active'                           => ['label' => 'Active',             'class' => 'success'],
         'inactive'                         => ['label' => 'Inactive',           'class' => 'neutral'],

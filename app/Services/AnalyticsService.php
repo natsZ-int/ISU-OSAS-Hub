@@ -110,36 +110,66 @@ class AnalyticsService
 
     public function getAllAnalytics(array $filters): array
     {
+        // Status counts are identical for the summary cards and the
+        // per-domain breakdowns: compute each grouped query only once.
+        [$appCounts, $apptCounts, $svcCounts] = $this->statusCountBundle($filters);
+
         return [
             'filters'      => $filters,
-            'summary'      => $this->getSummaryCards($filters),
-            'scholarships' => $this->getScholarshipAnalytics($filters),
-            'guidance'     => $this->getGuidanceAnalytics($filters),
-            'services'     => $this->getServiceAnalytics($filters),
+            'summary'      => $this->getSummaryCards($filters, $appCounts, $apptCounts, $svcCounts),
+            'scholarships' => $this->getScholarshipAnalytics($filters, $appCounts),
+            'guidance'     => $this->getGuidanceAnalytics($filters, $apptCounts),
+            'services'     => $this->getServiceAnalytics($filters, $svcCounts),
+        ];
+    }
+
+    /**
+     * Run the three grouped status queries for one filter set.
+     *
+     * @return array{0: array<string, int>, 1: array<string, int>, 2: array<string, int>}
+     *              [applications, appointments, service requests]
+     */
+    protected function statusCountBundle(array $filters): array
+    {
+        return [
+            $this->statusCounts($this->baseAppQuery($filters)),
+            $this->statusCounts($this->baseApptQuery($filters)),
+            $this->statusCounts($this->baseSvcQuery($filters)),
         ];
     }
 
     // ── Summary Cards ─────────────────────────────────────────
 
-    public function getSummaryCards(array $filters): array
-    {
-        $appQ = $this->baseAppQuery($filters);
-        $totalApps    = (clone $appQ)->count();
-        $pendingApps  = (clone $appQ)->whereIn('scholarship_applications.status', self::PENDING_APP_STATUSES)->count();
-        $approvedApps = (clone $appQ)->where('scholarship_applications.status', ScholarshipApplicationStatus::APPROVED->value)->count();
-        $rejectedApps = (clone $appQ)->where('scholarship_applications.status', ScholarshipApplicationStatus::REJECTED->value)->count();
+    /**
+     * @param  array<string, int>|null  $appCounts   Pre-computed application status counts
+     * @param  array<string, int>|null  $apptCounts  Pre-computed appointment status counts
+     * @param  array<string, int>|null  $svcCounts   Pre-computed service request status counts
+     */
+    public function getSummaryCards(
+        array $filters,
+        ?array $appCounts = null,
+        ?array $apptCounts = null,
+        ?array $svcCounts = null
+    ): array {
+        // One GROUP BY query per base table replaces the previous
+        // four separate COUNT(*) queries per table.
+        $appCounts  ??= $this->statusCounts($this->baseAppQuery($filters));
+        $totalApps  = array_sum($appCounts);
+        $approvedApps = $appCounts[ScholarshipApplicationStatus::APPROVED->value] ?? 0;
+        $rejectedApps = $appCounts[ScholarshipApplicationStatus::REJECTED->value] ?? 0;
+        $pendingApps  = $this->countStatuses($appCounts, self::PENDING_APP_STATUSES);
 
-        $apptQ = $this->baseApptQuery($filters);
-        $totalAppts     = (clone $apptQ)->count();
-        $pendingAppts   = (clone $apptQ)->where('guidance_appointments.status', GuidanceAppointment::STATUS_REQUESTED)->count();
-        $completedAppts = (clone $apptQ)->where('guidance_appointments.status', GuidanceAppointment::STATUS_COMPLETED)->count();
-        $cancelledAppts = (clone $apptQ)->where('guidance_appointments.status', GuidanceAppointment::STATUS_CANCELLED)->count();
+        $apptCounts ??= $this->statusCounts($this->baseApptQuery($filters));
+        $totalAppts     = array_sum($apptCounts);
+        $pendingAppts   = $apptCounts[GuidanceAppointment::STATUS_REQUESTED] ?? 0;
+        $completedAppts = $apptCounts[GuidanceAppointment::STATUS_COMPLETED] ?? 0;
+        $cancelledAppts = $apptCounts[GuidanceAppointment::STATUS_CANCELLED] ?? 0;
 
-        $svcQ = $this->baseSvcQuery($filters);
-        $totalSvc      = (clone $svcQ)->count();
-        $pendingSvc    = (clone $svcQ)->whereIn('student_service_requests.status', self::PENDING_SERVICE_STATUSES)->count();
-        $processingSvc = (clone $svcQ)->where('student_service_requests.status', StudentServiceRequest::STATUS_PROCESSING)->count();
-        $completedSvc  = (clone $svcQ)->where('student_service_requests.status', StudentServiceRequest::STATUS_COMPLETED)->count();
+        $svcCounts ??= $this->statusCounts($this->baseSvcQuery($filters));
+        $totalSvc      = array_sum($svcCounts);
+        $processingSvc = $svcCounts[StudentServiceRequest::STATUS_PROCESSING] ?? 0;
+        $completedSvc  = $svcCounts[StudentServiceRequest::STATUS_COMPLETED] ?? 0;
+        $pendingSvc    = $this->countStatuses($svcCounts, self::PENDING_SERVICE_STATUSES);
 
         $decided = $approvedApps + $rejectedApps;
 
@@ -161,9 +191,43 @@ class AnalyticsService
         ];
     }
 
+    /**
+     * Count every status of a query in a single GROUP BY query.
+     *
+     * @return array<string, int>  Counts keyed by raw status value.
+     */
+    protected function statusCounts(Builder $query): array
+    {
+        return $query
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->map(fn ($total) => (int) $total)
+            ->all();
+    }
+
+    /**
+     * Sum grouped counts for a set of statuses.
+     *
+     * @param  array<string, int>  $counts
+     * @param  string[]  $statuses
+     */
+    protected function countStatuses(array $counts, array $statuses): int
+    {
+        $total = 0;
+        foreach ($statuses as $status) {
+            $total += $counts[$status] ?? 0;
+        }
+
+        return $total;
+    }
+
     // ── Scholarship Analytics ─────────────────────────────────
 
-    public function getScholarshipAnalytics(array $filters): array
+    /**
+     * @param  array<string, int>|null  $appStatusCounts  Pre-computed application status counts
+     */
+    public function getScholarshipAnalytics(array $filters, ?array $appStatusCounts = null): array
     {
         $base = $this->baseAppQuery($filters);
 
@@ -195,11 +259,12 @@ class AnalyticsService
             ->orderBy('month')
             ->get();
 
-        // Rates
-        $approved = (clone $base)->where('scholarship_applications.status', ScholarshipApplicationStatus::APPROVED->value)->count();
-        $rejected = (clone $base)->where('scholarship_applications.status', ScholarshipApplicationStatus::REJECTED->value)->count();
-        $pending  = (clone $base)->whereIn('scholarship_applications.status', self::PENDING_APP_STATUSES)->count();
-        $decided  = $approved + $rejected;
+        // Rates — reuse the grouped counts already computed for the filters
+        $counts    = $appStatusCounts ?? $this->statusCounts(clone $base);
+        $approved  = $counts[ScholarshipApplicationStatus::APPROVED->value] ?? 0;
+        $rejected  = $counts[ScholarshipApplicationStatus::REJECTED->value] ?? 0;
+        $pending   = $this->countStatuses($counts, self::PENDING_APP_STATUSES);
+        $decided   = $approved + $rejected;
 
         return [
             'byScholarship'  => $byScholarship,
@@ -215,7 +280,10 @@ class AnalyticsService
 
     // ── Guidance Analytics ────────────────────────────────────
 
-    public function getGuidanceAnalytics(array $filters): array
+    /**
+     * @param  array<string, int>|null  $apptStatusCounts  Pre-computed appointment status counts
+     */
+    public function getGuidanceAnalytics(array $filters, ?array $apptStatusCounts = null): array
     {
         $base = $this->baseApptQuery($filters);
 
@@ -262,9 +330,11 @@ class AnalyticsService
             ->limit(20)
             ->get();
 
-        $completed = (clone $base)->where('guidance_appointments.status', GuidanceAppointment::STATUS_COMPLETED)->count();
-        $cancelled = (clone $base)->where('guidance_appointments.status', GuidanceAppointment::STATUS_CANCELLED)->count();
-        $pending   = (clone $base)->where('guidance_appointments.status', GuidanceAppointment::STATUS_REQUESTED)->count();
+        // Status totals — reuse the grouped counts already computed for the filters
+        $counts     = $apptStatusCounts ?? $this->statusCounts(clone $base);
+        $completed  = $counts[GuidanceAppointment::STATUS_COMPLETED] ?? 0;
+        $cancelled  = $counts[GuidanceAppointment::STATUS_CANCELLED] ?? 0;
+        $pending    = $counts[GuidanceAppointment::STATUS_REQUESTED] ?? 0;
 
         return [
             'byMonth'     => $byMonth,
@@ -278,7 +348,10 @@ class AnalyticsService
 
     // ── Student Service Analytics ─────────────────────────────
 
-    public function getServiceAnalytics(array $filters): array
+    /**
+     * @param  array<string, int>|null  $svcStatusCounts  Pre-computed service request status counts
+     */
+    public function getServiceAnalytics(array $filters, ?array $svcStatusCounts = null): array
     {
         $base = $this->baseSvcQuery($filters);
 
@@ -310,8 +383,10 @@ class AnalyticsService
             ->orderBy('month')
             ->get();
 
-        $completed = (clone $base)->where('student_service_requests.status', StudentServiceRequest::STATUS_COMPLETED)->count();
-        $pending   = (clone $base)->whereIn('student_service_requests.status', self::PENDING_SERVICE_STATUSES)->count();
+        // Status totals — reuse the grouped counts already computed for the filters
+        $counts    = $svcStatusCounts ?? $this->statusCounts(clone $base);
+        $completed = $counts[StudentServiceRequest::STATUS_COMPLETED] ?? 0;
+        $pending   = $this->countStatuses($counts, self::PENDING_SERVICE_STATUSES);
 
         // Processing time calculation (only completed with both timestamps)
         $durationExpression = DB::getDriverName() === 'sqlite'
@@ -342,11 +417,13 @@ class AnalyticsService
 
     public function getExportData(array $filters): array
     {
+        [$appCounts, $apptCounts, $svcCounts] = $this->statusCountBundle($filters);
+
         return [
-            'summary'      => $this->getSummaryCards($filters),
-            'scholarships' => $this->getScholarshipAnalytics($filters),
-            'guidance'     => $this->getGuidanceAnalytics($filters),
-            'services'     => $this->getServiceAnalytics($filters),
+            'summary'      => $this->getSummaryCards($filters, $appCounts, $apptCounts, $svcCounts),
+            'scholarships' => $this->getScholarshipAnalytics($filters, $appCounts),
+            'guidance'     => $this->getGuidanceAnalytics($filters, $apptCounts),
+            'services'     => $this->getServiceAnalytics($filters, $svcCounts),
         ];
     }
 

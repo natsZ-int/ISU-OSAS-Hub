@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Student;
 
+use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStudentServiceRequest;
 use App\Models\ServiceRequestDocument;
@@ -9,6 +10,7 @@ use App\Models\ServiceType;
 use App\Models\StudentServiceRequest;
 use App\Models\StudentServiceRequestHistory;
 use App\Services\AuditLogService;
+use App\Services\NotificationService;
 use App\Services\ServiceRequestNumberGenerator;
 use App\Services\StudentServiceRequestWorkflowService;
 use Illuminate\Http\Request;
@@ -23,7 +25,8 @@ class ServiceRequestController extends Controller
 
     public function __construct(
         StudentServiceRequestWorkflowService $workflowService,
-        ServiceRequestNumberGenerator $numberGenerator
+        ServiceRequestNumberGenerator $numberGenerator,
+        protected NotificationService $notificationService
     ) {
         $this->workflowService = $workflowService;
         $this->numberGenerator = $numberGenerator;
@@ -112,6 +115,25 @@ class ServiceRequestController extends Controller
             return $serviceRequest;
         });
 
+        // Notify the student only after the transaction has committed.
+        $this->notificationService->notifyUser(
+            $user,
+            NotificationType::STUDENT_SERVICE_REQUEST_SUBMITTED,
+            'Service Request Submitted',
+            "Your {$serviceType->name} request {$serviceRequest->request_number} has been submitted successfully.",
+            'StudentServiceRequest',
+            $serviceRequest->id,
+            [
+                'reference'       => $serviceRequest->request_number,
+                'reference_label' => 'Request No.',
+                'status'          => 'Submitted',
+                'service'         => $serviceType->name,
+                'next_step'       => 'Please wait for OSAS to process your request. You will be notified of any updates.',
+                'url'             => route('student.services.show', $serviceRequest->id),
+            ],
+            sendEmail: true,
+        );
+
         return redirect()->route('student.services.show', $serviceRequest)->with('status', 'Your service request has been submitted successfully.');
     }
 
@@ -175,18 +197,30 @@ class ServiceRequestController extends Controller
         }
 
         $request->validate([
-            'service_type_requirement_id' => 'required|exists:service_type_requirements,id',
+            'service_type_requirement_id' => 'nullable|exists:service_type_requirements,id',
             'file'                        => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
-        $requirement = $studentServiceRequest->serviceType->requirements()->findOrFail($request->service_type_requirement_id);
+        $requirement = null;
 
-        DB::transaction(function () use ($request, $studentServiceRequest, $requirement) {
+        if ($request->filled('service_type_requirement_id')) {
+            $requirement = $studentServiceRequest->serviceType->requirements()
+                ->find($request->service_type_requirement_id);
+
+            if (!$requirement) {
+                return redirect()->back()->with('error', 'The selected requirement is not valid for this service type.');
+            }
+        }
+
+        $requirementId = $requirement?->id;
+        $requirementName = $requirement?->name ?? 'Additional Requested Document';
+
+        DB::transaction(function () use ($request, $studentServiceRequest, $requirementId, $requirementName) {
             $file = $request->file('file');
             $path = $file->store("private/student-service-requests/{$studentServiceRequest->id}", 'local');
 
             $existing = ServiceRequestDocument::where('student_service_request_id', $studentServiceRequest->id)
-                ->where('service_type_requirement_id', $requirement->id)
+                ->where('service_type_requirement_id', $requirementId)
                 ->first();
 
             if ($existing) {
@@ -196,7 +230,7 @@ class ServiceRequestController extends Controller
 
             ServiceRequestDocument::create([
                 'student_service_request_id'  => $studentServiceRequest->id,
-                'service_type_requirement_id' => $requirement->id,
+                'service_type_requirement_id' => $requirementId,
                 'file_path'                   => $path,
                 'original_filename'           => $file->getClientOriginalName(),
                 'mime_type'                   => $file->getClientMimeType(),
@@ -209,9 +243,17 @@ class ServiceRequestController extends Controller
                 'previous_status'            => $studentServiceRequest->status,
                 'new_status'                 => $studentServiceRequest->status,
                 'changed_by'                 => auth()->id(),
-                'remarks'                    => "Uploaded updated document for requirement: {$requirement->name}",
+                'remarks'                    => "Uploaded updated document for requirement: {$requirementName}",
                 'created_at'                 => now(),
             ]);
+
+            \App\Services\AuditLogService::log(
+                action: 'Supporting Document Uploaded',
+                module: 'Student Services',
+                recordType: 'StudentServiceRequest',
+                recordId: $studentServiceRequest->id,
+                description: "Additional document uploaded for request '{$studentServiceRequest->request_number}', requirement '{$requirementName}'.",
+            );
         });
 
         return redirect()->back()->with('status', 'Supporting document uploaded successfully.');

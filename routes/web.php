@@ -11,9 +11,12 @@ use App\Http\Controllers\Admin\ServiceTypeController as AdminServiceTypeControll
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Counselor\GuidanceController as CounselorGuidanceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Staff\EnrollmentVerificationController;
 use App\Http\Controllers\Student\ApplicationController;
 use App\Http\Controllers\Student\DocumentController;
 use App\Http\Controllers\Student\EligibilityController;
@@ -27,17 +30,48 @@ use Illuminate\Support\Facades\Route;
 // Explicit model binding for guidance appointments
 Route::model('appointment', GuidanceAppointment::class);
 
-Route::get('/', fn () => redirect()->route('login'));
+Route::get('/', function () {
+    $user = auth()->user();
+
+    if (! $user) {
+        return redirect()->route('login');
+    }
+
+    return match (true) {
+        $user->isAdmin()     => redirect()->route('admin.dashboard'),
+        $user->isCounselor() => redirect()->route('counselor.dashboard'),
+        $user->isStudent()   => redirect()->route('student.dashboard'),
+        default              => abort(403, 'No dashboard is configured for this account role.'),
+    };
+});
 
 // ─── Guest ─────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/login',  [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:5,1')->name('login.store');
+
+    Route::get('/register', [RegisterController::class, 'show'])->name('register');
+    Route::post('/register', [RegisterController::class, 'store'])->middleware('throttle:3,1')->name('register.store');
 });
 
 // ─── Authenticated ─────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+    // ─── Email Verification (OTP) ───────────────────────────────────
+    Route::get('/email/verify', [VerificationController::class, 'notice'])->name('verification.notice');
+    Route::post('/email/verify', [VerificationController::class, 'verify'])->middleware('throttle:10,1')->name('verification.verify');
+    Route::post('/email/resend', [VerificationController::class, 'resend'])->middleware('throttle:6,1')->name('verification.resend');
+
+    // ─── Enrollment Verification (OSAS Staff: Admin + Counselor) ───
+    Route::middleware('can:manage-enrollment-verifications')
+        ->prefix('enrollment-verifications')
+        ->name('enrollment-verifications.')
+        ->group(function () {
+            Route::get('/', [EnrollmentVerificationController::class, 'index'])->name('index');
+            Route::get('/{enrollmentVerification}', [EnrollmentVerificationController::class, 'show'])->name('show');
+            Route::patch('/{enrollmentVerification}', [EnrollmentVerificationController::class, 'update'])->name('update');
+        });
 
         // ─── Admin ─────────────────────────────────────────────────────────
         Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
@@ -122,7 +156,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // ─── Student ───────────────────────────────────────────────────────
-    Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {
+    Route::middleware(['role:student', 'verified.email'])->prefix('student')->name('student.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'student'])->name('dashboard');
 
         // Recommendations
@@ -138,12 +172,12 @@ Route::middleware('auth')->group(function () {
         // Applications
         Route::get('/applications', [ApplicationController::class, 'index'])->name('applications.index');
         Route::get('/applications/{scholarshipApplication}', [ApplicationController::class, 'show'])->name('applications.show');
-        Route::post('/scholarships/{scholarship}/applications', [ApplicationController::class, 'store'])->name('applications.store');
-        Route::post('/applications/{scholarshipApplication}/submit', [ApplicationController::class, 'submit'])->name('applications.submit');
+        Route::post('/scholarships/{scholarship}/applications', [ApplicationController::class, 'store'])->middleware('enrollment.verified')->name('applications.store');
+        Route::post('/applications/{scholarshipApplication}/submit', [ApplicationController::class, 'submit'])->middleware('enrollment.verified')->name('applications.submit');
 
         // Documents
-        Route::post('/applications/{scholarshipApplication}/documents', [DocumentController::class, 'store'])->name('documents.store');
-        Route::delete('/applications/{scholarshipApplication}/documents/{applicationDocument}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+        Route::post('/applications/{scholarshipApplication}/documents', [DocumentController::class, 'store'])->middleware('enrollment.verified')->name('documents.store');
+        Route::delete('/applications/{scholarshipApplication}/documents/{applicationDocument}', [DocumentController::class, 'destroy'])->middleware('enrollment.verified')->name('documents.destroy');
         Route::get('/application-documents/{applicationDocument}/download', [DocumentController::class, 'download'])->name('documents.download');
 
         // Student Guidance Booking
@@ -151,15 +185,15 @@ Route::middleware('auth')->group(function () {
             Route::get('/counselors', [StudentGuidanceController::class, 'counselors'])->name('counselors');
             Route::get('/counselors/{counselor}/slots', [StudentGuidanceController::class, 'slots'])->name('slots');
             Route::get('/appointments', [StudentGuidanceController::class, 'appointments'])->name('appointments');
-            Route::post('/appointments', [StudentGuidanceController::class, 'store'])->name('appointments.store');
+            Route::post('/appointments', [StudentGuidanceController::class, 'store'])->middleware('enrollment.verified')->name('appointments.store');
             Route::get('/appointments/{appointment}', [StudentGuidanceController::class, 'show'])->name('appointments.show');
             Route::patch('/appointments/{appointment}/cancel', [StudentGuidanceController::class, 'cancel'])->name('appointments.cancel');
         });
 
         // Student Services
         Route::get('/services', [StudentServiceRequestController::class, 'catalog'])->name('services.catalog');
-        Route::get('/services/{serviceType}/apply', [StudentServiceRequestController::class, 'create'])->name('services.create');
-        Route::post('/service-requests', [StudentServiceRequestController::class, 'store'])->name('services.store');
+        Route::get('/services/{serviceType}/apply', [StudentServiceRequestController::class, 'create'])->middleware('enrollment.verified')->name('services.create');
+        Route::post('/service-requests', [StudentServiceRequestController::class, 'store'])->middleware('enrollment.verified')->name('services.store');
         Route::get('/service-requests', [StudentServiceRequestController::class, 'index'])->name('services.index');
         Route::get('/service-requests/{studentServiceRequest}', [StudentServiceRequestController::class, 'show'])->name('services.show');
         Route::patch('/service-requests/{studentServiceRequest}/cancel', [StudentServiceRequestController::class, 'cancel'])->name('services.cancel');
@@ -184,8 +218,10 @@ Route::middleware('auth')->group(function () {
         });
     });
 
-    // ─── Notifications (All Authenticated Users) ───────────────────
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    // ─── Notifications (All Active Authenticated Users) ───────────
+    Route::middleware('active')->group(function () {
+        Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+        Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    });
 });

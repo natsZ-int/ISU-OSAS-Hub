@@ -67,6 +67,62 @@ class User extends Authenticatable
         return $this->is_active === true;
     }
 
+    // ── Email Verification ────────────────────────────
+
+    public function otpVerifications(): HasMany
+    {
+        return $this->hasMany(OtpVerification::class);
+    }
+
+    public function hasVerifiedEmail(): bool
+    {
+        return $this->email_verified_at !== null;
+    }
+
+    /**
+     * Mark the email as verified. Uses forceFill because email_verified_at
+     * is intentionally not mass assignable.
+     */
+    public function markEmailAsVerified(): void
+    {
+        $this->forceFill(['email_verified_at' => now()])->save();
+    }
+
+    /**
+     * Whether the student's enrollment has been verified for the current
+     * academic term.
+     *
+     * Students created before the verification workflow existed (no
+     * verification records at all) keep their previous access behaviour.
+     * Students who went through self-registration must have a VERIFIED
+     * record for the current academic year and semester.
+     */
+    public function hasVerifiedEnrollmentForCurrentTerm(): bool
+    {
+        if (! $this->isStudent()) {
+            return true;
+        }
+
+        $profile = $this->studentProfile;
+
+        if (! $profile) {
+            return true;
+        }
+
+        $hasAnyRecord = \App\Models\StudentEnrollmentVerification::where('student_profile_id', $profile->id)
+            ->exists();
+
+        if (! $hasAnyRecord) {
+            return true;
+        }
+
+        return \App\Models\StudentEnrollmentVerification::where('student_profile_id', $profile->id)
+            ->where('academic_year', config('academic.current_year'))
+            ->where('semester', config('academic.current_semester'))
+            ->where('status', \App\Enums\EnrollmentVerificationStatus::VERIFIED->value)
+            ->exists();
+    }
+
     // ── Student Profile ───────────────────────────────
 
     public function studentProfile(): HasOne

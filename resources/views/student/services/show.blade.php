@@ -101,10 +101,12 @@
                             @csrf
                             <div style="margin-bottom: 0.75rem;">
                                 <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">Select Requirement:</label>
-                                <select name="service_type_requirement_id" style="width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 0.4rem;" required>
-                                    @foreach($studentServiceRequest->serviceType->requirements as $req)
-                                        <option value="{{ $req->id }}">{{ $req->name }}</option>
-                                    @endforeach
+                                <select name="service_type_requirement_id" style="width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 0.4rem;">
+                                    @forelse($studentServiceRequest->serviceType->requirements as $req)
+                                        <option value="{{ $req->id }}">{{ $req->name }}{{ $req->is_required ? '' : ' (Optional)' }}</option>
+                                    @empty
+                                        <option value="">Additional Requested Document</option>
+                                    @endforelse
                                 </select>
                             </div>
                             <div style="margin-bottom: 0.75rem;">

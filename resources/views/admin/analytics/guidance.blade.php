@@ -1,15 +1,29 @@
 @extends('layouts.app')
-@section('title', 'Guidance Analytics — OSAS Hub')
+@section('title', 'Guidance Analytics — ISU OSAS Hub')
 
 @section('content')
-<div style="max-width: 1200px; margin: 0 auto; padding: 1.5rem;">
+<div class="analytics-page">
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div class="report-header">
         <div>
-            <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;">Guidance Analytics</h2>
-            <p style="font-size: 0.85rem; color: #64748b; margin: 0.25rem 0 0 0;">Appointment statistics, type breakdown, and counselor workload distribution.</p>
+            <h1>Guidance Analytics</h1>
+            <p class="report-subtitle">
+                Appointment statistics, type breakdown, and counselor workload distribution.
+            </p>
+            <div class="report-meta">
+                @if (! empty($filters['date_from']) || ! empty($filters['date_to']))
+                    <span class="meta-chip">
+                        Period: {{ $filters['date_from'] ?? 'Beginning' }} &mdash; {{ $filters['date_to'] ?? 'Present' }}
+                    </span>
+                @else
+                    <span class="meta-chip">Period: All time</span>
+                @endif
+                <span>Generated {{ now()->format('M d, Y \a\t h:i A') }}</span>
+            </div>
         </div>
-        <a href="{{ route('admin.analytics.export', $filters) }}" style="padding: 0.5rem 1rem; background: #16a34a; color: #fff; border-radius: 4px; text-decoration: none; font-size: 0.85rem; font-weight: 600;">Export CSV</a>
+        <div class="report-actions">
+            <a href="{{ route('admin.analytics.export', $filters) }}" class="btn btn-primary btn-sm">Export CSV</a>
+        </div>
     </div>
 
     @include('admin.analytics._filters', [
@@ -17,100 +31,89 @@
         'showAppointmentFilter' => true,
     ])
 
-    {{-- Tabs --}}
-    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e2e8f0;">
-        <a href="{{ route('admin.analytics.index', $filters) }}" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; color: #64748b; text-decoration: none;">Overview</a>
-        <a href="{{ route('admin.analytics.scholarships', $filters) }}" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; color: #64748b; text-decoration: none;">Scholarships</a>
-        <a href="{{ route('admin.analytics.guidance', $filters) }}" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 700; color: #7c3aed; border-bottom: 2px solid #7c3aed; margin-bottom: -2px; text-decoration: none;">Guidance</a>
-        <a href="{{ route('admin.analytics.services', $filters) }}" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; color: #64748b; text-decoration: none;">Student Services</a>
+    @include('admin.analytics._tabs')
+
+    <div class="stat-grid">
+        <x-metric-card label="Completed" :value="$data['completed']" tone="success" hint="Sessions finished" />
+        <x-metric-card label="Cancelled" :value="$data['cancelled']" tone="neutral" />
+        <x-metric-card label="Pending (Requested)" :value="$data['pending']" tone="warning" hint="Awaiting counselor confirmation" />
     </div>
 
-    {{-- Status Cards --}}
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; text-align: center;">
-            <div style="font-size: 1.5rem; font-weight: 800; color: #16a34a;">{{ $data['completed'] }}</div>
-            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Completed</div>
-        </div>
-        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; text-align: center;">
-            <div style="font-size: 1.5rem; font-weight: 800; color: #dc2626;">{{ $data['cancelled'] }}</div>
-            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Cancelled</div>
-        </div>
-        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; text-align: center;">
-            <div style="font-size: 1.5rem; font-weight: 800; color: #d97706;">{{ $data['pending'] }}</div>
-            <div style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Pending (Requested)</div>
-        </div>
+    <div class="chart-grid">
+        <x-charts.chart-card
+            title="Appointments by Type"
+            subtitle="Appointment volume per counselling type, split by completed, cancelled, and pending outcomes."
+        >
+            <x-charts.stacked-bar-chart
+                :rows="$data['byType']->map(fn ($t) => [
+                    'label' => $t->type_name,
+                    'total' => $t->total,
+                    'segments' => [
+                        ['label' => 'Completed', 'value' => $t->completed, 'tone' => 'success'],
+                        ['label' => 'Cancelled', 'value' => $t->cancelled, 'tone' => 'neutral'],
+                        ['label' => 'Pending', 'value' => $t->pending, 'tone' => 'warning'],
+                    ],
+                ])->values()->all()"
+            />
+        </x-charts.chart-card>
+
+        <x-charts.chart-card
+            title="Appointment Volume by Month"
+            subtitle="Historical monthly trend of guidance appointments for the selected period."
+        >
+            <x-charts.line-chart
+                :points="$data['byMonth']->map(fn ($m) => [
+                    'label' => \Carbon\Carbon::parse($m->month . '-01')->format('M y'),
+                    'value' => $m->total,
+                ])->values()->all()"
+                valueLabel="Appointments"
+            />
+        </x-charts.chart-card>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+    <x-card title="Counselor Workload Distribution">
+        <p class="muted">
+            Aggregate appointment counts per counselor. This is workload distribution, not a performance evaluation.
+        </p>
 
-        {{-- By Type --}}
-        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
-            <h4 style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0;">Appointments by Type</h4>
-            @forelse($data['byType'] as $t)
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem;">
-                    <span style="color: #475569; font-weight: 600;">{{ $t->type_name }}</span>
-                    <div style="display: flex; gap: 0.75rem; font-size: 0.75rem;">
-                        <span style="color: #16a34a;" title="Completed">{{ $t->completed }} ✓</span>
-                        <span style="color: #dc2626;" title="Cancelled">{{ $t->cancelled }} ✗</span>
-                        <span style="color: #d97706;" title="Pending">{{ $t->pending }} ◷</span>
-                        <strong>{{ $t->total }}</strong>
-                    </div>
-                </div>
-            @empty
-                <p style="color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 1rem;">No appointment type data available.</p>
-            @endforelse
-        </div>
-
-        {{-- Monthly Trend --}}
-        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
-            <h4 style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin: 0 0 1rem 0;">Appointments by Month (Historical)</h4>
-            @php $maxAppt = $data['byMonth']->max('total') ?: 1; @endphp
-            @forelse($data['byMonth'] as $m)
-                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
-                    <span style="width: 65px; font-size: 0.75rem; color: #64748b;">{{ \Carbon\Carbon::parse($m->month . '-01')->format('M Y') }}</span>
-                    <div style="flex: 1; background: #f1f5f9; border-radius: 3px; height: 18px;">
-                        <div style="background: #7c3aed; height: 100%; width: {{ ($m->total / $maxAppt) * 100 }}%; border-radius: 3px; min-width: 2px;"></div>
-                    </div>
-                    <span style="font-size: 0.75rem; font-weight: 700; min-width: 25px; text-align: right;">{{ $m->total }}</span>
-                </div>
-            @empty
-                <p style="color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 1rem;">No monthly data available.</p>
-            @endforelse
-        </div>
-    </div>
-
-    {{-- Counselor Workload --}}
-    <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem;">
-        <h4 style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin: 0 0 0.25rem 0;">Counselor Workload Distribution</h4>
-        <p style="font-size: 0.75rem; color: #94a3b8; margin: 0 0 1rem 0;">Aggregate appointment counts per counselor. This is workload distribution, not performance evaluation.</p>
-        @if($data['byCounselor']->isNotEmpty())
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #e2e8f0;">
-                        <th style="text-align: left; padding: 0.5rem; color: #64748b;">Counselor</th>
-                        <th style="text-align: center; padding: 0.5rem; color: #d97706;">Pending</th>
-                        <th style="text-align: center; padding: 0.5rem; color: #2563eb;">Confirmed</th>
-                        <th style="text-align: center; padding: 0.5rem; color: #16a34a;">Completed</th>
-                        <th style="text-align: center; padding: 0.5rem; color: #dc2626;">Cancelled</th>
-                        <th style="text-align: center; padding: 0.5rem; color: #1e293b;">Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($data['byCounselor'] as $c)
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 0.5rem; font-weight: 600;">{{ $c->counselor_name }}</td>
-                            <td style="padding: 0.5rem; text-align: center;">{{ $c->pending }}</td>
-                            <td style="padding: 0.5rem; text-align: center;">{{ $c->confirmed }}</td>
-                            <td style="padding: 0.5rem; text-align: center;">{{ $c->completed }}</td>
-                            <td style="padding: 0.5rem; text-align: center;">{{ $c->cancelled }}</td>
-                            <td style="padding: 0.5rem; text-align: center; font-weight: 700;">{{ $c->total }}</td>
+        @if ($data['byCounselor']->isNotEmpty())
+            <x-table-wrapper label="Counselor workload distribution">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Counselor</th>
+                            <th scope="col" class="center">Pending</th>
+                            <th scope="col" class="center">Confirmed</th>
+                            <th scope="col" class="center">Completed</th>
+                            <th scope="col" class="center">Cancelled</th>
+                            <th scope="col" class="center">Total</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach ($data['byCounselor'] as $c)
+                            <tr>
+                                <td style="font-weight:600;">{{ $c->counselor_name }}</td>
+                                <td class="center">{{ $c->pending }}</td>
+                                <td class="center">{{ $c->confirmed }}</td>
+                                <td class="center">{{ $c->completed }}</td>
+                                <td class="center">{{ $c->cancelled }}</td>
+                                <td class="center" style="font-weight:700;">{{ $c->total }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </x-table-wrapper>
         @else
-            <p style="color: #94a3b8; font-size: 0.85rem; text-align: center; padding: 1rem;">No counselor assignment data available.</p>
+            <x-empty-state
+                title="No counselor assignment data available."
+                message="There are no appointments matching the selected filters."
+            />
         @endif
+    </x-card>
+
+    <div class="report-footer">
+        <span>ISU OSAS Hub &mdash; Guidance Analytics</span>
+        <span>Generated {{ now()->format('M d, Y \a\t h:i A') }}</span>
     </div>
 
 </div>
