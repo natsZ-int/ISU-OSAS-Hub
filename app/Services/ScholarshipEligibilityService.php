@@ -128,7 +128,7 @@ class ScholarshipEligibilityService
                 status: EligibilityStatus::NOT_MET,
                 explanation: 'Your family income is not available in your student profile. Update your profile or contact the administrator.',
                 isMandatory: true,
-                requiredValueDisplay: '₱' . number_format((float) $required, 2),
+                requiredValueDisplay: '₱'.number_format((float) $required, 2),
             );
         }
 
@@ -144,8 +144,8 @@ class ScholarshipEligibilityService
                 ? 'Your reported family income is within the configured limit.'
                 : 'Your reported family income exceeds the configured limit.',
             isMandatory: true,
-            studentValueDisplay: '₱' . number_format($studentIncome, 2),
-            requiredValueDisplay: '₱' . number_format($requiredIncome, 2),
+            studentValueDisplay: '₱'.number_format($studentIncome, 2),
+            requiredValueDisplay: '₱'.number_format($requiredIncome, 2),
         );
     }
 
@@ -306,9 +306,9 @@ class ScholarshipEligibilityService
         if ($requiredRequirements->isEmpty()) {
             return [
                 'has_required_documents' => true,
-                'missing'                => [],
-                'pending'                => [],
-                'rejected'               => [],
+                'missing' => [],
+                'pending' => [],
+                'rejected' => [],
             ];
         }
 
@@ -331,9 +331,9 @@ class ScholarshipEligibilityService
 
         return [
             'has_required_documents' => empty($missing),
-            'missing'                => $missing,
-            'pending'                => $pending,
-            'rejected'               => $rejected,
+            'missing' => $missing,
+            'pending' => $pending,
+            'rejected' => $rejected,
         ];
     }
 

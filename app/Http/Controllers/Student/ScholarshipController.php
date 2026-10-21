@@ -17,15 +17,15 @@ class ScholarshipController extends Controller
     // Show the searchable list of scholarships
     public function index(Request $request): View
     {
-        $user    = $request->user();
+        $user = $request->user();
         $profile = $user->studentProfile ?? null;
 
         // Run search (returns the paginator directly)
         $scholarships = $this->searchService->search($request, $profile);
 
         // Get dropdown options from the service's existing method
-        $options  = $this->searchService->availableFilterOptions();
-        $types    = $options['types'];
+        $options = $this->searchService->availableFilterOptions();
+        $types = $options['types'];
         $programs = $options['programs'];
 
         return view('student.scholarships.index', compact(
@@ -41,7 +41,7 @@ class ScholarshipController extends Controller
 
         $scholarship->load('requirements');
 
-        $user    = request()->user();
+        $user = request()->user();
         $profile = $user->studentProfile ?? null;
 
         // Check if student already applied

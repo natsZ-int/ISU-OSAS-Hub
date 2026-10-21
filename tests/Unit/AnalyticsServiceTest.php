@@ -3,8 +3,6 @@
 namespace Tests\Unit;
 
 use App\Enums\ScholarshipApplicationStatus;
-use App\Models\GuidanceAppointment;
-use App\Models\GuidanceAppointmentType;
 use App\Models\Role;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
@@ -25,15 +23,15 @@ class AnalyticsServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new AnalyticsService();
+        $this->service = new AnalyticsService;
     }
 
     public function test_filter_validation_rejects_inverted_dates_and_invalid_ids(): void
     {
         $raw = [
-            'date_from'           => '2026-05-01',
-            'date_to'             => '2026-01-01', // Earlier than date_from
-            'scholarship_id'      => 99999,        // Non-existent ID
+            'date_from' => '2026-05-01',
+            'date_to' => '2026-01-01', // Earlier than date_from
+            'scholarship_id' => 99999,        // Non-existent ID
             'appointment_type_id' => 'malicious_input',
         ];
 
@@ -53,26 +51,27 @@ class AnalyticsServiceTest extends TestCase
         $admin = User::factory()->create(['role_id' => $adminRole->id]);
 
         $scholarship = Scholarship::create([
-            'title'                  => 'Academic Excellence',
-            'description'            => 'Test scholarship description',
-            'provider'               => 'CHED',
-            'scholarship_type'       => 'academic',
-            'status'                 => 'open',
+            'title' => 'Academic Excellence',
+            'description' => 'Test scholarship description',
+            'provider' => 'CHED',
+            'scholarship_type' => 'academic',
+            'status' => 'open',
             'application_start_date' => now()->subDays(10),
-            'application_deadline'   => now()->addDays(20),
-            'created_by'             => $admin->id,
+            'application_deadline' => now()->addDays(20),
+            'created_by' => $admin->id,
         ]);
 
         $createStudentProfile = function (int $id) use ($studentRole) {
             $user = User::factory()->create(['role_id' => $studentRole->id]);
+
             return StudentProfile::create([
-                'user_id'           => $user->id,
-                'student_number'    => sprintf('2026-%04d', $id),
-                'first_name'        => 'Student',
-                'last_name'         => "Number{$id}",
-                'program'           => 'BSCS',
-                'year_level'        => 3,
-                'gwa'               => 1.50,
+                'user_id' => $user->id,
+                'student_number' => sprintf('2026-%04d', $id),
+                'first_name' => 'Student',
+                'last_name' => "Number{$id}",
+                'program' => 'BSCS',
+                'year_level' => 3,
+                'gwa' => 1.50,
                 'enrollment_status' => 'enrolled',
             ]);
         };
@@ -85,9 +84,9 @@ class AnalyticsServiceTest extends TestCase
             ScholarshipApplication::create([
                 'application_number' => "APP-A-{$i}",
                 'student_profile_id' => $p->id,
-                'scholarship_id'     => $scholarship->id,
-                'status'             => ScholarshipApplicationStatus::APPROVED->value,
-                'submitted_at'       => now()->subDays(2),
+                'scholarship_id' => $scholarship->id,
+                'status' => ScholarshipApplicationStatus::APPROVED->value,
+                'submitted_at' => now()->subDays(2),
             ]);
         }
 
@@ -96,9 +95,9 @@ class AnalyticsServiceTest extends TestCase
         ScholarshipApplication::create([
             'application_number' => 'APP-R-1',
             'student_profile_id' => $pR->id,
-            'scholarship_id'     => $scholarship->id,
-            'status'             => ScholarshipApplicationStatus::REJECTED->value,
-            'submitted_at'       => now()->subDays(2),
+            'scholarship_id' => $scholarship->id,
+            'status' => ScholarshipApplicationStatus::REJECTED->value,
+            'submitted_at' => now()->subDays(2),
         ]);
 
         // 5 Pending (submitted/under_review/document_verification)
@@ -115,9 +114,9 @@ class AnalyticsServiceTest extends TestCase
             ScholarshipApplication::create([
                 'application_number' => "APP-P-{$idx}",
                 'student_profile_id' => $pP->id,
-                'scholarship_id'     => $scholarship->id,
-                'status'             => $status,
-                'submitted_at'       => now()->subDays(1),
+                'scholarship_id' => $scholarship->id,
+                'status' => $status,
+                'submitted_at' => now()->subDays(1),
             ]);
         }
 
@@ -148,53 +147,53 @@ class AnalyticsServiceTest extends TestCase
         $studentRole = Role::create(['name' => 'student', 'label' => 'Student']);
         $studentUser = User::factory()->create(['role_id' => $studentRole->id]);
         $profile = StudentProfile::create([
-            'user_id'           => $studentUser->id,
-            'student_number'    => '2026-0002',
-            'first_name'        => 'John',
-            'last_name'         => 'Smith',
-            'program'           => 'BSIT',
-            'year_level'        => 2,
-            'gwa'               => 1.75,
+            'user_id' => $studentUser->id,
+            'student_number' => '2026-0002',
+            'first_name' => 'John',
+            'last_name' => 'Smith',
+            'program' => 'BSIT',
+            'year_level' => 2,
+            'gwa' => 1.75,
             'enrollment_status' => 'enrolled',
         ]);
 
         $serviceType = ServiceType::create([
-            'name'        => 'Good Moral Certificate',
+            'name' => 'Good Moral Certificate',
             'description' => 'Certificate issuance',
-            'is_active'   => true,
+            'is_active' => true,
         ]);
 
         // Request 1: 24 hours processing time
         StudentServiceRequest::create([
-            'request_number'     => 'REQ-001',
+            'request_number' => 'REQ-001',
             'student_profile_id' => $profile->id,
-            'service_type_id'    => $serviceType->id,
-            'description'        => 'Request for scholarship application certificate',
-            'status'             => StudentServiceRequest::STATUS_COMPLETED,
-            'submitted_at'       => now()->subHours(48),
-            'completed_at'       => now()->subHours(24),
+            'service_type_id' => $serviceType->id,
+            'description' => 'Request for scholarship application certificate',
+            'status' => StudentServiceRequest::STATUS_COMPLETED,
+            'submitted_at' => now()->subHours(48),
+            'completed_at' => now()->subHours(24),
         ]);
 
         // Request 2: 48 hours processing time
         StudentServiceRequest::create([
-            'request_number'     => 'REQ-002',
+            'request_number' => 'REQ-002',
             'student_profile_id' => $profile->id,
-            'service_type_id'    => $serviceType->id,
-            'description'        => 'Request for transfer certificate',
-            'status'             => StudentServiceRequest::STATUS_COMPLETED,
-            'submitted_at'       => now()->subHours(72),
-            'completed_at'       => now()->subHours(24),
+            'service_type_id' => $serviceType->id,
+            'description' => 'Request for transfer certificate',
+            'status' => StudentServiceRequest::STATUS_COMPLETED,
+            'submitted_at' => now()->subHours(72),
+            'completed_at' => now()->subHours(24),
         ]);
 
         // Request 3: Pending, no completed_at -> MUST NOT affect average
         StudentServiceRequest::create([
-            'request_number'     => 'REQ-003',
+            'request_number' => 'REQ-003',
             'student_profile_id' => $profile->id,
-            'service_type_id'    => $serviceType->id,
-            'description'        => 'Pending document review request',
-            'status'             => StudentServiceRequest::STATUS_PROCESSING,
-            'submitted_at'       => now()->subHours(10),
-            'completed_at'       => null,
+            'service_type_id' => $serviceType->id,
+            'description' => 'Pending document review request',
+            'status' => StudentServiceRequest::STATUS_PROCESSING,
+            'submitted_at' => now()->subHours(10),
+            'completed_at' => null,
         ]);
 
         $analytics = $this->service->getServiceAnalytics([]);

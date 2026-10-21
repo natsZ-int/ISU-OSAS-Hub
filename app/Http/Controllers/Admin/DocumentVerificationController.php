@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Gate;
 
 class DocumentVerificationController extends Controller
 {
-    public function __construct(protected NotificationService $notificationService)
-    {
-    }
+    public function __construct(protected NotificationService $notificationService) {}
 
     public function update(VerifyDocumentRequest $request, ApplicationDocument $applicationDocument): RedirectResponse
     {
@@ -30,10 +28,10 @@ class DocumentVerificationController extends Controller
         $previousStatus = $applicationDocument->verification_status;
 
         $applicationDocument->update([
-            'verification_status'  => $newStatus,
+            'verification_status' => $newStatus,
             'verification_remarks' => $request->input('verification_remarks'),
-            'verified_by'          => $request->user()->id,
-            'verified_at'          => now(),
+            'verified_by' => $request->user()->id,
+            'verified_at' => now(),
         ]);
 
         $actionLabel = $newStatus === 'verified' ? 'Document Verified' : 'Document Rejected';
@@ -67,7 +65,7 @@ class DocumentVerificationController extends Controller
         $accepted = $newStatus === ApplicationDocument::VERIFICATION_VERIFIED;
         $requirementName = $document->requirement?->requirement_name ?? 'your document';
 
-        $type  = $accepted
+        $type = $accepted
             ? NotificationType::SCHOLARSHIP_DOCUMENT_APPROVED
             : NotificationType::SCHOLARSHIP_DOCUMENT_REJECTED;
         $title = $accepted ? 'Document Accepted' : 'Document Rejected';
@@ -87,14 +85,14 @@ class DocumentVerificationController extends Controller
             'ScholarshipApplication',
             $application->id,
             [
-                'reference'       => $application->application_number,
+                'reference' => $application->application_number,
                 'reference_label' => 'Application No.',
-                'status'          => $accepted ? 'Document Accepted' : 'Document Rejected',
-                'next_step'       => $accepted
+                'status' => $accepted ? 'Document Accepted' : 'Document Rejected',
+                'next_step' => $accepted
                     ? 'No action is required for this document. We will notify you of further updates.'
                     : 'Please review the remarks in your application details and contact OSAS for guidance.',
-                'url'             => route('student.applications.show', $application->id),
-                'reason'          => $reason,
+                'url' => route('student.applications.show', $application->id),
+                'reason' => $reason,
             ],
             sendEmail: true,
         );

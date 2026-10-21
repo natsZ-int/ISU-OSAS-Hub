@@ -20,7 +20,7 @@ class LoginController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
@@ -108,10 +108,10 @@ class LoginController extends Controller
     protected function dashboardFor($user): string
     {
         return match (true) {
-            $user->hasRole(Role::ADMIN)     => route('admin.dashboard'),
+            $user->hasRole(Role::ADMIN) => route('admin.dashboard'),
             $user->hasRole(Role::COUNSELOR) => route('counselor.dashboard'),
-            $user->hasRole(Role::STUDENT)   => route('student.dashboard'),
-            default                         => route('login'),
+            $user->hasRole(Role::STUDENT) => route('student.dashboard'),
+            default => route('login'),
         };
     }
 }

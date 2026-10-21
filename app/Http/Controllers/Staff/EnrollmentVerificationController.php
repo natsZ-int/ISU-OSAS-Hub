@@ -20,8 +20,7 @@ class EnrollmentVerificationController extends Controller
 {
     public function __construct(
         private NotificationService $notificationService,
-    ) {
-    }
+    ) {}
 
     /**
      * Staff queue of enrollment verification requests.
@@ -64,10 +63,10 @@ class EnrollmentVerificationController extends Controller
             ->pluck('academic_year');
 
         return view('staff.enrollment-verifications.index', [
-            'verifications'  => $verifications,
-            'academicYears'  => $academicYears,
-            'semesters'      => config('academic.semesters'),
-            'statuses'       => EnrollmentVerificationStatus::cases(),
+            'verifications' => $verifications,
+            'academicYears' => $academicYears,
+            'semesters' => config('academic.semesters'),
+            'statuses' => EnrollmentVerificationStatus::cases(),
         ]);
     }
 
@@ -86,8 +85,8 @@ class EnrollmentVerificationController extends Controller
 
         return view('staff.enrollment-verifications.show', [
             'verification' => $enrollmentVerification,
-            'history'      => $history,
-            'semesters'    => config('academic.semesters'),
+            'history' => $history,
+            'semesters' => config('academic.semesters'),
         ]);
     }
 
@@ -99,14 +98,14 @@ class EnrollmentVerificationController extends Controller
         Gate::authorize('manage-enrollment-verifications');
 
         $validated = $request->validate([
-            'status'         => ['required', Rule::in([
+            'status' => ['required', Rule::in([
                 EnrollmentVerificationStatus::VERIFIED->value,
                 EnrollmentVerificationStatus::REJECTED->value,
                 EnrollmentVerificationStatus::UNABLE_TO_VERIFY->value,
             ])],
-            'academic_year'  => ['required', 'string', 'max:20'],
-            'semester'       => ['required', Rule::in(config('academic.semesters'))],
-            'notes'          => ['nullable', 'string', 'max:1000'],
+            'academic_year' => ['required', 'string', 'max:20'],
+            'semester' => ['required', Rule::in(config('academic.semesters'))],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $requiresReason = in_array($validated['status'], [
@@ -125,19 +124,19 @@ class EnrollmentVerificationController extends Controller
         }
 
         $statusMap = [
-            EnrollmentVerificationStatus::VERIFIED->value         => EnrollmentStatus::ENROLLED->value,
-            EnrollmentVerificationStatus::REJECTED->value         => EnrollmentStatus::NOT_ENROLLED->value,
+            EnrollmentVerificationStatus::VERIFIED->value => EnrollmentStatus::ENROLLED->value,
+            EnrollmentVerificationStatus::REJECTED->value => EnrollmentStatus::NOT_ENROLLED->value,
             EnrollmentVerificationStatus::UNABLE_TO_VERIFY->value => EnrollmentStatus::UNKNOWN->value,
         ];
 
         DB::transaction(function () use ($enrollmentVerification, $validated, $profile, $statusMap) {
             $enrollmentVerification->update([
-                'status'         => $validated['status'],
-                'academic_year'  => $validated['academic_year'],
-                'semester'       => $validated['semester'],
-                'notes'          => $validated['notes'] ?? null,
-                'verified_by'    => auth()->id(),
-                'verified_at'    => now(),
+                'status' => $validated['status'],
+                'academic_year' => $validated['academic_year'],
+                'semester' => $validated['semester'],
+                'notes' => $validated['notes'] ?? null,
+                'verified_by' => auth()->id(),
+                'verified_at' => now(),
             ]);
 
             $profile->update([
@@ -165,8 +164,8 @@ class EnrollmentVerificationController extends Controller
 
         if ($student) {
             $notificationType = match ($validated['status']) {
-                EnrollmentVerificationStatus::VERIFIED->value         => NotificationType::ACCOUNT_ENROLLMENT_VERIFIED,
-                EnrollmentVerificationStatus::REJECTED->value         => NotificationType::ACCOUNT_ENROLLMENT_REJECTED,
+                EnrollmentVerificationStatus::VERIFIED->value => NotificationType::ACCOUNT_ENROLLMENT_VERIFIED,
+                EnrollmentVerificationStatus::REJECTED->value => NotificationType::ACCOUNT_ENROLLMENT_REJECTED,
                 EnrollmentVerificationStatus::UNABLE_TO_VERIFY->value => NotificationType::ACCOUNT_ENROLLMENT_UNABLE_TO_VERIFY,
             };
 

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\EnrollmentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,9 +28,9 @@ class StudentProfile extends Model
     ];
 
     protected $casts = [
-        'gwa'           => 'decimal:2',
+        'gwa' => 'decimal:2',
         'family_income' => 'decimal:2',
-        'year_level'    => 'integer',
+        'year_level' => 'integer',
     ];
 
     public function user(): BelongsTo

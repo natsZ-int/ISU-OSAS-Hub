@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('scholarship_requirements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('scholarship_id')
-                  ->constrained('scholarships')
-                  ->cascadeOnDelete();
+                ->constrained('scholarships')
+                ->cascadeOnDelete();
             $table->string('requirement_name', 255);
             $table->text('description')->nullable();
             $table->boolean('is_required')->default(true);

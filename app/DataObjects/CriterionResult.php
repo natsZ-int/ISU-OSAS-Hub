@@ -19,13 +19,13 @@ class CriterionResult
     public function toArray(): array
     {
         return [
-            'criterion_type'         => $this->criterionType,
-            'criterion_label'        => $this->criterionLabel,
-            'status'                 => $this->status->value,
-            'status_label'           => $this->status->label(),
-            'explanation'            => $this->explanation,
-            'is_mandatory'           => $this->isMandatory,
-            'student_value_display'  => $this->studentValueDisplay,
+            'criterion_type' => $this->criterionType,
+            'criterion_label' => $this->criterionLabel,
+            'status' => $this->status->value,
+            'status_label' => $this->status->label(),
+            'explanation' => $this->explanation,
+            'is_mandatory' => $this->isMandatory,
+            'student_value_display' => $this->studentValueDisplay,
             'required_value_display' => $this->requiredValueDisplay,
         ];
     }

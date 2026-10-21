@@ -13,7 +13,9 @@ class RecommendationTest extends TestCase
     use RefreshDatabase;
 
     protected User $student;
+
     protected User $counselor;
+
     protected User $admin;
 
     protected function setUp(): void
@@ -29,14 +31,14 @@ class RecommendationTest extends TestCase
         $this->counselor = User::factory()->create(['role_id' => $counselorRole->id, 'is_active' => true]);
 
         StudentProfile::create([
-            'user_id'           => $this->student->id,
-            'student_number'    => '2026-FEAT-01',
-            'first_name'        => 'Feature',
-            'last_name'         => 'Test',
-            'program'           => 'BSCS',
-            'year_level'        => 3,
-            'gwa'               => 1.50,
-            'family_income'     => 100000,
+            'user_id' => $this->student->id,
+            'student_number' => '2026-FEAT-01',
+            'first_name' => 'Feature',
+            'last_name' => 'Test',
+            'program' => 'BSCS',
+            'year_level' => 3,
+            'gwa' => 1.50,
+            'family_income' => 100000,
             'enrollment_status' => 'enrolled',
         ]);
     }

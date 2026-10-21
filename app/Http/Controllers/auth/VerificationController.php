@@ -24,8 +24,7 @@ class VerificationController extends Controller
     public function __construct(
         private OtpVerificationService $otpService,
         private NotificationService $notificationService,
-    ) {
-    }
+    ) {}
 
     /**
      * Show the email verification (OTP entry) page.
@@ -53,8 +52,8 @@ class VerificationController extends Controller
         $validated = $request->validate([
             'code' => ['required', 'string', 'size:6', 'regex:/^\d{6}$/'],
         ], [
-            'code.size'   => 'The verification code must be exactly six digits.',
-            'code.regex'  => 'The verification code must contain digits only.',
+            'code.size' => 'The verification code must be exactly six digits.',
+            'code.regex' => 'The verification code must contain digits only.',
         ]);
 
         $user = $request->user();
@@ -93,9 +92,9 @@ class VerificationController extends Controller
                 if (! $exists) {
                     StudentEnrollmentVerification::create([
                         'student_profile_id' => $profile->id,
-                        'academic_year'      => config('academic.current_year'),
-                        'semester'           => config('academic.current_semester'),
-                        'status'             => EnrollmentVerificationStatus::PENDING->value,
+                        'academic_year' => config('academic.current_year'),
+                        'semester' => config('academic.current_semester'),
+                        'status' => EnrollmentVerificationStatus::PENDING->value,
                     ]);
                 }
             }
@@ -128,7 +127,7 @@ class VerificationController extends Controller
             'Enrollment Verification Pending',
             "{$user->name}'s email has been verified. Enrollment verification for "
             .config('academic.current_year').' '.config('academic.current_semester')
-            ." is awaiting review.",
+            .' is awaiting review.',
             'User',
             $user->id,
         );

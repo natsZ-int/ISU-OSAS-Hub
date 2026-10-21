@@ -7,6 +7,7 @@ use App\Models\Scholarship;
 use App\Models\ScholarshipMatchingWeight;
 use App\Models\StudentProfile;
 use App\Models\User;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -18,7 +19,7 @@ class ScholarshipSearchTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\RolesSeeder::class);
+        $this->seed(RolesSeeder::class);
 
         ScholarshipMatchingWeight::create([
             'academic_weight' => 30, 'financial_weight' => 25, 'program_weight' => 20,
@@ -42,12 +43,14 @@ class ScholarshipSearchTest extends TestCase
             'year_level' => 3, 'gwa' => 1.50,
             'program' => 'BSIT', 'family_income' => 20000,
         ]);
+
         return $u;
     }
 
     private function counselor(): User
     {
         $unique = uniqid();
+
         return User::create([
             'name' => 'C', 'email' => "c_{$unique}@t.l",
             'password' => Hash::make('p'),
@@ -78,9 +81,9 @@ class ScholarshipSearchTest extends TestCase
 
         $this->actingAs($this->student());
         $this->get('/student/scholarships')
-             ->assertOk()
-             ->assertSee('Alpha')
-             ->assertSee('Beta');
+            ->assertOk()
+            ->assertSee('Alpha')
+            ->assertSee('Beta');
     }
 
     // ── B. Exact Keyword ─────────────────────────────
@@ -92,8 +95,8 @@ class ScholarshipSearchTest extends TestCase
 
         $this->actingAs($this->student());
         $this->get('/student/scholarships?search=Academic+Excellence')
-             ->assertSee('Academic Excellence Grant')
-             ->assertDontSee('Community Service Award');
+            ->assertSee('Academic Excellence Grant')
+            ->assertDontSee('Community Service Award');
     }
 
     // ── C. Partial Keyword ───────────────────────────
@@ -105,8 +108,8 @@ class ScholarshipSearchTest extends TestCase
 
         $this->actingAs($this->student());
         $this->get('/student/scholarships?search=financ')
-             ->assertSee('Financial Assistance Fund')
-             ->assertDontSee('Sports Achievement Grant');
+            ->assertSee('Financial Assistance Fund')
+            ->assertDontSee('Sports Achievement Grant');
     }
 
     // ── D. Multi-Keyword ─────────────────────────────
@@ -121,8 +124,8 @@ class ScholarshipSearchTest extends TestCase
 
         $this->actingAs($this->student());
         $this->get('/student/scholarships?search=financial+excellence')
-             ->assertSee('Excellence Fund')
-             ->assertDontSee('Sports Grant');
+            ->assertSee('Excellence Fund')
+            ->assertDontSee('Sports Grant');
     }
 
     // ── E. Multiple Filters ──────────────────────────
@@ -144,8 +147,8 @@ class ScholarshipSearchTest extends TestCase
 
         $this->actingAs($this->student());
         $this->get('/student/scholarships?program=BSIT&year_level=3&type=Merit-Based')
-             ->assertSee('BSIT Grant')
-             ->assertDontSee('BSN Grant');
+            ->assertSee('BSIT Grant')
+            ->assertDontSee('BSN Grant');
     }
 
     // ── F. No Results ────────────────────────────────
@@ -156,7 +159,7 @@ class ScholarshipSearchTest extends TestCase
 
         $this->actingAs($this->student());
         $this->get('/student/scholarships?search=nonexistent-keyword-xyz')
-             ->assertSee('No scholarships found');
+            ->assertSee('No scholarships found');
     }
 
     // ── G. Invalid Sort Falls Back ───────────────────
@@ -200,16 +203,16 @@ class ScholarshipSearchTest extends TestCase
     {
         $this->scholarship(['title' => 'Alpha']);
         $this->actingAs($this->student());
-        $this->get('/student/scholarships?search=' . urlencode('   '))
-             ->assertOk()
-             ->assertSee('Alpha');
+        $this->get('/student/scholarships?search='.urlencode('   '))
+            ->assertOk()
+            ->assertSee('Alpha');
     }
 
     public function test_very_long_search_input_is_truncated(): void
     {
         $this->scholarship(['title' => 'Test']);
         $this->actingAs($this->student());
-        $this->get('/student/scholarships?search=' . str_repeat('a', 500))->assertOk();
+        $this->get('/student/scholarships?search='.str_repeat('a', 500))->assertOk();
     }
 
     // ── H. Deadline Filter ───────────────────────────
@@ -221,8 +224,8 @@ class ScholarshipSearchTest extends TestCase
 
         $this->actingAs($this->student());
         $this->get('/student/scholarships?deadline=within_7_days')
-             ->assertSee('Closing Soon')
-             ->assertDontSee('Later');
+            ->assertSee('Closing Soon')
+            ->assertDontSee('Later');
     }
 
     // ── I. Match Score Sort ──────────────────────────
@@ -246,7 +249,7 @@ class ScholarshipSearchTest extends TestCase
 
         $this->actingAs($this->student());
         $this->get('/student/scholarships?sort=match_score')
-             ->assertOk()
-             ->assertSee('Perfect Match');
+            ->assertOk()
+            ->assertSee('Perfect Match');
     }
 }

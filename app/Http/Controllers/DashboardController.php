@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GuidanceAppointment;
+use App\Models\ScholarshipApplication;
+use App\Models\StudentServiceRequest;
 use App\Services\AdminDashboardService;
 use App\Services\CounselorDashboardService;
 use App\Services\ScholarshipMatchingService;
-use App\Models\ScholarshipApplication;
-use App\Models\GuidanceAppointment;
-use App\Models\StudentServiceRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -40,7 +40,7 @@ class DashboardController extends Controller
         $user = Auth::user();
         $profile = $user->studentProfile;
 
-        if (!$profile) {
+        if (! $profile) {
             return view('dashboards.student', [
                 'profile' => null,
                 'unreadNotificationCount' => $user->notifications()->unread()->count(),
@@ -56,7 +56,7 @@ class DashboardController extends Controller
                 'servicesData' => [
                     'activeCount' => 0,
                     'recentCompleted' => null,
-                ]
+                ],
             ]);
         }
 
@@ -116,7 +116,7 @@ class DashboardController extends Controller
             'servicesData' => [
                 'activeCount' => $activeServicesCount,
                 'recentCompleted' => $recentCompletedService,
-            ]
+            ],
         ]);
     }
 }

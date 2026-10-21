@@ -10,6 +10,7 @@ use App\Models\ScholarshipApplication;
 use App\Models\ScholarshipRequirement;
 use App\Models\StudentProfile;
 use App\Models\User;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -21,17 +22,18 @@ class ScholarshipWorkflowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\RolesSeeder::class);
+        $this->seed(RolesSeeder::class);
     }
 
     private function admin(): User
     {
         $unique = uniqid();
+
         return User::create([
-            'name'      => 'Admin',
-            'email'     => "admin_{$unique}@test.local",
-            'password'  => Hash::make('password'),
-            'role_id'   => Role::where('name', 'admin')->first()->id,
+            'name' => 'Admin',
+            'email' => "admin_{$unique}@test.local",
+            'password' => Hash::make('password'),
+            'role_id' => Role::where('name', 'admin')->first()->id,
             'is_active' => true,
         ]);
     }
@@ -40,19 +42,19 @@ class ScholarshipWorkflowTest extends TestCase
     {
         $unique = uniqid();
         $user = User::create([
-            'name'      => 'Student',
-            'email'     => "student_{$unique}@test.local",
-            'password'  => Hash::make('password'),
-            'role_id'   => Role::where('name', 'student')->first()->id,
+            'name' => 'Student',
+            'email' => "student_{$unique}@test.local",
+            'password' => Hash::make('password'),
+            'role_id' => Role::where('name', 'student')->first()->id,
             'is_active' => true,
         ]);
 
         StudentProfile::create([
-            'user_id'        => $user->id,
+            'user_id' => $user->id,
             'student_number' => "STU-{$unique}",
-            'first_name'     => 'Test',
-            'last_name'      => 'Student',
-            'year_level'     => 2,
+            'first_name' => 'Test',
+            'last_name' => 'Student',
+            'year_level' => 2,
         ]);
 
         return $user;
@@ -61,11 +63,12 @@ class ScholarshipWorkflowTest extends TestCase
     private function counselor(): User
     {
         $unique = uniqid();
+
         return User::create([
-            'name'      => 'Counselor',
-            'email'     => "counselor_{$unique}@test.local",
-            'password'  => Hash::make('password'),
-            'role_id'   => Role::where('name', 'counselor')->first()->id,
+            'name' => 'Counselor',
+            'email' => "counselor_{$unique}@test.local",
+            'password' => Hash::make('password'),
+            'role_id' => Role::where('name', 'counselor')->first()->id,
             'is_active' => true,
         ]);
     }
@@ -74,21 +77,21 @@ class ScholarshipWorkflowTest extends TestCase
     {
         $student = $student ?? $this->student();
         $scholarship = Scholarship::create([
-            'title'                  => 'Test Scholarship',
-            'description'            => 'Test Description',
-            'provider'               => 'ISU',
-            'scholarship_type'       => 'Merit',
+            'title' => 'Test Scholarship',
+            'description' => 'Test Description',
+            'provider' => 'ISU',
+            'scholarship_type' => 'Merit',
             'application_start_date' => now()->subDay(),
-            'application_deadline'   => now()->addMonth(),
-            'status'                 => 'open',
+            'application_deadline' => now()->addMonth(),
+            'status' => 'open',
         ]);
 
         return ScholarshipApplication::create([
-            'application_number' => 'SCH-' . date('Y') . '-' . rand(100000, 999999),
+            'application_number' => 'SCH-'.date('Y').'-'.rand(100000, 999999),
             'student_profile_id' => $student->studentProfile->id,
-            'scholarship_id'     => $scholarship->id,
-            'status'             => ScholarshipApplicationStatus::SUBMITTED->value,
-            'submitted_at'       => now(),
+            'scholarship_id' => $scholarship->id,
+            'status' => ScholarshipApplicationStatus::SUBMITTED->value,
+            'submitted_at' => now(),
         ]);
     }
 
@@ -137,8 +140,8 @@ class ScholarshipWorkflowTest extends TestCase
         $this->assertEquals('under_review', $app->fresh()->getRawOriginal('status'));
         $this->assertDatabaseHas('application_status_histories', [
             'scholarship_application_id' => $app->id,
-            'previous_status'            => 'submitted',
-            'new_status'                 => 'under_review',
+            'previous_status' => 'submitted',
+            'new_status' => 'under_review',
         ]);
     }
 
@@ -176,7 +179,7 @@ class ScholarshipWorkflowTest extends TestCase
         $this->actingAs($this->admin());
 
         $this->patch("/admin/scholarship-applications/{$app->id}/transition", [
-            'status'  => 'rejected',
+            'status' => 'rejected',
             'remarks' => '',
         ])->assertSessionHasErrors('transition');
 
@@ -190,7 +193,7 @@ class ScholarshipWorkflowTest extends TestCase
         $this->actingAs($this->admin());
 
         $this->patch("/admin/scholarship-applications/{$app->id}/transition", [
-            'status'  => 'rejected',
+            'status' => 'rejected',
             'remarks' => 'Does not meet eligibility criteria.',
         ])->assertSessionHas('status');
 
@@ -205,10 +208,10 @@ class ScholarshipWorkflowTest extends TestCase
         $app->update(['status' => ScholarshipApplicationStatus::DOCUMENT_VERIFICATION->value]);
 
         ScholarshipRequirement::create([
-            'scholarship_id'   => $app->scholarship_id,
+            'scholarship_id' => $app->scholarship_id,
             'requirement_name' => 'TOR',
-            'is_required'      => true,
-            'display_order'    => 1,
+            'is_required' => true,
+            'display_order' => 1,
         ]);
 
         $this->actingAs($this->admin());
@@ -225,18 +228,18 @@ class ScholarshipWorkflowTest extends TestCase
         $app->update(['status' => ScholarshipApplicationStatus::DOCUMENT_VERIFICATION->value]);
 
         $req = ScholarshipRequirement::create([
-            'scholarship_id'   => $app->scholarship_id,
+            'scholarship_id' => $app->scholarship_id,
             'requirement_name' => 'TOR',
-            'is_required'      => true,
-            'display_order'    => 1,
+            'is_required' => true,
+            'display_order' => 1,
         ]);
 
         ApplicationDocument::create([
             'scholarship_application_id' => $app->id,
             'scholarship_requirement_id' => $req->id,
-            'file_path'                  => 'test/path.pdf',
-            'original_filename'          => 'tor.pdf',
-            'verification_status'        => 'verified',
+            'file_path' => 'test/path.pdf',
+            'original_filename' => 'tor.pdf',
+            'verification_status' => 'verified',
         ]);
 
         $this->actingAs($this->admin());

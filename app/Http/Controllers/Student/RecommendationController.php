@@ -19,8 +19,8 @@ class RecommendationController extends Controller
 
         if (! $profile) {
             return view('student.recommendations.index', [
-                'eligible'     => collect(),
-                'potential'    => collect(),
+                'eligible' => collect(),
+                'potential' => collect(),
                 'not_eligible' => collect(),
             ]);
         }
@@ -28,8 +28,8 @@ class RecommendationController extends Controller
         $results = $this->recommendationService->recommendForStudent($profile);
 
         return view('student.recommendations.index', [
-            'eligible'     => $results['eligible'],
-            'potential'    => $results['potential'],
+            'eligible' => $results['eligible'],
+            'potential' => $results['potential'],
             'not_eligible' => $results['not_eligible'],
         ]);
     }

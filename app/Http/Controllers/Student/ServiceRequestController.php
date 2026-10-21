@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Storage;
 class ServiceRequestController extends Controller
 {
     protected StudentServiceRequestWorkflowService $workflowService;
+
     protected ServiceRequestNumberGenerator $numberGenerator;
 
     public function __construct(
@@ -44,7 +45,7 @@ class ServiceRequestController extends Controller
 
     public function create(ServiceType $serviceType)
     {
-        if (!$serviceType->is_active) {
+        if (! $serviceType->is_active) {
             return redirect()->route('student.services.catalog')->with('error', 'This service is currently unavailable.');
         }
 
@@ -58,7 +59,7 @@ class ServiceRequestController extends Controller
         $user = auth()->user();
         $studentProfile = $user->studentProfile;
 
-        if (!$studentProfile) {
+        if (! $studentProfile) {
             return redirect()->back()->with('error', 'Student profile is missing. Please complete your profile first.');
         }
 
@@ -68,21 +69,21 @@ class ServiceRequestController extends Controller
             $requestNumber = $this->numberGenerator->generate();
 
             $serviceRequest = StudentServiceRequest::create([
-                'request_number'     => $requestNumber,
+                'request_number' => $requestNumber,
                 'student_profile_id' => $studentProfile->id,
-                'service_type_id'    => $serviceType->id,
-                'description'        => $request->description,
-                'status'             => StudentServiceRequest::STATUS_SUBMITTED,
-                'submitted_at'       => now(),
+                'service_type_id' => $serviceType->id,
+                'description' => $request->description,
+                'status' => StudentServiceRequest::STATUS_SUBMITTED,
+                'submitted_at' => now(),
             ]);
 
             StudentServiceRequestHistory::create([
                 'student_service_request_id' => $serviceRequest->id,
-                'previous_status'            => null,
-                'new_status'                 => StudentServiceRequest::STATUS_SUBMITTED,
-                'changed_by'                 => $user->id,
-                'remarks'                    => 'Service request submitted by student.',
-                'created_at'                 => now(),
+                'previous_status' => null,
+                'new_status' => StudentServiceRequest::STATUS_SUBMITTED,
+                'changed_by' => $user->id,
+                'remarks' => 'Service request submitted by student.',
+                'created_at' => now(),
             ]);
 
             foreach ($serviceType->requirements as $requirement) {
@@ -92,13 +93,13 @@ class ServiceRequestController extends Controller
                     $path = $file->store("private/student-service-requests/{$serviceRequest->id}", 'local');
 
                     ServiceRequestDocument::create([
-                        'student_service_request_id'  => $serviceRequest->id,
+                        'student_service_request_id' => $serviceRequest->id,
                         'service_type_requirement_id' => $requirement->id,
-                        'file_path'                   => $path,
-                        'original_filename'           => $file->getClientOriginalName(),
-                        'mime_type'                   => $file->getClientMimeType(),
-                        'file_size'                   => $file->getSize(),
-                        'uploaded_by'                 => $user->id,
+                        'file_path' => $path,
+                        'original_filename' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                        'uploaded_by' => $user->id,
                     ]);
                 }
             }
@@ -124,12 +125,12 @@ class ServiceRequestController extends Controller
             'StudentServiceRequest',
             $serviceRequest->id,
             [
-                'reference'       => $serviceRequest->request_number,
+                'reference' => $serviceRequest->request_number,
                 'reference_label' => 'Request No.',
-                'status'          => 'Submitted',
-                'service'         => $serviceType->name,
-                'next_step'       => 'Please wait for OSAS to process your request. You will be notified of any updates.',
-                'url'             => route('student.services.show', $serviceRequest->id),
+                'status' => 'Submitted',
+                'service' => $serviceType->name,
+                'next_step' => 'Please wait for OSAS to process your request. You will be notified of any updates.',
+                'url' => route('student.services.show', $serviceRequest->id),
             ],
             sendEmail: true,
         );
@@ -141,7 +142,7 @@ class ServiceRequestController extends Controller
     {
         $studentProfile = auth()->user()->studentProfile;
 
-        if (!$studentProfile) {
+        if (! $studentProfile) {
             return view('student.services.index', ['requests' => collect([])]);
         }
 
@@ -198,7 +199,7 @@ class ServiceRequestController extends Controller
 
         $request->validate([
             'service_type_requirement_id' => 'nullable|exists:service_type_requirements,id',
-            'file'                        => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         $requirement = null;
@@ -207,7 +208,7 @@ class ServiceRequestController extends Controller
             $requirement = $studentServiceRequest->serviceType->requirements()
                 ->find($request->service_type_requirement_id);
 
-            if (!$requirement) {
+            if (! $requirement) {
                 return redirect()->back()->with('error', 'The selected requirement is not valid for this service type.');
             }
         }
@@ -229,25 +230,25 @@ class ServiceRequestController extends Controller
             }
 
             ServiceRequestDocument::create([
-                'student_service_request_id'  => $studentServiceRequest->id,
+                'student_service_request_id' => $studentServiceRequest->id,
                 'service_type_requirement_id' => $requirementId,
-                'file_path'                   => $path,
-                'original_filename'           => $file->getClientOriginalName(),
-                'mime_type'                   => $file->getClientMimeType(),
-                'file_size'                   => $file->getSize(),
-                'uploaded_by'                 => auth()->id(),
+                'file_path' => $path,
+                'original_filename' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType(),
+                'file_size' => $file->getSize(),
+                'uploaded_by' => auth()->id(),
             ]);
 
             StudentServiceRequestHistory::create([
                 'student_service_request_id' => $studentServiceRequest->id,
-                'previous_status'            => $studentServiceRequest->status,
-                'new_status'                 => $studentServiceRequest->status,
-                'changed_by'                 => auth()->id(),
-                'remarks'                    => "Uploaded updated document for requirement: {$requirementName}",
-                'created_at'                 => now(),
+                'previous_status' => $studentServiceRequest->status,
+                'new_status' => $studentServiceRequest->status,
+                'changed_by' => auth()->id(),
+                'remarks' => "Uploaded updated document for requirement: {$requirementName}",
+                'created_at' => now(),
             ]);
 
-            \App\Services\AuditLogService::log(
+            AuditLogService::log(
                 action: 'Supporting Document Uploaded',
                 module: 'Student Services',
                 recordType: 'StudentServiceRequest',
@@ -267,7 +268,7 @@ class ServiceRequestController extends Controller
             abort(403);
         }
 
-        if (!Storage::disk('local')->exists($serviceRequestDocument->file_path)) {
+        if (! Storage::disk('local')->exists($serviceRequestDocument->file_path)) {
             abort(404, 'The requested document file was not found.');
         }
 

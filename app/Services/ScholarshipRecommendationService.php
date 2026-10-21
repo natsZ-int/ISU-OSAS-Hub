@@ -149,24 +149,24 @@ class ScholarshipRecommendationService
 
         if ($total === 0) {
             return [
-                'total_required'       => 0,
-                'uploaded'             => 0,
-                'verified'             => 0,
-                'missing'              => [],
+                'total_required' => 0,
+                'uploaded' => 0,
+                'verified' => 0,
+                'missing' => [],
                 'pending_verification' => [],
-                'rejected'             => [],
+                'rejected' => [],
                 'all_requirements_met' => true,
             ];
         }
 
         if (! $application) {
             return [
-                'total_required'       => $total,
-                'uploaded'             => 0,
-                'verified'             => 0,
-                'missing'              => $required->pluck('requirement_name')->toArray(),
+                'total_required' => $total,
+                'uploaded' => 0,
+                'verified' => 0,
+                'missing' => $required->pluck('requirement_name')->toArray(),
                 'pending_verification' => [],
-                'rejected'             => [],
+                'rejected' => [],
                 'all_requirements_met' => false,
             ];
         }
@@ -197,12 +197,12 @@ class ScholarshipRecommendationService
         }
 
         return [
-            'total_required'       => $total,
-            'uploaded'             => $uploaded,
-            'verified'             => $verified,
-            'missing'              => $missing,
+            'total_required' => $total,
+            'uploaded' => $uploaded,
+            'verified' => $verified,
+            'missing' => $missing,
             'pending_verification' => $pending,
-            'rejected'             => $rejected,
+            'rejected' => $rejected,
             'all_requirements_met' => empty($missing) && empty($pending) && empty($rejected),
         ];
     }
@@ -226,6 +226,7 @@ class ScholarshipRecommendationService
                     $reasons[] = $c->explanation;
                 }
             }
+
             return $reasons;
         }
 
@@ -280,14 +281,20 @@ class ScholarshipRecommendationService
             ->filter(fn (ScholarshipRecommendationResult $r) => $r->isEligibleRecommendation())
             ->sort(function (ScholarshipRecommendationResult $a, ScholarshipRecommendationResult $b) {
                 $score = ($b->matchScore ?? 0) <=> ($a->matchScore ?? 0);
-                if ($score !== 0) return $score;
+                if ($score !== 0) {
+                    return $score;
+                }
 
                 // Parse deadline strings to timestamps for chronological comparison
                 $deadline = strtotime($a->deadline) <=> strtotime($b->deadline);
-                if ($deadline !== 0) return $deadline;
+                if ($deadline !== 0) {
+                    return $deadline;
+                }
 
                 $title = strcmp($a->scholarshipTitle, $b->scholarshipTitle);
-                if ($title !== 0) return $title;
+                if ($title !== 0) {
+                    return $title;
+                }
 
                 return $a->scholarshipId <=> $b->scholarshipId;
             })
@@ -319,8 +326,8 @@ class ScholarshipRecommendationService
             ->values();
 
         return [
-            'eligible'     => $eligible,
-            'potential'    => $potential,
+            'eligible' => $eligible,
+            'potential' => $potential,
             'not_eligible' => $notEligible,
         ];
     }
@@ -330,6 +337,7 @@ class ScholarshipRecommendationService
     protected function rawStatus(ScholarshipApplication $app): string
     {
         $raw = $app->getRawOriginal('status') ?? $app->status;
+
         return is_object($raw) ? $raw->value : (string) $raw;
     }
 

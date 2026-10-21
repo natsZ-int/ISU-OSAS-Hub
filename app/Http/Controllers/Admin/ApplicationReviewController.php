@@ -31,28 +31,28 @@ class ApplicationReviewController extends Controller
         if ($search = $request->filled('search') ? $request->input('search') : null) {
             $query->where(function ($q) use ($search) {
                 $q->where('application_number', 'like', "%{$search}%")
-                  ->orWhereHas('studentProfile', function ($sq) use ($search) {
-                      $sq->where('student_number', 'like', "%{$search}%")
-                         ->orWhere('first_name', 'like', "%{$search}%")
-                         ->orWhere('last_name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('scholarship', function ($sq) use ($search) {
-                      $sq->where('title', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('studentProfile', function ($sq) use ($search) {
+                        $sq->where('student_number', 'like', "%{$search}%")
+                            ->orWhere('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('scholarship', function ($sq) use ($search) {
+                        $sq->where('title', 'like', "%{$search}%");
+                    });
             });
         }
 
-                if ($status = $request->filled('status') ? $request->input('status') : null) {
-            $allowedStatuses = array_column(\App\Enums\ScholarshipApplicationStatus::cases(), 'value');
-            $allowedStatuses[] = \App\Models\ScholarshipApplication::STATUS_DRAFT;
+        if ($status = $request->filled('status') ? $request->input('status') : null) {
+            $allowedStatuses = array_column(ScholarshipApplicationStatus::cases(), 'value');
+            $allowedStatuses[] = ScholarshipApplication::STATUS_DRAFT;
             if (in_array($status, $allowedStatuses, true)) {
                 $query->where('status', $status);
             }
         }
 
         $applications = $query->orderBy('submitted_at', 'desc')
-                              ->paginate(15)
-                              ->withQueryString();
+            ->paginate(15)
+            ->withQueryString();
 
         return view('admin.applications.index', compact('applications'));
     }

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -15,16 +16,16 @@ class UserManagementTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\RolesSeeder::class);
+        $this->seed(RolesSeeder::class);
     }
 
     private function createAdmin(): User
     {
         return User::create([
-            'name'      => 'Test Admin',
-            'email'     => 'admin@test.local',
-            'password'  => Hash::make('password123'),
-            'role_id'   => Role::where('name', 'admin')->first()->id,
+            'name' => 'Test Admin',
+            'email' => 'admin@test.local',
+            'password' => Hash::make('password123'),
+            'role_id' => Role::where('name', 'admin')->first()->id,
             'is_active' => true,
         ]);
     }
@@ -32,10 +33,10 @@ class UserManagementTest extends TestCase
     private function createStudent(): User
     {
         return User::create([
-            'name'      => 'Test Student',
-            'email'     => 'student@test.local',
-            'password'  => Hash::make('password123'),
-            'role_id'   => Role::where('name', 'student')->first()->id,
+            'name' => 'Test Student',
+            'email' => 'student@test.local',
+            'password' => Hash::make('password123'),
+            'role_id' => Role::where('name', 'student')->first()->id,
             'is_active' => true,
         ]);
     }
@@ -43,10 +44,10 @@ class UserManagementTest extends TestCase
     private function createCounselor(): User
     {
         return User::create([
-            'name'      => 'Test Counselor',
-            'email'     => 'counselor@test.local',
-            'password'  => Hash::make('password123'),
-            'role_id'   => Role::where('name', 'counselor')->first()->id,
+            'name' => 'Test Counselor',
+            'email' => 'counselor@test.local',
+            'password' => Hash::make('password123'),
+            'role_id' => Role::where('name', 'counselor')->first()->id,
             'is_active' => true,
         ]);
     }
@@ -79,7 +80,7 @@ class UserManagementTest extends TestCase
         $admin = $this->createAdmin();
         $this->actingAs($admin);
         $this->patch("/admin/users/{$admin->id}/deactivate")
-             ->assertSessionHasErrors('error');
+            ->assertSessionHasErrors('error');
         $this->assertTrue($admin->fresh()->is_active);
     }
 
@@ -89,15 +90,15 @@ class UserManagementTest extends TestCase
         $this->actingAs($admin);
 
         $otherAdmin = User::create([
-            'name'      => 'Other Admin',
-            'email'     => 'other@test.local',
-            'password'  => Hash::make('password123'),
-            'role_id'   => Role::where('name', 'admin')->first()->id,
+            'name' => 'Other Admin',
+            'email' => 'other@test.local',
+            'password' => Hash::make('password123'),
+            'role_id' => Role::where('name', 'admin')->first()->id,
             'is_active' => false,
         ]);
 
         $this->patch("/admin/users/{$admin->id}/deactivate")
-             ->assertSessionHasErrors('error');
+            ->assertSessionHasErrors('error');
     }
 
     public function test_inactive_user_cannot_login(): void
@@ -106,7 +107,7 @@ class UserManagementTest extends TestCase
         $user->update(['is_active' => false]);
 
         $this->post('/login', [
-            'email'    => 'student@test.local',
+            'email' => 'student@test.local',
             'password' => 'password123',
         ])->assertSessionHasErrors('email');
 
@@ -115,21 +116,21 @@ class UserManagementTest extends TestCase
 
     public function test_admin_can_update_student_enrollment_status(): void
     {
-        $admin  = $this->createAdmin();
+        $admin = $this->createAdmin();
         $student = $this->createStudent();
         $student->studentProfile()->create([
             'student_number' => '2024-0001',
-            'first_name'     => 'Test',
-            'last_name'      => 'Student',
-            'year_level'     => 1,
+            'first_name' => 'Test',
+            'last_name' => 'Student',
+            'year_level' => 1,
         ]);
 
         $this->actingAs($admin);
         $this->put("/admin/users/{$student->id}", [
-            'name'              => $student->name,
-            'email'             => $student->email,
-            'role_id'           => $student->role_id,
-            'student_number'    => '2024-0001',
+            'name' => $student->name,
+            'email' => $student->email,
+            'role_id' => $student->role_id,
+            'student_number' => '2024-0001',
             'enrollment_status' => 'enrolled',
         ])->assertRedirect(route('admin.users.index'));
 
@@ -138,39 +139,39 @@ class UserManagementTest extends TestCase
 
     public function test_admin_sees_enrollment_status_on_users_index(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $student = $this->createStudent();
         $student->studentProfile()->create([
-            'student_number'   => '2024-0002',
-            'first_name'       => 'Test',
-            'last_name'        => 'Student',
-            'year_level'       => 1,
+            'student_number' => '2024-0002',
+            'first_name' => 'Test',
+            'last_name' => 'Student',
+            'year_level' => 1,
             'enrollment_status' => 'enrolled',
         ]);
 
         $this->actingAs($admin);
         $this->get('/admin/users')
-             ->assertOk()
-             ->assertSee('Enrolled');
+            ->assertOk()
+            ->assertSee('Enrolled');
     }
 
     public function test_update_rejects_invalid_enrollment_status(): void
     {
-        $admin   = $this->createAdmin();
+        $admin = $this->createAdmin();
         $student = $this->createStudent();
         $student->studentProfile()->create([
             'student_number' => '2024-0003',
-            'first_name'     => 'Test',
-            'last_name'      => 'Student',
-            'year_level'     => 1,
+            'first_name' => 'Test',
+            'last_name' => 'Student',
+            'year_level' => 1,
         ]);
 
         $this->actingAs($admin);
         $this->put("/admin/users/{$student->id}", [
-            'name'              => $student->name,
-            'email'             => $student->email,
-            'role_id'           => $student->role_id,
-            'student_number'    => '2024-0003',
+            'name' => $student->name,
+            'email' => $student->email,
+            'role_id' => $student->role_id,
+            'student_number' => '2024-0003',
             'enrollment_status' => 'graduated',
         ])->assertSessionHasErrors('enrollment_status');
     }

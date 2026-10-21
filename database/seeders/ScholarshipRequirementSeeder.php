@@ -40,7 +40,7 @@ class ScholarshipRequirementSeeder extends Seeder
             foreach ($reqs as $req) {
                 ScholarshipRequirement::updateOrCreate(
                     [
-                        'scholarship_id'   => $scholarship->id,
+                        'scholarship_id' => $scholarship->id,
                         'requirement_name' => $req['requirement_name'],
                     ],
                     array_merge($req, ['scholarship_id' => $scholarship->id])

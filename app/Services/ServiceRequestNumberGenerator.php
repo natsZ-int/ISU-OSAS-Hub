@@ -15,7 +15,7 @@ class ServiceRequestNumberGenerator
         $year = date('Y');
         $prefix = "SR-{$year}-";
 
-        return DB::transaction(function () use ($year, $prefix) {
+        return DB::transaction(function () use ($prefix) {
             $latest = StudentServiceRequest::where('request_number', 'like', "{$prefix}%")
                 ->lockForUpdate()
                 ->orderByDesc('id')
@@ -28,7 +28,7 @@ class ServiceRequestNumberGenerator
                 $nextSequence = 1;
             }
 
-            return $prefix . str_pad((string) $nextSequence, 6, '0', STR_PAD_LEFT);
+            return $prefix.str_pad((string) $nextSequence, 6, '0', STR_PAD_LEFT);
         });
     }
 }

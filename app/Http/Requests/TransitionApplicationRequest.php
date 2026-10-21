@@ -18,7 +18,7 @@ class TransitionApplicationRequest extends FormRequest
         $validStates = array_column(ScholarshipApplicationStatus::cases(), 'value');
 
         return [
-            'status'  => ['required', Rule::in($validStates)],
+            'status' => ['required', Rule::in($validStates)],
             'remarks' => ['nullable', 'string', 'max:2000'],
         ];
     }

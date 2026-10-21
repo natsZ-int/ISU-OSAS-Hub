@@ -15,7 +15,8 @@ class MatchingWeightController extends Controller
     public function edit(): View
     {
         Gate::authorize('manage-users');
-        $weights = ScholarshipMatchingWeight::active() ?? new ScholarshipMatchingWeight();
+        $weights = ScholarshipMatchingWeight::active() ?? new ScholarshipMatchingWeight;
+
         return view('admin.matching.weights', compact('weights'));
     }
 
@@ -26,13 +27,13 @@ class MatchingWeightController extends Controller
         ScholarshipMatchingWeight::where('is_active', true)->update(['is_active' => false]);
 
         $weights = ScholarshipMatchingWeight::create([
-            'academic_weight'           => $request->academic_weight,
-            'financial_weight'          => $request->financial_weight,
-            'program_weight'            => $request->program_weight,
-            'year_level_weight'         => $request->year_level_weight,
+            'academic_weight' => $request->academic_weight,
+            'financial_weight' => $request->financial_weight,
+            'program_weight' => $request->program_weight,
+            'year_level_weight' => $request->year_level_weight,
             'document_readiness_weight' => $request->document_readiness_weight,
-            'is_active'                 => true,
-            'updated_by'               => $request->user()->id,
+            'is_active' => true,
+            'updated_by' => $request->user()->id,
         ]);
 
         AuditLogService::log(

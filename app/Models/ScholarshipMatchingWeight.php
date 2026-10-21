@@ -18,12 +18,12 @@ class ScholarshipMatchingWeight extends Model
     ];
 
     protected $casts = [
-        'academic_weight'            => 'decimal:2',
-        'financial_weight'           => 'decimal:2',
-        'program_weight'             => 'decimal:2',
-        'year_level_weight'          => 'decimal:2',
-        'document_readiness_weight'  => 'decimal:2',
-        'is_active'                  => 'boolean',
+        'academic_weight' => 'decimal:2',
+        'financial_weight' => 'decimal:2',
+        'program_weight' => 'decimal:2',
+        'year_level_weight' => 'decimal:2',
+        'document_readiness_weight' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 
     public function updatedByUser(): BelongsTo
@@ -48,11 +48,11 @@ class ScholarshipMatchingWeight extends Model
     public function toDecimalArray(): array
     {
         return [
-            'academic'            => (float) $this->academic_weight / 100,
-            'financial'           => (float) $this->financial_weight / 100,
-            'program'             => (float) $this->program_weight / 100,
-            'year_level'          => (float) $this->year_level_weight / 100,
-            'document_readiness'  => (float) $this->document_readiness_weight / 100,
+            'academic' => (float) $this->academic_weight / 100,
+            'financial' => (float) $this->financial_weight / 100,
+            'program' => (float) $this->program_weight / 100,
+            'year_level' => (float) $this->year_level_weight / 100,
+            'document_readiness' => (float) $this->document_readiness_weight / 100,
         ];
     }
 }

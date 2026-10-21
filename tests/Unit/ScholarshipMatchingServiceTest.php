@@ -17,54 +17,56 @@ class ScholarshipMatchingServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $eligibility = new ScholarshipEligibilityService();
+        $eligibility = new ScholarshipEligibilityService;
         $this->service = new ScholarshipMatchingService($eligibility);
     }
 
     private function profile(array $a = []): StudentProfile
     {
         $p = new StudentProfile(array_merge([
-            'gwa'               => 1.50,
-            'family_income'     => 20000,
-            'program'           => 'BSIT',
-            'year_level'        => 3,
+            'gwa' => 1.50,
+            'family_income' => 20000,
+            'program' => 'BSIT',
+            'year_level' => 3,
             'enrollment_status' => 'enrolled',
         ], $a));
         $p->id = 1;
         $p->exists = true;
+
         return $p;
     }
 
     private function scholarship(array $a = []): Scholarship
     {
         $s = new Scholarship(array_merge([
-            'title'                      => 'Test',
-            'provider'                   => 'ISU',
-            'scholarship_type'           => 'Merit',
-            'minimum_gwa'                => 1.75,
-            'maximum_family_income'      => 30000,
-            'eligible_programs'          => ['BSIT', 'BSCS'],
-            'eligible_year_levels'       => [2, 3, 4],
+            'title' => 'Test',
+            'provider' => 'ISU',
+            'scholarship_type' => 'Merit',
+            'minimum_gwa' => 1.75,
+            'maximum_family_income' => 30000,
+            'eligible_programs' => ['BSIT', 'BSCS'],
+            'eligible_year_levels' => [2, 3, 4],
             'required_enrollment_status' => null,
-            'application_start_date'     => now()->subDay(),
-            'application_deadline'       => now()->addMonth(),
-            'status'                     => 'open',
+            'application_start_date' => now()->subDay(),
+            'application_deadline' => now()->addMonth(),
+            'status' => 'open',
         ], $a));
         $s->id = 1;
         $s->exists = true;
         $s->setRelation('requirements', collect());
+
         return $s;
     }
 
     private function weights(array $a = []): ScholarshipMatchingWeight
     {
         return new ScholarshipMatchingWeight(array_merge([
-            'academic_weight'           => 30,
-            'financial_weight'          => 25,
-            'program_weight'            => 20,
-            'year_level_weight'         => 15,
+            'academic_weight' => 30,
+            'financial_weight' => 25,
+            'program_weight' => 20,
+            'year_level_weight' => 15,
             'document_readiness_weight' => 10,
-            'is_active'                 => true,
+            'is_active' => true,
         ], $a));
     }
 
@@ -106,8 +108,8 @@ class ScholarshipMatchingServiceTest extends TestCase
             $this->profile(),
             $this->scholarship([
                 'maximum_family_income' => null,
-                'eligible_programs'     => null,
-                'eligible_year_levels'  => null,
+                'eligible_programs' => null,
+                'eligible_year_levels' => null,
             ]),
             null,
             $this->weights()
@@ -124,10 +126,10 @@ class ScholarshipMatchingServiceTest extends TestCase
         $result = $this->service->evaluateMatch(
             $this->profile(),
             $this->scholarship([
-                'minimum_gwa'           => null,
+                'minimum_gwa' => null,
                 'maximum_family_income' => null,
-                'eligible_programs'     => null,
-                'eligible_year_levels'  => null,
+                'eligible_programs' => null,
+                'eligible_year_levels' => null,
             ]),
             null,
             $this->weights()
@@ -142,10 +144,10 @@ class ScholarshipMatchingServiceTest extends TestCase
     public function test_changed_weights_affect_score(): void
     {
         $w1 = $this->weights([
-            'academic_weight'           => 100,
-            'financial_weight'          => 0,
-            'program_weight'            => 0,
-            'year_level_weight'         => 0,
+            'academic_weight' => 100,
+            'financial_weight' => 0,
+            'program_weight' => 0,
+            'year_level_weight' => 0,
             'document_readiness_weight' => 0,
         ]);
 

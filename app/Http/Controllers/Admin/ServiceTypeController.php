@@ -29,19 +29,19 @@ class ServiceTypeController extends Controller
     {
         DB::transaction(function () use ($request) {
             $serviceType = ServiceType::create([
-                'name'          => $request->name,
-                'description'   => $request->description,
-                'instructions'  => $request->instructions,
-                'is_active'     => $request->is_active,
+                'name' => $request->name,
+                'description' => $request->description,
+                'instructions' => $request->instructions,
+                'is_active' => $request->is_active,
                 'display_order' => $request->display_order,
             ]);
 
             if ($request->has('requirements')) {
                 foreach ($request->requirements as $req) {
                     $serviceType->requirements()->create([
-                        'name'          => $req['name'],
-                        'description'   => $req['description'] ?? null,
-                        'is_required'   => (bool) $req['is_required'],
+                        'name' => $req['name'],
+                        'description' => $req['description'] ?? null,
+                        'is_required' => (bool) $req['is_required'],
                         'display_order' => (int) $req['display_order'],
                     ]);
                 }
@@ -70,32 +70,32 @@ class ServiceTypeController extends Controller
     {
         DB::transaction(function () use ($request, $serviceType) {
             $serviceType->update([
-                'name'          => $request->name,
-                'description'   => $request->description,
-                'instructions'  => $request->instructions,
-                'is_active'     => $request->is_active,
+                'name' => $request->name,
+                'description' => $request->description,
+                'instructions' => $request->instructions,
+                'is_active' => $request->is_active,
                 'display_order' => $request->display_order,
             ]);
 
             $keptIds = [];
             if ($request->has('requirements')) {
                 foreach ($request->requirements as $req) {
-                    if (!empty($req['id'])) {
+                    if (! empty($req['id'])) {
                         $existing = $serviceType->requirements()->find($req['id']);
                         if ($existing) {
                             $existing->update([
-                                'name'          => $req['name'],
-                                'description'   => $req['description'] ?? null,
-                                'is_required'   => (bool) $req['is_required'],
+                                'name' => $req['name'],
+                                'description' => $req['description'] ?? null,
+                                'is_required' => (bool) $req['is_required'],
                                 'display_order' => (int) $req['display_order'],
                             ]);
                             $keptIds[] = $existing->id;
                         }
                     } else {
                         $new = $serviceType->requirements()->create([
-                            'name'          => $req['name'],
-                            'description'   => $req['description'] ?? null,
-                            'is_required'   => (bool) $req['is_required'],
+                            'name' => $req['name'],
+                            'description' => $req['description'] ?? null,
+                            'is_required' => (bool) $req['is_required'],
                             'display_order' => (int) $req['display_order'],
                         ]);
                         $keptIds[] = $new->id;
@@ -119,7 +119,7 @@ class ServiceTypeController extends Controller
 
     public function toggle(ServiceType $serviceType)
     {
-        $serviceType->update(['is_active' => !$serviceType->is_active]);
+        $serviceType->update(['is_active' => ! $serviceType->is_active]);
 
         $statusLabel = $serviceType->is_active ? 'activated' : 'deactivated';
 

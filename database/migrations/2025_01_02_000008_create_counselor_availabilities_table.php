@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('counselor_availabilities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('counselor_id')
-                  ->constrained('users')
-                  ->cascadeOnDelete();
+                ->constrained('users')
+                ->cascadeOnDelete();
             // 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday,
             // 4=Thursday, 5=Friday, 6=Saturday
             $table->tinyInteger('day_of_week')->unsigned();

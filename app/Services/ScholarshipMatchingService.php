@@ -6,7 +6,6 @@ use App\DataObjects\EligibilityEvaluationResult;
 use App\DataObjects\FactorResult;
 use App\DataObjects\ScholarshipMatchResult;
 use App\Enums\OverallEligibility;
-use App\Models\ApplicationDocument;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
 use App\Models\ScholarshipMatchingWeight;
@@ -295,6 +294,7 @@ class ScholarshipMatchingService
                     $reasons[] = $c->explanation;
                 }
             }
+
             return $reasons;
         }
 
@@ -326,15 +326,21 @@ class ScholarshipMatchingService
         $ranked = $eligible->sort(function (ScholarshipMatchResult $a, ScholarshipMatchResult $b) {
             // Primary: score descending
             $scoreComp = ($b->matchScore ?? 0) <=> ($a->matchScore ?? 0);
-            if ($scoreComp !== 0) return $scoreComp;
+            if ($scoreComp !== 0) {
+                return $scoreComp;
+            }
 
             // Tie-break 1: earlier deadline first
             $deadlineComp = strcmp($a->deadline, $b->deadline);
-            if ($deadlineComp !== 0) return $deadlineComp;
+            if ($deadlineComp !== 0) {
+                return $deadlineComp;
+            }
 
             // Tie-break 2: title ascending
             $titleComp = strcmp($a->scholarshipTitle, $b->scholarshipTitle);
-            if ($titleComp !== 0) return $titleComp;
+            if ($titleComp !== 0) {
+                return $titleComp;
+            }
 
             // Tie-break 3: id ascending
             return $a->scholarshipId <=> $b->scholarshipId;
@@ -361,7 +367,7 @@ class ScholarshipMatchingService
         });
 
         return collect([
-            'eligible'   => $rankedWithPosition,
+            'eligible' => $rankedWithPosition,
             'ineligible' => $ineligible->values(),
         ]);
     }

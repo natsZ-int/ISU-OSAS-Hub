@@ -19,8 +19,8 @@ class NotificationService
      * Callers must invoke this AFTER the underlying business transaction has
      * committed so a rolled-back change never produces a notification or email.
      *
-     * @param  array<string, mixed>  $data       Non-confidential metadata (reference, status, next_step, url, reason).
-     * @param  bool                  $sendEmail  Queue an email for this notification.
+     * @param  array<string, mixed>  $data  Non-confidential metadata (reference, status, next_step, url, reason).
+     * @param  bool  $sendEmail  Queue an email for this notification.
      */
     public function notifyUser(
         User $recipient,
@@ -32,7 +32,7 @@ class NotificationService
         array $data = [],
         bool $sendEmail = false,
     ): ?Notification {
-        if (!$recipient->isActive()) {
+        if (! $recipient->isActive()) {
             return null;
         }
 
@@ -52,16 +52,17 @@ class NotificationService
 
         try {
             $notification = Notification::create([
-                'user_id'      => $recipient->id,
-                'type'         => $type->value,
-                'title'        => $title,
-                'message'      => $message,
+                'user_id' => $recipient->id,
+                'type' => $type->value,
+                'title' => $title,
+                'message' => $message,
                 'related_type' => $relatedType,
-                'related_id'   => $relatedId,
-                'data'         => $data ?: null,
+                'related_id' => $relatedId,
+                'data' => $data ?: null,
             ]);
         } catch (\Throwable $e) {
             Log::warning("Notification creation failed: {$e->getMessage()}");
+
             return null;
         }
 

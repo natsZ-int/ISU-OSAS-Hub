@@ -6,15 +6,15 @@ use App\Enums\NotificationType;
 use App\Models\GuidanceAppointment;
 use App\Models\GuidanceSchedulingSettings;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class GuidanceAppointmentWorkflowService
 {
     protected const TRANSITIONS = [
         GuidanceAppointment::STATUS_REQUESTED => [
             GuidanceAppointment::STATUS_CONFIRMED => 'counselor',
-            GuidanceAppointment::STATUS_REJECTED  => 'counselor',
+            GuidanceAppointment::STATUS_REJECTED => 'counselor',
             GuidanceAppointment::STATUS_CANCELLED => 'student',
         ],
         GuidanceAppointment::STATUS_CONFIRMED => [
@@ -23,7 +23,7 @@ class GuidanceAppointmentWorkflowService
         ],
         GuidanceAppointment::STATUS_COMPLETED => [],
         GuidanceAppointment::STATUS_CANCELLED => [],
-        GuidanceAppointment::STATUS_REJECTED  => [],
+        GuidanceAppointment::STATUS_REJECTED => [],
     ];
 
     protected NotificationService $notificationService;
@@ -54,12 +54,14 @@ class GuidanceAppointmentWorkflowService
 
         if ($requiredRole === 'counselor') {
             $isCounselor = $actorRole === 'counselor' || $actor->isCounselor() || $actor->hasRole('counselor');
+
             return $isCounselor && (int) $appointment->counselor_id === (int) $actor->id;
         }
 
         if ($requiredRole === 'student') {
             $isStudent = $actorRole === 'student' || $actor->isStudent() || $actor->hasRole('student');
             $profile = $actor->studentProfile;
+
             return $isStudent && $profile && (int) $appointment->student_profile_id === (int) $profile->id;
         }
 
@@ -118,7 +120,7 @@ class GuidanceAppointmentWorkflowService
             $appointment->update($updateData);
 
             AuditLogService::log(
-                action: "Appointment " . ucfirst($targetState),
+                action: 'Appointment '.ucfirst($targetState),
                 module: 'Guidance Appointment',
                 recordType: 'GuidanceAppointment',
                 recordId: $appointment->id,
@@ -211,13 +213,13 @@ class GuidanceAppointmentWorkflowService
             'GuidanceAppointment',
             $appointment->id,
             [
-                'reference'       => 'APT-' . $appointment->id,
+                'reference' => 'APT-'.$appointment->id,
                 'reference_label' => 'Appointment No.',
-                'status'          => ucfirst($newStatus),
-                'date'            => $dateLabel,
-                'time'            => $timeLabel,
-                'next_step'       => $nextStep,
-                'url'             => $url,
+                'status' => ucfirst($newStatus),
+                'date' => $dateLabel,
+                'time' => $timeLabel,
+                'next_step' => $nextStep,
+                'url' => $url,
             ],
             sendEmail: true,
         );
@@ -229,16 +231,16 @@ class GuidanceAppointmentWorkflowService
     protected function formatTimeRange(GuidanceAppointment $appointment): string
     {
         $start = $appointment->start_time
-            ? \Carbon\Carbon::parse($appointment->start_time)->format('g:i A')
+            ? Carbon::parse($appointment->start_time)->format('g:i A')
             : null;
         $end = $appointment->end_time
-            ? \Carbon\Carbon::parse($appointment->end_time)->format('g:i A')
+            ? Carbon::parse($appointment->end_time)->format('g:i A')
             : null;
 
         return match (true) {
             $start && $end => "{$start} – {$end}",
-            (bool) $start  => $start,
-            default        => 'the scheduled time',
+            (bool) $start => $start,
+            default => 'the scheduled time',
         };
     }
 }

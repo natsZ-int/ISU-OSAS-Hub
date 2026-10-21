@@ -6,6 +6,7 @@ use App\Models\Role;
 use App\Models\Scholarship;
 use App\Models\StudentProfile;
 use App\Models\User;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -17,7 +18,7 @@ class EligibilityAccessTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\RolesSeeder::class);
+        $this->seed(RolesSeeder::class);
     }
 
     private function scholarship(): Scholarship
@@ -41,6 +42,7 @@ class EligibilityAccessTest extends TestCase
             'user_id' => $user->id, 'student_number' => '2025-1',
             'first_name' => 'S', 'last_name' => 'T', 'year_level' => 3, 'gwa' => 1.50,
         ]);
+
         return $user;
     }
 

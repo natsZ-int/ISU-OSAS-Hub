@@ -16,7 +16,7 @@ class UpdateApplicationStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status'  => ['required', Rule::in(ScholarshipApplication::ALLOWED_STATUSES)],
+            'status' => ['required', Rule::in(ScholarshipApplication::ALLOWED_STATUSES)],
             'remarks' => ['nullable', 'string', 'max:2000'],
         ];
     }

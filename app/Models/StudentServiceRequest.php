@@ -11,11 +11,15 @@ class StudentServiceRequest extends Model
 {
     use HasFactory;
 
-    public const STATUS_SUBMITTED            = 'submitted';
-    public const STATUS_PROCESSING           = 'processing';
+    public const STATUS_SUBMITTED = 'submitted';
+
+    public const STATUS_PROCESSING = 'processing';
+
     public const STATUS_REQUIRES_INFORMATION = 'requires_information';
-    public const STATUS_COMPLETED            = 'completed';
-    public const STATUS_CANCELLED            = 'cancelled';
+
+    public const STATUS_COMPLETED = 'completed';
+
+    public const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
         'request_number',

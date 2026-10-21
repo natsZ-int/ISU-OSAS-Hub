@@ -43,7 +43,7 @@ class DocumentController extends Controller
 
         $file = $request->file('document');
         $extension = $file->getClientOriginalExtension();
-        $storagePath = "scholarship-applications/{$scholarshipApplication->id}/" . Str::uuid() . ".{$extension}";
+        $storagePath = "scholarship-applications/{$scholarshipApplication->id}/".Str::uuid().".{$extension}";
 
         $path = $file->storeAs(
             dirname($storagePath),
@@ -58,11 +58,11 @@ class DocumentController extends Controller
         $document = ApplicationDocument::create([
             'scholarship_application_id' => $scholarshipApplication->id,
             'scholarship_requirement_id' => $requirementId,
-            'file_path'                  => $path,
-            'original_filename'          => $file->getClientOriginalName(),
-            'mime_type'                  => $file->getMimeType(),
-            'file_size'                  => $file->getSize(),
-            'verification_status'        => ApplicationDocument::VERIFICATION_PENDING,
+            'file_path' => $path,
+            'original_filename' => $file->getClientOriginalName(),
+            'mime_type' => $file->getMimeType(),
+            'file_size' => $file->getSize(),
+            'verification_status' => ApplicationDocument::VERIFICATION_PENDING,
         ]);
 
         AuditLogService::log(

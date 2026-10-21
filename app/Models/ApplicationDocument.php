@@ -10,8 +10,10 @@ class ApplicationDocument extends Model
 {
     use HasFactory;
 
-    public const VERIFICATION_PENDING  = 'pending';
+    public const VERIFICATION_PENDING = 'pending';
+
     public const VERIFICATION_VERIFIED = 'verified';
+
     public const VERIFICATION_REJECTED = 'rejected';
 
     protected $fillable = [
@@ -28,7 +30,7 @@ class ApplicationDocument extends Model
     ];
 
     protected $casts = [
-        'file_size'   => 'integer',
+        'file_size' => 'integer',
         'verified_at' => 'datetime',
     ];
 

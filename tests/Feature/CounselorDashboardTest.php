@@ -16,9 +16,13 @@ class CounselorDashboardTest extends TestCase
     use RefreshDatabase;
 
     protected User $counselorUser;
+
     protected Role $studentRole;
+
     protected Role $adminRole;
+
     protected Role $counselorRole;
+
     protected StudentProfile $studentProfile;
 
     protected function setUp(): void

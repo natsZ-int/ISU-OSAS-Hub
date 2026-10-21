@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
 
 class CounselorAvailability extends Model
 {
@@ -30,7 +30,7 @@ class CounselorAvailability extends Model
     ];
 
     protected $casts = [
-        'day_of_week'  => 'integer',
+        'day_of_week' => 'integer',
         'is_available' => 'boolean',
     ];
 

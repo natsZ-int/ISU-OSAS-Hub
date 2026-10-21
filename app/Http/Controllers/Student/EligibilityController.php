@@ -37,7 +37,7 @@ class EligibilityController extends Controller
 
         return view('student.eligibility.show', [
             'scholarship' => $scholarship,
-            'evaluation'  => $evaluation,
+            'evaluation' => $evaluation,
             'application' => $application,
         ]);
     }

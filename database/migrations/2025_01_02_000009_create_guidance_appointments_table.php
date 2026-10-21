@@ -11,11 +11,11 @@ return new class extends Migration
         Schema::create('guidance_appointments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_profile_id')
-                  ->constrained('student_profiles')
-                  ->restrictOnDelete();
+                ->constrained('student_profiles')
+                ->restrictOnDelete();
             $table->foreignId('counselor_id')
-                  ->constrained('users')
-                  ->restrictOnDelete();
+                ->constrained('users')
+                ->restrictOnDelete();
             $table->date('appointment_date');
             $table->time('start_time');
             $table->time('end_time');

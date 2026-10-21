@@ -27,7 +27,7 @@ class ApplicationNumberGenerator
             $nextNumber = 1;
         }
 
-        $number = $prefix . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+        $number = $prefix.str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
 
         // Safety check for concurrent requests
         if (ScholarshipApplication::where('application_number', $number)->exists()) {

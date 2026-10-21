@@ -29,12 +29,12 @@ class GuidanceSeeder extends Seeder
         GuidanceSchedulingSettings::firstOrCreate(
             ['is_active' => true],
             [
-                'office_start_time'                    => '08:00:00',
-                'office_end_time'                      => '17:00:00',
-                'default_appointment_duration_minutes'  => 30,
-                'minimum_booking_notice_minutes'        => 60,
-                'student_cancellation_notice_minutes'   => 60,
-                'maximum_future_booking_days'           => 30,
+                'office_start_time' => '08:00:00',
+                'office_end_time' => '17:00:00',
+                'default_appointment_duration_minutes' => 30,
+                'minimum_booking_notice_minutes' => 60,
+                'student_cancellation_notice_minutes' => 60,
+                'maximum_future_booking_days' => 30,
             ]
         );
     }

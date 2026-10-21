@@ -65,6 +65,7 @@ class GuidanceAppointmentSchedulingService
                     return false;
                 }
             }
+
             return true;
         })->values();
     }
@@ -124,15 +125,15 @@ class GuidanceAppointmentSchedulingService
 
             // 7. Create the appointment
             $appointment = GuidanceAppointment::create([
-                'student_profile_id'  => $studentProfile->id,
-                'counselor_id'        => $counselor->id,
+                'student_profile_id' => $studentProfile->id,
+                'counselor_id' => $counselor->id,
                 'appointment_type_id' => $appointmentType->id,
-                'appointment_type'    => $appointmentType->name,
-                'appointment_date'    => $date->toDateString(),
-                'start_time'          => $startTime,
-                'end_time'            => $endTime,
-                'reason'              => $reason,
-                'status'              => GuidanceAppointment::STATUS_REQUESTED,
+                'appointment_type' => $appointmentType->name,
+                'appointment_date' => $date->toDateString(),
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'reason' => $reason,
+                'status' => GuidanceAppointment::STATUS_REQUESTED,
             ]);
 
             // 8. Audit log
@@ -159,11 +160,11 @@ class GuidanceAppointmentSchedulingService
             'GuidanceAppointment',
             $appointment->id,
             [
-                'reference'       => 'APT-' . $appointment->id,
+                'reference' => 'APT-'.$appointment->id,
                 'reference_label' => 'Appointment No.',
-                'status'          => 'Requested',
-                'next_step'       => 'Review and confirm or reject the appointment request.',
-                'url'             => route('counselor.guidance.appointments.show', $appointment->id),
+                'status' => 'Requested',
+                'next_step' => 'Review and confirm or reject the appointment request.',
+                'url' => route('counselor.guidance.appointments.show', $appointment->id),
             ],
             sendEmail: false,
         );
@@ -207,7 +208,7 @@ class GuidanceAppointmentSchedulingService
         return GuidanceAppointment::counselorBlockingOnDate($counselor->id, $date->toDateString())
             ->where(function ($q) use ($startTime, $endTime) {
                 $q->where('start_time', '<', $endTime)
-                  ->where('end_time', '>', $startTime);
+                    ->where('end_time', '>', $startTime);
             })
             ->exists();
     }
@@ -222,7 +223,7 @@ class GuidanceAppointmentSchedulingService
         return GuidanceAppointment::studentBlockingOnDate($studentProfile->id, $date->toDateString())
             ->where(function ($q) use ($startTime, $endTime) {
                 $q->where('start_time', '<', $endTime)
-                  ->where('end_time', '>', $startTime);
+                    ->where('end_time', '>', $startTime);
             })
             ->exists();
     }
@@ -258,8 +259,8 @@ class GuidanceAppointmentSchedulingService
             $windowStart = max($avail->start_time, $officeStart);
             $windowEnd = min($avail->end_time, $officeEnd);
 
-            $current = Carbon::parse($date->toDateString() . ' ' . $windowStart);
-            $end = Carbon::parse($date->toDateString() . ' ' . $windowEnd);
+            $current = Carbon::parse($date->toDateString().' '.$windowStart);
+            $end = Carbon::parse($date->toDateString().' '.$windowEnd);
 
             while ($current->copy()->addMinutes($durationMinutes)->lte($end)) {
                 $slotStart = $current->format('H:i:s');
@@ -269,13 +270,14 @@ class GuidanceAppointmentSchedulingService
                 $slotDateTime = $date->copy()->setTimeFromTimeString($slotStart);
                 if ($slotDateTime->lte($now->copy()->addMinutes($noticeMinutes))) {
                     $current->addMinutes($durationMinutes);
+
                     continue;
                 }
 
                 $slots->push([
                     'start' => $slotStart,
-                    'end'   => $slotEnd,
-                    'display' => Carbon::parse($slotStart)->format('g:i A') . ' – ' . Carbon::parse($slotEnd)->format('g:i A'),
+                    'end' => $slotEnd,
+                    'display' => Carbon::parse($slotStart)->format('g:i A').' – '.Carbon::parse($slotEnd)->format('g:i A'),
                 ]);
 
                 $current->addMinutes($durationMinutes);
@@ -314,6 +316,7 @@ class GuidanceAppointmentSchedulingService
         if ($type && $type->duration_minutes) {
             return $type->duration_minutes;
         }
+
         return $settings->default_appointment_duration_minutes;
     }
 }

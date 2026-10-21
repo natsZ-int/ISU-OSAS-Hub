@@ -26,7 +26,7 @@ class ScholarshipApplicationWorkflowTest extends TestCase
     public function test_submitted_can_transition_to_under_review()
     {
         $application = new ScholarshipApplication(['status' => 'submitted']);
-        $actor = new User();
+        $actor = new User;
         $actor->role_id = 1; // Assuming Admin/Appropriate Actor Role
 
         $this->assertTrue(
@@ -37,7 +37,7 @@ class ScholarshipApplicationWorkflowTest extends TestCase
     public function test_under_review_can_transition_to_document_verification()
     {
         $application = new ScholarshipApplication(['status' => 'under_review']);
-        $actor = new User();
+        $actor = new User;
 
         $this->assertTrue(
             $this->workflowService->canTransition($application, 'document_verification', $actor)
@@ -47,7 +47,7 @@ class ScholarshipApplicationWorkflowTest extends TestCase
     public function test_under_review_can_transition_to_rejected()
     {
         $application = new ScholarshipApplication(['status' => 'under_review']);
-        $actor = new User();
+        $actor = new User;
 
         $this->assertTrue(
             $this->workflowService->canTransition($application, 'rejected', $actor)
@@ -57,7 +57,7 @@ class ScholarshipApplicationWorkflowTest extends TestCase
     public function test_document_verification_can_transition_to_approved()
     {
         $application = new ScholarshipApplication(['status' => 'document_verification']);
-        $actor = new User();
+        $actor = new User;
 
         $this->assertTrue(
             $this->workflowService->canTransition($application, 'approved', $actor)
@@ -67,7 +67,7 @@ class ScholarshipApplicationWorkflowTest extends TestCase
     public function test_document_verification_can_transition_to_rejected()
     {
         $application = new ScholarshipApplication(['status' => 'document_verification']);
-        $actor = new User();
+        $actor = new User;
 
         $this->assertTrue(
             $this->workflowService->canTransition($application, 'rejected', $actor)
@@ -77,7 +77,7 @@ class ScholarshipApplicationWorkflowTest extends TestCase
     public function test_submitted_cannot_transition_to_approved()
     {
         $application = new ScholarshipApplication(['status' => 'submitted']);
-        $actor = new User();
+        $actor = new User;
 
         $this->assertFalse(
             $this->workflowService->canTransition($application, 'approved', $actor)
@@ -87,7 +87,7 @@ class ScholarshipApplicationWorkflowTest extends TestCase
     public function test_submitted_cannot_transition_to_rejected()
     {
         $application = new ScholarshipApplication(['status' => 'submitted']);
-        $actor = new User();
+        $actor = new User;
 
         $this->assertFalse(
             $this->workflowService->canTransition($application, 'rejected', $actor)
@@ -97,7 +97,7 @@ class ScholarshipApplicationWorkflowTest extends TestCase
     public function test_submitted_cannot_transition_to_document_verification()
     {
         $application = new ScholarshipApplication(['status' => 'submitted']);
-        $actor = new User();
+        $actor = new User;
 
         $this->assertFalse(
             $this->workflowService->canTransition($application, 'document_verification', $actor)
@@ -107,7 +107,7 @@ class ScholarshipApplicationWorkflowTest extends TestCase
     public function test_under_review_cannot_transition_to_approved()
     {
         $application = new ScholarshipApplication(['status' => 'under_review']);
-        $actor = new User();
+        $actor = new User;
 
         $this->assertFalse(
             $this->workflowService->canTransition($application, 'approved', $actor)

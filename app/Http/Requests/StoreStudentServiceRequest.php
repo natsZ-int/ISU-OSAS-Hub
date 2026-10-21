@@ -19,7 +19,7 @@ class StoreStudentServiceRequest extends FormRequest
 
         $rules = [
             'service_type_id' => ['required', 'exists:service_types,id,is_active,1'],
-            'description'     => ['required', 'string', 'min:10', 'max:5000'],
+            'description' => ['required', 'string', 'min:10', 'max:5000'],
         ];
 
         if ($serviceType) {
@@ -41,9 +41,9 @@ class StoreStudentServiceRequest extends FormRequest
     {
         return [
             'service_type_id.exists' => 'The selected service type is currently unavailable or inactive.',
-            'description.min'        => 'Please provide a clear explanation of your request (at least 10 characters).',
-            '*.mimes'                => 'Supporting documents must be in PDF, JPG, JPEG, or PNG format.',
-            '*.max'                  => 'Supporting documents must not exceed 5 MB in size.',
+            'description.min' => 'Please provide a clear explanation of your request (at least 10 characters).',
+            '*.mimes' => 'Supporting documents must be in PDF, JPG, JPEG, or PNG format.',
+            '*.max' => 'Supporting documents must not exceed 5 MB in size.',
         ];
     }
 }

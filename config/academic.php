@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'current_year'     => env('ACADEMIC_CURRENT_YEAR', '2025-2026'),
+    'current_year' => env('ACADEMIC_CURRENT_YEAR', '2025-2026'),
     'current_semester' => env('ACADEMIC_CURRENT_SEMESTER', 'first'),
 
     'semesters' => ['first', 'second', 'summer'],

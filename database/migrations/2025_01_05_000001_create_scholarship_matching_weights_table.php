@@ -17,9 +17,9 @@ return new class extends Migration
             $table->decimal('document_readiness_weight', 5, 2)->default(10.00);
             $table->boolean('is_active')->default(true);
             $table->foreignId('updated_by')
-                  ->nullable()
-                  ->constrained('users')
-                  ->nullOnDelete();
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->timestamps();
         });
     }

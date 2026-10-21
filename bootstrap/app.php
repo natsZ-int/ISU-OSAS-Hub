@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsureActive;
+use App\Http\Middleware\EnsureCurrentEnrollmentVerified;
+use App\Http\Middleware\EnsureEmailIsVerified;
+use App\Http\Middleware\EnsureRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,10 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'role'               => \App\Http\Middleware\EnsureRole::class,
-            'active'             => \App\Http\Middleware\EnsureActive::class,
-            'verified.email'     => \App\Http\Middleware\EnsureEmailIsVerified::class,
-            'enrollment.verified' => \App\Http\Middleware\EnsureCurrentEnrollmentVerified::class,
+            'role' => EnsureRole::class,
+            'active' => EnsureActive::class,
+            'verified.email' => EnsureEmailIsVerified::class,
+            'enrollment.verified' => EnsureCurrentEnrollmentVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

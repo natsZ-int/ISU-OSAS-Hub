@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
 
 class GuidanceAppointment extends Model
 {
@@ -13,10 +13,14 @@ class GuidanceAppointment extends Model
 
     // Status constants
     public const STATUS_REQUESTED = 'requested';
+
     public const STATUS_CONFIRMED = 'confirmed';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED = 'cancelled';
-    public const STATUS_REJECTED  = 'rejected';
+
+    public const STATUS_REJECTED = 'rejected';
 
     // Statuses that block time slots
     public const BLOCKING_STATUSES = [
@@ -50,9 +54,9 @@ class GuidanceAppointment extends Model
     ];
 
     protected $casts = [
-        'appointment_date'  => 'date',
-        'cancelled_at'      => 'datetime',
-        'reminder_sent_at'  => 'datetime',
+        'appointment_date' => 'date',
+        'cancelled_at' => 'datetime',
+        'reminder_sent_at' => 'datetime',
     ];
 
     // ── Relationships ───────────────────────────────
@@ -92,15 +96,15 @@ class GuidanceAppointment extends Model
     public function scopeCounselorBlockingOnDate(Builder $query, int $counselorId, string $date): Builder
     {
         return $query->where('counselor_id', $counselorId)
-                     ->onDate($date)
-                     ->blocking();
+            ->onDate($date)
+            ->blocking();
     }
 
     public function scopeStudentBlockingOnDate(Builder $query, int $studentProfileId, string $date): Builder
     {
         return $query->where('student_profile_id', $studentProfileId)
-                     ->onDate($date)
-                     ->blocking();
+            ->onDate($date)
+            ->blocking();
     }
 
     // ── Helpers ─────────────────────────────────────

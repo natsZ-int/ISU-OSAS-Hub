@@ -29,11 +29,11 @@ class ServiceRequestController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('request_number', 'like', "%{$search}%")
-                  ->orWhereHas('studentProfile', function ($sub) use ($search) {
-                      $sub->where('first_name', 'like', "%{$search}%")
-                          ->orWhere('last_name', 'like', "%{$search}%")
-                          ->orWhere('student_number', 'like', "%{$search}%");
-                  });
+                    ->orWhereHas('studentProfile', function ($sub) use ($search) {
+                        $sub->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhere('student_number', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -95,7 +95,7 @@ class ServiceRequestController extends Controller
 
         $studentServiceRequest->update([
             'handled_by' => $handler->id,
-            'status'     => $studentServiceRequest->status === StudentServiceRequest::STATUS_SUBMITTED
+            'status' => $studentServiceRequest->status === StudentServiceRequest::STATUS_SUBMITTED
                 ? StudentServiceRequest::STATUS_PROCESSING
                 : $studentServiceRequest->status,
         ]);
@@ -121,8 +121,8 @@ class ServiceRequestController extends Controller
     public function transition(Request $request, StudentServiceRequest $studentServiceRequest)
     {
         $request->validate([
-            'status'           => 'required|string',
-            'remarks'          => 'nullable|string|max:2000',
+            'status' => 'required|string',
+            'remarks' => 'nullable|string|max:2000',
             'internal_remarks' => 'nullable|string|max:2000',
         ]);
 
@@ -147,7 +147,7 @@ class ServiceRequestController extends Controller
             abort(403);
         }
 
-        if (!Storage::disk('local')->exists($serviceRequestDocument->file_path)) {
+        if (! Storage::disk('local')->exists($serviceRequestDocument->file_path)) {
             abort(404, 'The requested document file was not found.');
         }
 
