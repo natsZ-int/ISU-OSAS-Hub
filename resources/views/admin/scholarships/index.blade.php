@@ -85,6 +85,13 @@
                                         size="sm" />
                                 @else
                                     <x-confirm-button
+                                        :action="route('admin.scholarships.announce', $s)"
+                                        method="PATCH"
+                                        :confirm="'Email all eligible students about \'' . $s->title . '\'?'"
+                                        label="Notify Eligible"
+                                        variant="outline-dark"
+                                        size="sm" />
+                                    <x-confirm-button
                                         :action="route('admin.scholarships.deactivate', $s)"
                                         method="PATCH"
                                         :confirm="'Deactivate the scholarship \'' . $s->title . '\'? Students will no longer be able to apply.'"

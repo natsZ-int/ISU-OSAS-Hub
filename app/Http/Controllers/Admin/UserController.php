@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Services\AuditLogService;
+use App\Services\ScholarshipAnnouncementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,10 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private ScholarshipAnnouncementService $announcements,
+    ) {}
+
     public function index(Request $request): View
     {
         Gate::authorize('manage-users');
@@ -192,6 +197,12 @@ class UserController extends Controller
                 description: implode(' ', $changes)." User: {$user->name} ({$user->email}).",
                 request: $request
             );
+
+            // Staff edits here also change eligibility inputs, so announce any
+            // open scholarships the student now qualifies for.
+            if ($user->isStudent() && $studentProfile = $user->studentProfile()->first()) {
+                $this->announcements->announceToStudent($studentProfile);
+            }
 
             return redirect()->route('admin.users.index')
                 ->with('status', "User '{$user->name}' updated successfully.");

@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StudentEnrollmentVerification;
 use App\Services\AuditLogService;
 use App\Services\NotificationService;
+use App\Services\ScholarshipAnnouncementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ class EnrollmentVerificationController extends Controller
 {
     public function __construct(
         private NotificationService $notificationService,
+        private ScholarshipAnnouncementService $announcements,
     ) {}
 
     /**
@@ -187,6 +189,10 @@ class EnrollmentVerificationController extends Controller
                 $enrollmentVerification->id,
             );
         }
+
+        // Verifying enrollment changes the eligibility inputs (enrollment
+        // status), so announce any newly matched open scholarships.
+        $this->announcements->announceToStudent($profile);
 
         return redirect()->route('enrollment-verifications.index')
             ->with('status', 'Verification decision recorded.');
