@@ -18,7 +18,9 @@
                 <input type="search" id="quick_search" name="search"
                        value="{{ request('search') }}"
                        placeholder="Type a scholarship name, provider, program, or keyword..."
-                       maxlength="200">
+                       maxlength="200"
+                       data-live-search
+                       data-live-search-endpoint="{{ route('student.quick-search', ['module' => 'scholarships']) }}">
             </div>
             <div class="filter-actions" style="margin:0;">
                 <button type="submit" class="btn btn-primary">Quick Search</button>
@@ -41,7 +43,9 @@
                 <input type="text" id="search" name="search"
                        value="{{ request('search') }}"
                        placeholder="Title, provider, type, program, description..."
-                       maxlength="200">
+                       maxlength="200"
+                       data-live-search
+                       data-live-search-endpoint="{{ route('student.quick-search', ['module' => 'scholarships']) }}">
             </div>
             <div class="form-group">
                 <label for="type">Scholarship Type</label>

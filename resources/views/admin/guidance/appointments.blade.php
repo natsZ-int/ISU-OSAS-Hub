@@ -14,6 +14,13 @@
 <div class="card filter-card">
     <form method="GET" action="{{ route('admin.guidance.appointments') }}" class="filter-form">
         <div class="filter-row">
+            <div class="form-group" style="flex:2;">
+                <label for="search">Search</label>
+                <input type="search" id="search" name="search" value="{{ request('search') }}"
+                       placeholder="Student, appointment type, counselor, or schedule"
+                       data-live-search
+                       data-live-search-endpoint="{{ route('admin.quick-search', ['module' => 'appointments']) }}">
+            </div>
             <div class="form-group">
                 <label for="counselor_id">Counselor</label>
                 <select id="counselor_id" name="counselor_id">
@@ -52,6 +59,7 @@
                 <th>Student</th>
                 <th>Type</th>
                 <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -64,13 +72,22 @@
                 </td>
                 <td>{{ $a->counselor->name }}</td>
                 <td>
-                    {{ $a->studentProfile ? $a->studentProfile->first_name . ' ' . $a->studentProfile->last_name : 'N/A' }}
+                    @if ($a->studentProfile)
+                        <a href="{{ route('admin.student-profiles.show', $a->studentProfile) }}">
+                            {{ $a->studentProfile->first_name . ' ' . $a->studentProfile->last_name }}
+                        </a>
+                    @else
+                        N/A
+                    @endif
                 </td>
                 <td>{{ $a->appointment_type }}</td>
                 <td>
                     <span class="badge badge-{{ $a->status === 'confirmed' ? 'active' : ($a->status === 'requested' ? 'admin' : 'inactive') }}">
                         {{ $a->getDisplayStatus() }}
                     </span>
+                </td>
+                <td>
+                    <a href="{{ route('admin.guidance.appointments.show', $a) }}" class="btn btn-sm btn-outline">View</a>
                 </td>
             </tr>
             @endforeach

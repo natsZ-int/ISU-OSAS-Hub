@@ -25,15 +25,19 @@ class ServiceRequestController extends Controller
     {
         $query = StudentServiceRequest::with(['studentProfile.user', 'serviceType', 'handler']);
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('request_number', 'like', "%{$search}%")
-                    ->orWhereHas('studentProfile', function ($sub) use ($search) {
-                        $sub->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%")
-                            ->orWhere('student_number', 'like', "%{$search}%");
-                    });
+        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
+            $like = '%'.addcslashes($search, '\\%_').'%';
+
+            $query->where(function ($q) use ($like) {
+                $q->where('request_number', 'like', $like)
+                    ->orWhere('description', 'like', $like)
+                    ->orWhere('status', 'like', $like)
+                    ->orWhereHas('studentProfile', function ($sub) use ($like) {
+                        $sub->where('first_name', 'like', $like)
+                            ->orWhere('last_name', 'like', $like)
+                            ->orWhere('student_number', 'like', $like);
+                    })
+                    ->orWhereHas('serviceType', fn ($type) => $type->where('name', 'like', $like));
             });
         }
 

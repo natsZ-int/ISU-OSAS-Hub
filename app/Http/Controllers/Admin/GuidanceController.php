@@ -134,6 +134,22 @@ class GuidanceController extends Controller
     {
         $query = GuidanceAppointment::with(['studentProfile', 'counselor', 'appointmentType']);
 
+        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
+            $like = '%'.addcslashes($search, '\\%_').'%';
+
+            $query->where(function ($q) use ($like) {
+                $q->where('appointment_type', 'like', $like)
+                    ->orWhere('status', 'like', $like)
+                    ->orWhereHas('studentProfile', function ($student) use ($like) {
+                        $student->where('student_number', 'like', $like)
+                            ->orWhere('first_name', 'like', $like)
+                            ->orWhere('last_name', 'like', $like);
+                    })
+                    ->orWhereHas('counselor', fn ($counselor) => $counselor->where('name', 'like', $like))
+                    ->orWhereHas('appointmentType', fn ($type) => $type->where('name', 'like', $like));
+            });
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -143,10 +159,18 @@ class GuidanceController extends Controller
 
         $appointments = $query->orderBy('appointment_date', 'desc')
             ->orderBy('start_time')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         $counselors = User::whereHas('role', fn ($q) => $q->where('name', 'counselor'))->get();
 
         return view('admin.guidance.appointments', compact('appointments', 'counselors'));
+    }
+
+    public function showAppointment(GuidanceAppointment $appointment): View
+    {
+        $appointment->load(['studentProfile.user', 'counselor', 'appointmentType', 'cancelledByUser']);
+
+        return view('admin.guidance.show', compact('appointment'));
     }
 }

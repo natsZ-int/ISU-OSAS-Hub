@@ -81,8 +81,10 @@ class AuditLog extends Model
                 ->orWhere('record_type', 'like', "%{$term}%")
                 ->orWhere('record_id', $term)
                 ->orWhereHas('user', function (Builder $uq) use ($term) {
-                    $uq->where('name', 'like', "%{$term}%")
-                        ->orWhere('email', 'like', "%{$term}%");
+                    $uq->where(function (Builder $nameOrEmail) use ($term) {
+                        $nameOrEmail->where('name', 'like', "%{$term}%")
+                            ->orWhere('email', 'like', "%{$term}%");
+                    });
                 });
         });
     }

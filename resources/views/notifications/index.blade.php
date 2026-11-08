@@ -20,10 +20,32 @@
     <x-alert type="success">{{ session('status') }}</x-alert>
 @endif
 
+<x-card class="filter-card">
+    <form method="GET" action="{{ route('notifications.index') }}" class="filter-form" role="search">
+        <div class="filter-row">
+            <div class="form-group" style="flex:2;">
+                <label for="notification_search">Search Notifications</label>
+                <input type="search" id="notification_search" name="search"
+                       value="{{ request('search') }}"
+                       placeholder="Title, message, category, or reference..."
+                       maxlength="200"
+                       data-live-search
+                       data-live-search-endpoint="{{ route('notifications.quick-search') }}">
+            </div>
+            <div class="form-group" style="align-self:flex-end;">
+                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                @if (request('search'))
+                    <a href="{{ route('notifications.index') }}" class="btn btn-outline-dark btn-sm">Clear</a>
+                @endif
+            </div>
+        </div>
+    </form>
+</x-card>
+
 @if ($notifications->count() > 0)
     <div class="notification-list">
         @foreach ($notifications as $notification)
-            <div class="notification-item {{ $notification->isUnread() ? 'is-unread' : '' }}">
+            <div id="notification-{{ $notification->id }}" class="notification-item {{ $notification->isUnread() ? 'is-unread' : '' }}">
                 <div class="notification-item-main">
                     <div class="notification-item-head">
                         @if ($notification->isUnread())
@@ -80,9 +102,17 @@
     <x-pagination-wrapper :paginator="$notifications" />
 @else
     <x-card>
-        <x-empty-state
-            title="No notifications."
-            message="You're all caught up. New notifications will appear here." />
+        @if (request('search'))
+            <x-empty-state
+                title="No matching notifications."
+                message="No notifications match your search."
+                :action-url="route('notifications.index')"
+                action-label="Clear Search" />
+        @else
+            <x-empty-state
+                title="No notifications."
+                message="You're all caught up. New notifications will appear here." />
+        @endif
     </x-card>
 @endif
 @endsection

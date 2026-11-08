@@ -22,12 +22,18 @@ class GuidanceController extends Controller
     ) {}
 
     // List available counselors
-    public function counselors(): View
+    public function counselors(Request $request): View
     {
-        $counselors = User::whereHas('role', fn ($q) => $q->where('name', 'counselor'))
+        $query = User::whereHas('role', fn ($q) => $q->where('name', 'counselor'))
             ->where('is_active', true)
-            ->with('availabilities')
-            ->get();
+            ->with('availabilities');
+
+        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
+            $like = '%'.addcslashes($search, '\\%_').'%';
+            $query->where(fn ($q) => $q->where('name', 'like', $like)->orWhere('email', 'like', $like));
+        }
+
+        $counselors = $query->orderBy('name')->get();
 
         return view('student.guidance.counselors', compact('counselors'));
     }
@@ -94,11 +100,24 @@ class GuidanceController extends Controller
     {
         $profile = $request->user()->studentProfile;
 
-        $appointments = GuidanceAppointment::where('student_profile_id', $profile?->id)
-            ->with(['counselor', 'appointmentType'])
-            ->orderBy('appointment_date', 'desc')
+        $query = GuidanceAppointment::where('student_profile_id', $profile?->id)
+            ->with(['counselor', 'appointmentType']);
+
+        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
+            $like = '%'.addcslashes($search, '\\%_').'%';
+
+            $query->where(function ($q) use ($like) {
+                $q->where('appointment_type', 'like', $like)
+                    ->orWhere('status', 'like', $like)
+                    ->orWhereHas('counselor', fn ($counselor) => $counselor->where('name', 'like', $like))
+                    ->orWhereHas('appointmentType', fn ($type) => $type->where('name', 'like', $like));
+            });
+        }
+
+        $appointments = $query->orderBy('appointment_date', 'desc')
             ->orderBy('start_time', 'desc')
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('student.guidance.appointments', compact('appointments'));
     }

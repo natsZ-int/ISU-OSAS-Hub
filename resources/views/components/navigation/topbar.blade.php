@@ -40,6 +40,8 @@
                 <input type="search" id="global-quick-search" name="search"
                        value="{{ request()->routeIs('student.scholarships.*') ? request('search') : '' }}"
                        placeholder="Quick Search scholarships..." maxlength="200"
+                       data-live-search
+                       data-live-search-endpoint="{{ route('student.quick-search', ['module' => 'scholarships']) }}"
                        style="width:190px;padding:.35rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.82rem;">
                 <button type="submit" class="btn btn-outline btn-sm">Search</button>
             </form>

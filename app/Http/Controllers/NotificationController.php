@@ -19,9 +19,21 @@ class NotificationController extends Controller
     {
         $user = auth()->user();
 
-        $notifications = Notification::forUser($user->id)
-            ->latest('created_at')
-            ->paginate(15);
+        $query = Notification::forUser($user->id)
+            ->latest('created_at');
+
+        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
+            $like = '%'.addcslashes($search, '\\%_').'%';
+
+            $query->where(function ($q) use ($like) {
+                $q->where('title', 'like', $like)
+                    ->orWhere('message', 'like', $like)
+                    ->orWhere('type', 'like', $like)
+                    ->orWhere('related_type', 'like', $like);
+            });
+        }
+
+        $notifications = $query->paginate(15)->withQueryString();
 
         $unreadCount = $this->notificationService->getUnreadCount($user);
 

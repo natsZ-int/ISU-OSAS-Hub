@@ -5,7 +5,24 @@
         'serviceTypes'      => collect(),
         'appointmentTypes'  => collect(),
     ];
+
+    $quickFindModule = match (true) {
+        request()->routeIs('admin.analytics.scholarships') => 'analytics-scholarships',
+        request()->routeIs('admin.analytics.guidance') => 'analytics-guidance',
+        request()->routeIs('admin.analytics.services') => 'analytics-services',
+        default => 'analytics',
+    };
 @endphp
+
+<div class="card filter-card">
+    <x-live-search
+        :endpoint="route('admin.quick-search', ['module' => $quickFindModule])"
+        name="quick_find"
+        id="analytics-quick-find"
+        label="Quick Find"
+        placeholder="Jump straight to an application, appointment, or service request..."
+    />
+</div>
 
 <x-filter-bar :action="$filterAction ?? route('admin.analytics.index')">
     <x-filter-field label="Date From" for-id="filter_date_from">

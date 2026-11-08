@@ -19,6 +19,7 @@ use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\Counselor\GuidanceController as CounselorGuidanceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\QuickSearchController;
 use App\Http\Controllers\Staff\EnrollmentVerificationController;
 use App\Http\Controllers\Student\ApplicationController;
 use App\Http\Controllers\Student\DocumentController;
@@ -74,6 +75,7 @@ Route::middleware('auth')->group(function () {
         ->name('enrollment-verifications.')
         ->group(function () {
             Route::get('/', [EnrollmentVerificationController::class, 'index'])->name('index');
+            Route::get('/quick-search', [QuickSearchController::class, 'enrollment'])->name('quick-search');
             Route::get('/{enrollmentVerification}', [EnrollmentVerificationController::class, 'show'])->name('show');
             Route::patch('/{enrollmentVerification}', [EnrollmentVerificationController::class, 'update'])->name('update');
         });
@@ -81,6 +83,9 @@ Route::middleware('auth')->group(function () {
     // ─── Admin ─────────────────────────────────────────────────────────
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
+
+        // Live quick search (role- and module-scoped suggestions)
+        Route::get('/quick-search/{module}', [QuickSearchController::class, 'admin'])->name('quick-search');
 
         // Analytics (Admin Only, Active Account Required)
         Route::middleware('active')->prefix('analytics')->name('analytics.')->group(function () {
@@ -151,6 +156,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/scheduling-settings', [AdminGuidanceController::class, 'settings'])->name('settings');
             Route::patch('/scheduling-settings', [AdminGuidanceController::class, 'updateSettings'])->name('settings.update');
             Route::get('/appointments', [AdminGuidanceController::class, 'appointments'])->name('appointments');
+            Route::get('/appointments/{appointment}', [AdminGuidanceController::class, 'showAppointment'])->name('appointments.show');
         });
 
         // Student Services Management
@@ -175,6 +181,9 @@ Route::middleware('auth')->group(function () {
     // ─── Student ───────────────────────────────────────────────────────
     Route::middleware(['role:student', 'verified.email'])->prefix('student')->name('student.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'student'])->name('dashboard');
+
+        // Live quick search, scoped to the signed-in student's records
+        Route::get('/quick-search/{module}', [QuickSearchController::class, 'student'])->name('quick-search');
 
         // Student Profile
         Route::get('/profile', [StudentProfileController::class, 'show'])->name('profile.show');
@@ -240,6 +249,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:counselor')->prefix('counselor')->name('counselor.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'counselor'])->name('dashboard');
 
+        // Live quick search over the counselor's own appointments
+        Route::get('/quick-search/{module}', [QuickSearchController::class, 'counselor'])->name('quick-search');
+
         // Counselor Guidance Management
         Route::prefix('guidance')->name('guidance.')->group(function () {
             Route::get('/availability', [CounselorGuidanceController::class, 'availability'])->name('availability');
@@ -256,6 +268,7 @@ Route::middleware('auth')->group(function () {
     // ─── Notifications (All Active Authenticated Users) ───────────
     Route::middleware('active')->group(function () {
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/notifications/quick-search', [QuickSearchController::class, 'notifications'])->name('notifications.quick-search');
         Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
         Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     });

@@ -33,11 +33,22 @@ class ServiceRequestController extends Controller
         $this->numberGenerator = $numberGenerator;
     }
 
-    public function catalog()
+    public function catalog(Request $request)
     {
-        $serviceTypes = ServiceType::where('is_active', true)
-            ->with('requirements')
-            ->orderBy('display_order')
+        $query = ServiceType::where('is_active', true)
+            ->with('requirements');
+
+        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
+            $like = '%'.addcslashes($search, '\\%_').'%';
+
+            $query->where(function ($q) use ($like) {
+                $q->where('name', 'like', $like)
+                    ->orWhere('description', 'like', $like)
+                    ->orWhere('instructions', 'like', $like);
+            });
+        }
+
+        $serviceTypes = $query->orderBy('display_order')
             ->get();
 
         return view('student.services.catalog', compact('serviceTypes'));
@@ -148,6 +159,17 @@ class ServiceRequestController extends Controller
 
         $query = StudentServiceRequest::where('student_profile_id', $studentProfile->id)
             ->with('serviceType');
+
+        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
+            $like = '%'.addcslashes($search, '\\%_').'%';
+
+            $query->where(function ($q) use ($like) {
+                $q->where('request_number', 'like', $like)
+                    ->orWhere('description', 'like', $like)
+                    ->orWhere('status', 'like', $like)
+                    ->orWhereHas('serviceType', fn ($type) => $type->where('name', 'like', $like));
+            });
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
