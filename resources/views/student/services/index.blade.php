@@ -15,28 +15,6 @@
         <div class="alert alert-success" style="margin-bottom: 1.5rem; padding: 0.75rem 1rem; background: #d4edda; color: #155724; border-radius: 6px;">{{ session('status') }}</div>
     @endif
 
-    <form method="GET" action="{{ route('student.services.index') }}" role="search"
-          style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end;">
-            <div style="flex: 1; min-width: 240px;">
-                <label for="service_request_search" style="display: block; font-size: 0.8rem; font-weight: 600; color: #475569; margin-bottom: 0.3rem;">Search Requests</label>
-                <input type="search" id="service_request_search" name="search"
-                       value="{{ request('search') }}"
-                       placeholder="Request number, service type, status, or description..."
-                       maxlength="200"
-                       data-live-search
-                       data-live-search-endpoint="{{ route('student.quick-search', ['module' => 'service-requests']) }}"
-                       style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;">
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-                <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">Search</button>
-                @if (request('search'))
-                    <a href="{{ route('student.services.index') }}" class="btn btn-outline" style="padding: 0.5rem 1rem; text-decoration: none;">Clear</a>
-                @endif
-            </div>
-        </div>
-    </form>
-
     <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
             <thead>

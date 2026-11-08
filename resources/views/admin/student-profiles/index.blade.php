@@ -21,9 +21,7 @@
                 <div class="form-group" style="flex:2;">
                     <label for="search">Search</label>
                     <input type="text" id="search" name="search" value="{{ request('search') }}"
-                           placeholder="Student number, name, or email"
-                           data-live-search
-                           data-live-search-endpoint="{{ route('admin.quick-search', ['module' => 'students']) }}">
+                           placeholder="Student number, name, or email">
                 </div>
 
                 <div class="form-group">

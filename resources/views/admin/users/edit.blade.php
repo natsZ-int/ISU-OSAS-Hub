@@ -26,19 +26,32 @@
                 </div>
                 <div class="form-group">
                     <label for="email">Email *</label>
-                    <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required>
+                    @if ($user->isSystemAdmin())
+                        <input type="text" id="email" value="{{ $user->email }}" disabled>
+                        <input type="hidden" name="email" value="{{ old('email', $user->email) }}">
+                        <span class="field-hint">The System Administrator e-mail is locked to keep role management secure.</span>
+                    @else
+                        <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required>
+                    @endif
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="role_id">Role *</label>
-                    <select id="role_id" name="role_id" required>
-                        @foreach ($roles as $r)
-                            <option value="{{ $r->id }}" {{ old('role_id', $user->role_id) == $r->id ? 'selected' : '' }}>
-                                {{ $r->label ?? ucfirst($r->name) }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <label for="role_id">Role {{ auth()->user()->isSystemAdmin() ? '*' : '' }}</label>
+                    @if (auth()->user()->isSystemAdmin())
+                        <select id="role_id" name="role_id" required>
+                            @foreach ($roles as $r)
+                                <option value="{{ $r->id }}" {{ old('role_id', $user->role_id) == $r->id ? 'selected' : '' }}>
+                                    {{ $r->label ?? ucfirst($r->name) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @else
+                        <input type="text" id="role_id"
+                               value="{{ $user->role?->label ?? ucfirst($user->role?->name ?? 'N/A') }}"
+                               disabled>
+                        <span class="field-hint">Only the System Administrator can change user roles.</span>
+                    @endif
                 </div>
             </div>
         </fieldset>

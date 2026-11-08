@@ -107,21 +107,6 @@ class GuidanceController extends Controller
         $query = GuidanceAppointment::where('counselor_id', $counselor->id)
             ->with(['studentProfile.user', 'appointmentType']);
 
-        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
-            $like = '%'.addcslashes($search, '\\%_').'%';
-
-            $query->where(function ($q) use ($like) {
-                $q->where('appointment_type', 'like', $like)
-                    ->orWhere('status', 'like', $like)
-                    ->orWhereHas('studentProfile', function ($student) use ($like) {
-                        $student->where('student_number', 'like', $like)
-                            ->orWhere('first_name', 'like', $like)
-                            ->orWhere('last_name', 'like', $like);
-                    })
-                    ->orWhereHas('appointmentType', fn ($type) => $type->where('name', 'like', $like));
-            });
-        }
-
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }

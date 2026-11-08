@@ -33,6 +33,19 @@
 
     @include('admin.analytics._tabs')
 
+    @include('admin.analytics._record_search', [
+        'recordSearchTitle' => 'Find a Scholarship',
+        'searches' => [
+            [
+                'id' => 'analytics-scholarship-search',
+                'field' => 'Scholarships',
+                'results' => 'scholarships',
+                'endpoint' => route('quick-search.suggest', 'admin-scholarships'),
+                'placeholder' => 'Title, provider, or scholarship type...',
+            ],
+        ],
+    ])
+
     <div class="stat-grid">
         <x-metric-card
             label="Approval Rate"

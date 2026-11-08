@@ -7,15 +7,25 @@ use App\Http\Requests\StoreServiceTypeRequest;
 use App\Http\Requests\UpdateServiceTypeRequest;
 use App\Models\ServiceType;
 use App\Services\AuditLogService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ServiceTypeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $serviceTypes = ServiceType::withCount('serviceRequests')
-            ->orderBy('display_order')
-            ->get();
+        $query = ServiceType::withCount('serviceRequests');
+
+        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
+            $like = '%'.addcslashes($search, '%_\\').'%';
+            $query->where(function ($q) use ($like) {
+                $q->where('name', 'like', $like)
+                    ->orWhere('description', 'like', $like)
+                    ->orWhere('instructions', 'like', $like);
+            });
+        }
+
+        $serviceTypes = $query->orderBy('display_order')->get();
 
         return view('admin.services.types.index', compact('serviceTypes'));
     }

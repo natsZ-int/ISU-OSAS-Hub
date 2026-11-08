@@ -17,6 +17,9 @@ class UserManagementTest extends TestCase
     {
         parent::setUp();
         $this->seed(RolesSeeder::class);
+
+        // Make the default test admin the seeded System Administrator.
+        config(['app.system_admin_email' => 'admin@test.local']);
     }
 
     private function createAdmin(): User
@@ -48,6 +51,17 @@ class UserManagementTest extends TestCase
             'email' => 'counselor@test.local',
             'password' => Hash::make('password123'),
             'role_id' => Role::where('name', 'counselor')->first()->id,
+            'is_active' => true,
+        ]);
+    }
+
+    private function createSecondaryAdmin(): User
+    {
+        return User::create([
+            'name' => 'Other Admin',
+            'email' => 'other-admin@test.local',
+            'password' => Hash::make('password123'),
+            'role_id' => Role::where('name', 'admin')->first()->id,
             'is_active' => true,
         ]);
     }
@@ -174,5 +188,140 @@ class UserManagementTest extends TestCase
             'student_number' => '2024-0003',
             'enrollment_status' => 'graduated',
         ])->assertSessionHasErrors('enrollment_status');
+    }
+
+    public function test_admin_receives_typeahead_user_suggestions(): void
+    {
+        $admin = $this->createAdmin();
+        $student = $this->createStudent();
+        $student->studentProfile()->create([
+            'student_number' => '2024-0009',
+            'first_name' => 'Test',
+            'last_name' => 'Student',
+            'year_level' => 1,
+        ]);
+
+        $this->actingAs($admin);
+
+        $this->getJson('/admin/users/suggestions?q=stu')
+            ->assertOk()
+            ->assertJsonPath('query', 'stu')
+            ->assertJsonFragment(['name' => 'Test Student', 'match' => 'name']);
+
+        $this->getJson('/admin/users/suggestions?q=2024-0009')
+            ->assertOk()
+            ->assertJsonFragment([
+                'student_number' => '2024-0009',
+                'match' => 'student number',
+                'search' => '2024-0009',
+            ]);
+    }
+
+    public function test_typeahead_user_suggestions_are_admin_only(): void
+    {
+        $student = $this->createStudent();
+
+        $this->actingAs($student)
+            ->getJson('/admin/users/suggestions?q=test')
+            ->assertForbidden();
+    }
+
+    public function test_only_the_system_admin_can_change_user_roles(): void
+    {
+        $systemAdmin = $this->createAdmin();
+        $otherAdmin = $this->createSecondaryAdmin();
+        $student = $this->createStudent();
+        $counselorRole = Role::where('name', Role::COUNSELOR)->firstOrFail();
+
+        $payload = [
+            'name' => $student->name,
+            'email' => $student->email,
+            'role_id' => $counselorRole->id,
+        ];
+
+        $this->actingAs($otherAdmin)
+            ->put("/admin/users/{$student->id}", $payload)
+            ->assertSessionHasErrors('role_id');
+
+        $this->assertSame(Role::STUDENT, $student->fresh()->role->name);
+
+        $this->actingAs($systemAdmin)
+            ->put("/admin/users/{$student->id}", $payload)
+            ->assertRedirect(route('admin.users.index'));
+
+        $this->assertSame(Role::COUNSELOR, $student->fresh()->role->name);
+    }
+
+    public function test_other_admins_can_update_users_without_changing_roles(): void
+    {
+        $otherAdmin = $this->createSecondaryAdmin();
+        $student = $this->createStudent();
+
+        $this->actingAs($otherAdmin)
+            ->put("/admin/users/{$student->id}", [
+                'name' => 'Renamed Student',
+                'email' => $student->email,
+            ])
+            ->assertRedirect(route('admin.users.index'));
+
+        $student->refresh();
+
+        $this->assertSame('Renamed Student', $student->name);
+        $this->assertSame(Role::STUDENT, $student->role->name);
+    }
+
+    public function test_other_admins_see_role_as_read_only(): void
+    {
+        $otherAdmin = $this->createSecondaryAdmin();
+        $student = $this->createStudent();
+
+        $this->actingAs($otherAdmin)
+            ->get("/admin/users/{$student->id}/edit")
+            ->assertOk()
+            ->assertSee('Only the System Administrator can change user roles.')
+            ->assertDontSee('name="role_id"', false);
+    }
+
+    public function test_system_admin_email_is_locked(): void
+    {
+        $systemAdmin = $this->createAdmin();
+
+        $this->actingAs($systemAdmin)
+            ->put("/admin/users/{$systemAdmin->id}", [
+                'name' => $systemAdmin->name,
+                'email' => 'renamed-admin@test.local',
+            ])
+            ->assertSessionHasErrors('email');
+
+        $this->assertSame('admin@test.local', $systemAdmin->fresh()->email);
+    }
+
+    public function test_only_the_system_admin_can_create_administrator_accounts(): void
+    {        $otherAdmin = $this->createSecondaryAdmin();
+        $adminRole = Role::where('name', Role::ADMIN)->firstOrFail();
+
+        $this->actingAs($otherAdmin)
+            ->post('/admin/users', [
+                'name' => 'Another Admin',
+                'email' => 'another-admin@test.local',
+                'role_id' => $adminRole->id,
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+            ])
+            ->assertSessionHasErrors('role_id');
+
+        $this->assertDatabaseMissing('users', ['email' => 'another-admin@test.local']);
+    }
+
+    public function test_users_index_supports_live_ajax_filtering(): void
+    {
+        $admin = $this->createAdmin();
+        $this->createStudent();
+
+        $this->actingAs($admin)
+            ->getJson('/admin/users?search=Test+Student')
+            ->assertOk()
+            ->assertJsonStructure(['html', 'total', 'first', 'last'])
+            ->assertJsonPath('total', 1);
     }
 }

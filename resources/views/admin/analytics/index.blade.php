@@ -38,6 +38,33 @@
     {{-- Section tabs --}}
     @include('admin.analytics._tabs')
 
+    @include('admin.analytics._record_search', [
+        'recordSearchTitle' => 'Find a Record',
+        'searches' => [
+            [
+                'id' => 'analytics-application-search',
+                'field' => 'Scholarship Applications',
+                'results' => 'applications',
+                'endpoint' => route('quick-search.suggest', 'admin-applications'),
+                'placeholder' => 'Application #, student, or scholarship...',
+            ],
+            [
+                'id' => 'analytics-appointment-search',
+                'field' => 'Guidance Appointments',
+                'results' => 'appointments',
+                'endpoint' => route('quick-search.suggest', 'admin-guidance-appointments'),
+                'placeholder' => 'Student, counselor, type, or status...',
+            ],
+            [
+                'id' => 'analytics-service-request-search',
+                'field' => 'Service Requests',
+                'results' => 'service requests',
+                'endpoint' => route('quick-search.suggest', 'admin-service-requests'),
+                'placeholder' => 'Request #, student, or service...',
+            ],
+        ],
+    ])
+
     @php
         $hasAnyData = ($summary['total_applications'] + $summary['total_appointments'] + $summary['total_service_requests']) > 0;
     @endphp

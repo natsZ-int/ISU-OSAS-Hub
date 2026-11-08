@@ -16,9 +16,7 @@
             <div class="form-group" style="flex: 2;">
                 <label for="search">Search Title or Provider</label>
                 <input type="text" id="search" name="search" value="{{ request('search') }}"
-                       placeholder="Search scholarships..."
-                       data-live-search
-                       data-live-search-endpoint="{{ route('admin.quick-search', ['module' => 'scholarships']) }}">
+                       placeholder="Search scholarships...">
             </div>
             <div class="form-group">
                 <label for="status">Status</label>

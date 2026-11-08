@@ -36,6 +36,28 @@
     </form>
 </div>
 
+{{-- Search --}}
+<div class="card filter-card" style="margin-bottom: 1.5rem;">
+    <form method="GET" action="{{ route('admin.guidance.types') }}" class="filter-form">
+        <div class="filter-row" style="align-items:flex-end;">
+            <div class="form-group" style="flex:2;">
+                <label for="type-search">Search Appointment Types</label>
+                <x-live-search
+                    id="type-search"
+                    name="search"
+                    :value="request('search')"
+                    :endpoint="route('quick-search.suggest', 'admin-guidance-types')"
+                    placeholder="Name or description..."
+                    label="appointment types" />
+            </div>
+            <div class="filter-actions" style="margin:0;">
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                <a href="{{ route('admin.guidance.types') }}" class="btn btn-outline-dark btn-sm">Clear</a>
+            </div>
+        </div>
+    </form>
+</div>
+
 {{-- Types Table --}}
 @if ($types->count() > 0)
     <table class="table">
@@ -50,7 +72,7 @@
         </thead>
         <tbody>
             @foreach ($types as $t)
-            <tr>
+            <tr id="type-{{ $t->id }}">
                 <td>{{ $t->display_order }}</td>
                 <td>
                     <strong>{{ $t->name }}</strong>

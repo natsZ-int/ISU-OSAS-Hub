@@ -12,28 +12,6 @@
     <x-alert type="error">{{ $errors->first() }}</x-alert>
 @endif
 
-<x-card class="filter-card">
-    <form method="GET" action="{{ route('student.guidance.appointments') }}" class="filter-form" role="search">
-        <div class="filter-row">
-            <div class="form-group" style="flex:2;">
-                <label for="appointment_search">Search</label>
-                <input type="search" id="appointment_search" name="search"
-                       value="{{ request('search') }}"
-                       placeholder="Counselor, appointment type, or status..."
-                       maxlength="200"
-                       data-live-search
-                       data-live-search-endpoint="{{ route('student.quick-search', ['module' => 'appointments']) }}">
-            </div>
-            <div class="form-group" style="align-self:flex-end;">
-                <button type="submit" class="btn btn-primary btn-sm">Search</button>
-                @if (request('search'))
-                    <a href="{{ route('student.guidance.appointments') }}" class="btn btn-outline-dark btn-sm">Clear</a>
-                @endif
-            </div>
-        </div>
-    </form>
-</x-card>
-
 @if ($appointments->count() > 0)
     <div class="table-responsive">
         <table class="data-table">

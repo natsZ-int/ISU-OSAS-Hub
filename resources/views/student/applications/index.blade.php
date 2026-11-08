@@ -11,39 +11,6 @@
     <div class="alert alert-success">{{ session('success') }}</div>
 @endif
 
-<div class="card filter-card">
-    <form method="GET" action="{{ route('student.applications.index') }}" class="filter-form" role="search">
-        <div class="filter-row">
-            <div class="form-group" style="flex:2;">
-                <label for="application_search">Search</label>
-                <input type="search" id="application_search" name="search"
-                       value="{{ request('search') }}"
-                       placeholder="Application number, scholarship, or provider..."
-                       maxlength="200"
-                       data-live-search
-                       data-live-search-endpoint="{{ route('student.quick-search', ['module' => 'applications']) }}">
-            </div>
-            <div class="form-group">
-                <label for="application_status">Status</label>
-                <select id="application_status" name="status">
-                    <option value="">All Statuses</option>
-                    @foreach (\App\Models\ScholarshipApplication::ALLOWED_STATUSES as $status)
-                        <option value="{{ $status }}" @selected(request('status') === $status)>
-                            {{ ucfirst(str_replace('_', ' ', $status)) }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="form-group" style="align-self:flex-end;">
-                <button type="submit" class="btn btn-primary btn-sm">Search</button>
-                @if (request()->hasAny(['search', 'status']))
-                    <a href="{{ route('student.applications.index') }}" class="btn btn-outline-dark btn-sm">Clear</a>
-                @endif
-            </div>
-        </div>
-    </form>
-</div>
-
 @if ($applications->count() > 0)
 <div class="card table-card">
     <div class="table-responsive">

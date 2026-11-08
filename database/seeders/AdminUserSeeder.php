@@ -13,7 +13,7 @@ class AdminUserSeeder extends Seeder
     {
         $adminRole = Role::where('name', Role::ADMIN)->firstOrFail();
 
-        $email = env('ADMIN_EMAIL', 'admin@isu.local');
+        $email = config('app.system_admin_email');
         $name = env('ADMIN_NAME', 'System Administrator');
         $password = env('ADMIN_PASSWORD');
 

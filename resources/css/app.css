@@ -12,6 +12,8 @@
 .data-table th{background:#f9fafb;font-weight:700;color:var(--primary-dark);white-space:nowrap}
 .data-table tbody tr:hover{background:#f0fdf4}
 .actions-cell{white-space:nowrap;display:flex;gap:.35rem;flex-wrap:wrap}
+.actions-cell--icons{display:table-cell;text-align:right}
+.action-group{display:inline-flex;align-items:center;justify-content:flex-end;gap:.3rem}
 .inline-form{display:inline}
 .badge{display:inline-block;padding:.2rem .6rem;border-radius:999px;font-size:.75rem;font-weight:700;text-transform:uppercase}
 .badge-admin{background:#dbeafe;color:#1e40af}
@@ -46,4 +48,5 @@ select{width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-rad
     .form-row{flex-direction:column}
     .page-header{flex-direction:column;align-items:flex-start}
     .actions-cell{flex-direction:column}
+    .actions-cell--icons{display:table-cell}
 }

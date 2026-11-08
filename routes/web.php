@@ -64,6 +64,13 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
+    // ─── Shared live-search suggestions ────────────────────────────
+    // Every searchable module registers its own scoped resolver and role
+    // rules in App\Services\QuickSearchService.
+    Route::get('/quick-search/{module}', [QuickSearchController::class, 'suggest'])
+        ->middleware('throttle:120,1')
+        ->name('quick-search.suggest');
+
     // ─── Email Verification (OTP) ───────────────────────────────────
     Route::get('/email/verify', [VerificationController::class, 'notice'])->name('verification.notice');
     Route::post('/email/verify', [VerificationController::class, 'verify'])->middleware('throttle:10,1')->name('verification.verify');
@@ -103,6 +110,8 @@ Route::middleware('auth')->group(function () {
         // User Management
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::get('/users/suggestions', [UserController::class, 'suggest'])
+            ->middleware('throttle:60,1')->name('users.suggestions');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
         Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
@@ -209,7 +218,8 @@ Route::middleware('auth')->group(function () {
         // Browse Scholarships
         Route::get('/scholarships', [StudentScholarshipController::class, 'index'])->name('scholarships.index');
         // Quick Search must be declared before the dynamic {scholarship} route.
-        Route::get('/scholarships/quick-search', [StudentScholarshipController::class, 'quickSearch'])->name('scholarships.quick-search');
+        Route::get('/scholarships/quick-search', [StudentScholarshipController::class, 'quickSearch'])
+            ->middleware('throttle:120,1')->name('scholarships.quick-search');
         Route::get('/scholarships/search', [StudentScholarshipController::class, 'search'])->name('scholarships.search');
         Route::get('/scholarships/{scholarship}', [StudentScholarshipController::class, 'show'])->name('scholarships.show');
 

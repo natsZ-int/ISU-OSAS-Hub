@@ -33,6 +33,19 @@
 
     @include('admin.analytics._tabs')
 
+    @include('admin.analytics._record_search', [
+        'recordSearchTitle' => 'Find a Service Request',
+        'searches' => [
+            [
+                'id' => 'analytics-service-search',
+                'field' => 'Service Requests',
+                'results' => 'service requests',
+                'endpoint' => route('quick-search.suggest', 'admin-service-requests'),
+                'placeholder' => 'Request #, student, or service...',
+            ],
+        ],
+    ])
+
     <div class="stat-grid">
         <x-metric-card
             label="Completed Requests"

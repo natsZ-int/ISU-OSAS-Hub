@@ -51,6 +51,13 @@ class ScholarshipController extends Controller
      */
     public function quickSearch(Request $request): JsonResponse|RedirectResponse
     {
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:200'],
+            'search' => ['nullable', 'string', 'max:200'],
+            'keyword' => ['nullable', 'string', 'max:200'],
+            'query' => ['nullable', 'string', 'max:200'],
+        ]);
+
         $term = $request->input('q')
             ?? $request->input('search')
             ?? $request->input('keyword')
@@ -74,11 +81,24 @@ class ScholarshipController extends Controller
                     return [
                         'id' => $scholarship->id,
                         'title' => $scholarship->title,
+                        'subtitle' => $scholarship->provider,
                         'provider' => $scholarship->provider,
                         'type' => $scholarship->scholarship_type,
+                        'meta' => trim(implode(' · ', array_filter([
+                            $scholarship->scholarship_type,
+                            $scholarship->application_deadline
+                                ? 'Deadline '.$scholarship->application_deadline->format('M d, Y')
+                                : null,
+                        ]))),
                         'deadline' => $scholarship->application_deadline?->format('M d, Y'),
                         'eligible' => $match?->isEligible(),
                         'match_score' => $match?->matchScore,
+                        'badge' => $match?->isEligible() ? 'Eligible' : null,
+                        'badge_tone' => $match?->isEligible() ? 'active' : 'inactive',
+                        'search' => $scholarship->title,
+                        'avatar' => \Illuminate\Support\Str::upper(
+                            \Illuminate\Support\Str::substr($scholarship->title, 0, 1)
+                        ),
                         'url' => route('student.scholarships.show', $scholarship),
                     ];
                 })->values(),

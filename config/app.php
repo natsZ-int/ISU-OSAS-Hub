@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | System Administrator
+    |--------------------------------------------------------------------------
+    |
+    | The e-mail address of the seeded system administrator. Only this account
+    | may assign or change user roles; all other administrators see the role
+    | field as read-only.
+    |
+    */
+
+    'system_admin_email' => env('ADMIN_EMAIL', 'admin@isu.local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

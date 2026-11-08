@@ -18,7 +18,22 @@ class StoreUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'role_id' => ['required', 'integer', Rule::exists('roles', 'id')],
+            'role_id' => [
+                'required',
+                'integer',
+                Rule::exists('roles', 'id'),
+                function ($attribute, $value, $fail) {
+                    if ($this->user()?->isSystemAdmin()) {
+                        return;
+                    }
+
+                    $adminRoleId = Role::where('name', Role::ADMIN)->value('id');
+
+                    if ($adminRoleId && (int) $value === (int) $adminRoleId) {
+                        $fail('Only the System Administrator can create Administrator accounts.');
+                    }
+                },
+            ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'is_active' => ['sometimes', 'boolean'],
 

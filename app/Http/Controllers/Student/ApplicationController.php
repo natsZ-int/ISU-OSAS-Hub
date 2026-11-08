@@ -33,18 +33,6 @@ class ApplicationController extends Controller
         $query = ScholarshipApplication::where('student_profile_id', $profile->id)
             ->with(['scholarship', 'documents']);
 
-        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
-            $like = '%'.addcslashes($search, '\\%_').'%';
-
-            $query->where(function ($q) use ($like) {
-                $q->where('application_number', 'like', $like)
-                    ->orWhereHas('scholarship', function ($scholarship) use ($like) {
-                        $scholarship->where('title', 'like', $like)
-                            ->orWhere('provider', 'like', $like);
-                    });
-            });
-        }
-
         if ($status = $request->filled('status') ? $request->input('status') : null) {
             if (in_array($status, ScholarshipApplication::ALLOWED_STATUSES)) {
                 $query->where('status', $status);

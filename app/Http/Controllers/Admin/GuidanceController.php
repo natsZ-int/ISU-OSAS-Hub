@@ -16,9 +16,16 @@ class GuidanceController extends Controller
 {
     // ── Appointment Types ───────────────────────────
 
-    public function types(): View
+    public function types(Request $request): View
     {
-        $types = GuidanceAppointmentType::orderBy('display_order')->get();
+        $query = GuidanceAppointmentType::query()->withCount('appointments');
+
+        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
+            $like = '%'.addcslashes($search, '%_\\').'%';
+            $query->where(fn ($q) => $q->where('name', 'like', $like)->orWhere('description', 'like', $like));
+        }
+
+        $types = $query->orderBy('display_order')->get();
 
         return view('admin.guidance.types', compact('types'));
     }
@@ -133,22 +140,6 @@ class GuidanceController extends Controller
     public function appointments(Request $request): View
     {
         $query = GuidanceAppointment::with(['studentProfile', 'counselor', 'appointmentType']);
-
-        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
-            $like = '%'.addcslashes($search, '\\%_').'%';
-
-            $query->where(function ($q) use ($like) {
-                $q->where('appointment_type', 'like', $like)
-                    ->orWhere('status', 'like', $like)
-                    ->orWhereHas('studentProfile', function ($student) use ($like) {
-                        $student->where('student_number', 'like', $like)
-                            ->orWhere('first_name', 'like', $like)
-                            ->orWhere('last_name', 'like', $like);
-                    })
-                    ->orWhereHas('counselor', fn ($counselor) => $counselor->where('name', 'like', $like))
-                    ->orWhereHas('appointmentType', fn ($type) => $type->where('name', 'like', $like));
-            });
-        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

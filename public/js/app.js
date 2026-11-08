@@ -124,6 +124,491 @@
             resendBtn.disabled = false;
         }
     }
+
+    /* ── Live filtering (refresh results without a page reload) ─ */
+    document.querySelectorAll('form[data-live-filter]').forEach(function (form) {
+        var selector = form.getAttribute('data-live-filter-target');
+        var target = selector ? document.querySelector(selector) : null;
+
+        if (!target) return;
+        if (typeof window.fetch !== 'function' || typeof window.AbortController !== 'function') return;
+
+        var status = document.querySelector('[data-live-filter-status]');
+        var countEl = document.querySelector('[data-live-filter-count]');
+        var timer = null;
+        var controller = null;
+        var requestId = 0;
+
+        function buildRequest() {
+            var params = new URLSearchParams();
+
+            new FormData(form).forEach(function (value, key) {
+                if (String(value).trim() !== '') params.append(key, value);
+            });
+
+            var query = params.toString();
+
+            return {
+                query: query,
+                url: form.action + (query !== '' ? '?' + query : '')
+            };
+        }
+
+        function refresh() {
+            if (typeof window.fetch !== 'function') return;
+
+            if (controller) controller.abort();
+            controller = new AbortController();
+
+            var current = ++requestId;
+            var request = buildRequest();
+
+            target.classList.add('is-loading');
+            target.setAttribute('aria-busy', 'true');
+
+            window.fetch(request.url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                signal: controller.signal
+            }).then(function (response) {
+                if (!response.ok) throw new Error('Filter request failed');
+                return response.json();
+            }).then(function (data) {
+                if (current !== requestId) return;
+
+                target.innerHTML = data.html;
+
+                if (countEl) {
+                    countEl.textContent = data.total + (data.total === 1 ? ' record' : ' records');
+                }
+
+                if (status) {
+                    status.textContent = data.total === 0
+                        ? 'No records match the current filters.'
+                        : 'Showing ' + data.first + ' to ' + data.last + ' of ' + data.total + ' records.';
+                }
+
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, '', request.url);
+                }
+            }).catch(function (error) {
+                if (error.name === 'AbortError') return;
+                form.classList.remove('is-loading');
+            }).finally(function () {
+                if (current !== requestId) return;
+
+                form.classList.remove('is-loading');
+                target.classList.remove('is-loading');
+                target.removeAttribute('aria-busy');
+            });
+        }
+
+        function debouncedRefresh() {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(refresh, 300);
+        }
+
+        form.querySelectorAll('input, select').forEach(function (field) {
+            if (field.type === 'hidden') return;
+            field.addEventListener('input', debouncedRefresh);
+            field.addEventListener('change', debouncedRefresh);
+        });
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            window.clearTimeout(timer);
+            refresh();
+        });
+    });
+
+    /* ── Live search (Google-style typeahead suggestions) ─────── */
+    document.querySelectorAll('[data-smart-search]').forEach(function (root) {
+        var form = root.closest('form');
+        var input = root.querySelector('[data-smart-search-input]');
+        var panel = root.querySelector('[data-smart-search-panel]');
+        var status = root.querySelector('[data-smart-search-status]');
+        var endpoint = root.getAttribute('data-smart-search-endpoint');
+        var label = root.getAttribute('data-smart-search-label') || 'results';
+
+        if (!input || !panel || !endpoint) return;
+        if (typeof window.fetch !== 'function' || typeof window.AbortController !== 'function') return;
+
+        var controller = null;
+        var timer = null;
+        var options = [];
+        var activeIndex = -1;
+        var lastQuery = '';
+        var uid = 'smart-search-' + Math.random().toString(36).slice(2, 9);
+
+        function setExpanded(open) {
+            input.setAttribute('aria-expanded', open ? 'true' : 'false');
+            panel.hidden = !open;
+        }
+
+        function announce(message) {
+            if (status) status.textContent = message;
+        }
+
+        function close() {
+            setExpanded(false);
+            clearActive();
+        }
+
+        function clearActive() {
+            options.forEach(function (option) {
+                option.classList.remove('is-active');
+                option.setAttribute('aria-selected', 'false');
+            });
+            options = [];
+            activeIndex = -1;
+            input.removeAttribute('aria-activedescendant');
+        }
+
+        function setActive(index) {
+            if (!options.length) return;
+            if (index < 0) index = options.length - 1;
+            if (index >= options.length) index = 0;
+
+            options.forEach(function (option, position) {
+                var isActive = position === index;
+                option.classList.toggle('is-active', isActive);
+                option.setAttribute('aria-selected', isActive ? 'true' : 'false');
+            });
+
+            activeIndex = index;
+            input.setAttribute('aria-activedescendant', options[index].id);
+            options[index].scrollIntoView({ block: 'nearest' });
+        }
+
+        function initials(name) {
+            return String(name || '').trim().split(/\s+/).slice(0, 2).map(function (part) {
+                return part.charAt(0);
+            }).join('').toUpperCase();
+        }
+
+        function escapeRegex(value) {
+            return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        /**
+         * Highlight every occurrence of each search token, not just the first.
+         */
+        function highlight(text, term) {
+            var fragment = document.createDocumentFragment();
+            var safeText = text == null ? '' : String(text);
+            var tokens = String(term || '').trim().split(/\s+/).filter(Boolean);
+
+            if (!tokens.length) {
+                fragment.appendChild(document.createTextNode(safeText));
+                return fragment;
+            }
+
+            tokens.sort(function (a, b) { return b.length - a.length; });
+
+            var regex = new RegExp('(' + tokens.map(escapeRegex).join('|') + ')', 'gi');
+            var lastIndex = 0;
+            var match;
+
+            while ((match = regex.exec(safeText)) !== null) {
+                if (match.index > lastIndex) {
+                    fragment.appendChild(document.createTextNode(safeText.slice(lastIndex, match.index)));
+                }
+
+                var mark = document.createElement('mark');
+                mark.textContent = match[0];
+                fragment.appendChild(mark);
+                lastIndex = regex.lastIndex;
+
+                if (match[0].length === 0) regex.lastIndex += 1;
+            }
+
+            if (lastIndex < safeText.length) {
+                fragment.appendChild(document.createTextNode(safeText.slice(lastIndex)));
+            }
+
+            return fragment;
+        }
+
+        function appendBadge(container, labelText, tone) {
+            if (!labelText) return;
+
+            var badge = document.createElement('span');
+            var safeTone = String(tone || 'info').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+            badge.className = 'badge badge-' + safeTone;
+            badge.textContent = labelText;
+            container.appendChild(badge);
+        }
+
+        function createOption(result, term, index) {
+            var option = document.createElement('button');
+            var title = result.title || result.name || '';
+            var subtitle = result.subtitle || result.email || '';
+            var metaParts = [];
+
+            if (result.meta) metaParts.push(result.meta);
+            if (result.student_number && subtitle.indexOf(result.student_number) === -1) {
+                metaParts.push(result.student_number);
+            }
+            if (result.type && (!result.meta || result.meta.indexOf(result.type) === -1)) {
+                metaParts.push(result.type);
+            }
+
+            option.type = 'button';
+            option.className = 'smart-search-option';
+            option.id = uid + '-' + index;
+            option.setAttribute('role', 'option');
+            option.setAttribute('aria-selected', 'false');
+            option.setAttribute('tabindex', '-1');
+            option.dataset.search = result.search || title;
+            option.dataset.url = result.url || '';
+            option.title = title + (subtitle ? ' — ' + subtitle : '');
+
+            var avatar = document.createElement('span');
+            avatar.className = 'smart-search-avatar';
+            avatar.setAttribute('aria-hidden', 'true');
+            avatar.textContent = result.avatar || initials(title) || '?';
+
+            var body = document.createElement('span');
+            body.className = 'smart-search-body';
+
+            var name = document.createElement('span');
+            name.className = 'smart-search-name';
+            name.appendChild(highlight(title, term));
+            body.appendChild(name);
+
+            var meta = document.createElement('span');
+            meta.className = 'smart-search-meta';
+            meta.appendChild(highlight(subtitle, term));
+
+            if (metaParts.length) {
+                meta.appendChild(document.createTextNode((subtitle ? ' · ' : '') + metaParts.join(' · ')));
+            }
+            body.appendChild(meta);
+
+            var badges = document.createElement('span');
+            badges.className = 'smart-search-badges';
+
+            if (Array.isArray(result.badges) && result.badges.length) {
+                result.badges.forEach(function (item) {
+                    if (item && typeof item === 'object') {
+                        appendBadge(badges, item.label, item.tone);
+                    } else {
+                        appendBadge(badges, item, 'info');
+                    }
+                });
+            } else {
+                appendBadge(badges, result.badge, result.badge_tone);
+                if (!result.badge && result.role) {
+                    appendBadge(badges, result.role, result.role);
+                }
+            }
+
+            if (result.active === false) {
+                appendBadge(badges, 'Inactive', 'inactive');
+            }
+
+            if (result.match_score !== null && result.match_score !== undefined) {
+                appendBadge(badges, 'Match ' + Math.round(result.match_score) + '%', 'admin');
+            }
+
+            option.appendChild(avatar);
+            option.appendChild(body);
+            option.appendChild(badges);
+
+            option.addEventListener('mousedown', function (event) {
+                event.preventDefault();
+            });
+
+            option.addEventListener('click', function () {
+                select(option);
+            });
+
+            option.addEventListener('mouseenter', function () {
+                setActive(options.indexOf(option));
+            });
+
+            return option;
+        }
+
+        function select(option) {
+            if (!option) return;
+
+            var url = option.dataset.url;
+
+            if (url) {
+                close();
+                window.location.assign(url);
+                return;
+            }
+
+            if (!form) return;
+
+            input.value = option.dataset.search || '';
+            close();
+            announce('Filtering ' + label + ' by ' + input.value);
+
+            if (typeof form.requestSubmit === 'function') {
+                form.requestSubmit();
+            } else {
+                form.submit();
+            }
+        }
+
+        function renderResults(results, term) {
+            clearActive();
+            panel.innerHTML = '';
+
+            if (!results.length) {
+                var empty = document.createElement('div');
+                empty.className = 'smart-search-empty';
+                empty.textContent = 'No ' + label + ' match “' + term + '”.';
+                panel.appendChild(empty);
+                setExpanded(true);
+                announce('No ' + label + ' match ' + term);
+                return;
+            }
+
+            var fragment = document.createDocumentFragment();
+
+            results.forEach(function (result, index) {
+                fragment.appendChild(createOption(result, term, index));
+            });
+
+            panel.appendChild(fragment);
+
+            options = Array.prototype.slice.call(
+                panel.querySelectorAll('.smart-search-option')
+            );
+
+            var footnote = document.createElement('div');
+            footnote.className = 'smart-search-footnote';
+            footnote.innerHTML = '<span>↑ ↓ to navigate</span><span>Enter to open · Esc to close</span>';
+            panel.appendChild(footnote);
+
+            setExpanded(true);
+            announce(results.length + (results.length === 1 ? ' suggestion available' : ' suggestions available'));
+        }
+
+        function renderError() {
+            clearActive();
+            panel.innerHTML = '';
+
+            var error = document.createElement('div');
+            error.className = 'smart-search-empty smart-search-error';
+            error.textContent = 'Search is unavailable right now. Please try again.';
+            panel.appendChild(error);
+            setExpanded(true);
+            announce('Search is unavailable right now.');
+        }
+
+        function fetchSuggestions(term) {
+            if (typeof window.fetch !== 'function') return;
+
+            if (controller) controller.abort();
+            controller = new AbortController();
+            lastQuery = term;
+            root.classList.add('is-loading');
+
+            window.fetch(endpoint + '?q=' + encodeURIComponent(term), {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                signal: controller.signal
+            }).then(function (response) {
+                if (!response.ok) throw new Error('Search request failed');
+                return response.json();
+            }).then(function (data) {
+                if (lastQuery !== term) return;
+                if (document.activeElement !== input) return;
+                renderResults(data.results || [], data.query || term);
+            }).catch(function (error) {
+                if (error.name === 'AbortError') return;
+                if (lastQuery === term && document.activeElement === input) renderError();
+            }).finally(function () {
+                if (lastQuery === term) root.classList.remove('is-loading');
+            });
+        }
+
+        input.addEventListener('input', function () {
+            var term = input.value.trim();
+
+            window.clearTimeout(timer);
+
+            if (controller) {
+                controller.abort();
+                controller = null;
+            }
+            lastQuery = term;
+            root.classList.remove('is-loading');
+
+            if (term === '') {
+                close();
+                panel.innerHTML = '';
+                announce('');
+                return;
+            }
+
+            // One character is enough; suggestions update on every keystroke.
+            timer = window.setTimeout(function () {
+                fetchSuggestions(term);
+            }, 180);
+        });
+
+        input.addEventListener('focus', function () {
+            var term = input.value.trim();
+            if (term !== '' && panel.hidden) fetchSuggestions(term);
+        });
+
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                if (panel.hidden) {
+                    var term = input.value.trim();
+                    if (term !== '') fetchSuggestions(term);
+                    return;
+                }
+                setActive(activeIndex + 1);
+            } else if (event.key === 'ArrowUp') {
+                if (panel.hidden) return;
+                event.preventDefault();
+                setActive(activeIndex - 1);
+            } else if (event.key === 'Enter') {
+                if (!panel.hidden && activeIndex >= 0) {
+                    event.preventDefault();
+                    select(options[activeIndex]);
+                }
+            } else if (event.key === 'Escape') {
+                if (!panel.hidden) {
+                    event.preventDefault();
+                    close();
+                }
+            } else if (event.key === 'Tab') {
+                close();
+            }
+        });
+
+        input.addEventListener('blur', function () {
+            window.setTimeout(function () {
+                if (!root.contains(document.activeElement)) close();
+            }, 120);
+        });
+
+        // Close when clicking anywhere outside this search area.
+        document.addEventListener('click', function (event) {
+            if (!root.contains(event.target)) close();
+        });
+
+        if (form) {
+            form.addEventListener('submit', function () {
+                close();
+            });
+        }
+    });
 })();
 
 /* ── Google-style live search ─────────────────────────────────────────────

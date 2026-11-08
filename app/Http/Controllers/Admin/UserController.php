@@ -11,11 +11,13 @@ use App\Models\StudentProfile;
 use App\Models\User;
 use App\Services\AuditLogService;
 use App\Services\ScholarshipAnnouncementService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class UserController extends Controller
@@ -24,7 +26,7 @@ class UserController extends Controller
         private ScholarshipAnnouncementService $announcements,
     ) {}
 
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
         Gate::authorize('manage-users');
 
@@ -63,7 +65,92 @@ class UserController extends Controller
 
         $roles = Role::orderBy('name')->get();
 
+        // Live search: the table refreshes in place without a full page load.
+        if ($request->expectsJson()) {
+            return response()->json([
+                'html' => view('admin.users._results', ['users' => $users])->render(),
+                'total' => $users->total(),
+                'first' => $users->firstItem(),
+                'last' => $users->lastItem(),
+            ]);
+        }
+
         return view('admin.users.index', compact('users', 'roles'));
+    }
+
+    /**
+     * Typeahead suggestions for the user search box.
+     *
+     * Returns a small, relevance-ordered set of matches so the search field
+     * can predict names, e-mails, and student numbers as the admin types.
+     */
+    public function suggest(Request $request): JsonResponse
+    {
+        Gate::authorize('manage-users');
+
+        $term = trim(preg_replace('/\s+/', ' ', (string) $request->input('q', '')));
+        $term = Str::limit($term, 100, '');
+
+        if ($term === '') {
+            return response()->json(['query' => '', 'results' => []]);
+        }
+
+        // Escape LIKE wildcards so "%" and "_" are searched literally.
+        $escaped = addcslashes($term, '%_\\');
+        $contains = "%{$escaped}%";
+        $prefix = "{$escaped}%";
+        $needle = Str::lower($term);
+
+        $users = User::query()
+            ->with(['role', 'studentProfile'])
+            ->where(function ($query) use ($contains) {
+                $query->where('name', 'like', $contains)
+                    ->orWhere('email', 'like', $contains)
+                    ->orWhereHas('studentProfile', fn ($sq) => $sq->where('student_number', 'like', $contains));
+            })
+            ->orderByRaw(
+                'CASE
+                    WHEN name LIKE ? THEN 0
+                    WHEN email LIKE ? THEN 1
+                    ELSE 2
+                END',
+                [$prefix, $prefix]
+            )
+            ->orderBy('name')
+            ->limit(8)
+            ->get();
+
+        $results = $users->map(function (User $user) use ($needle) {
+            $studentNumber = $user->studentProfile?->student_number;
+
+            $match = match (true) {
+                Str::contains(Str::lower($user->name), $needle) => 'name',
+                Str::contains(Str::lower($user->email), $needle) => 'email',
+                $studentNumber !== null && Str::contains(Str::lower($studentNumber), $needle) => 'student number',
+                default => 'name',
+            };
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'student_number' => $studentNumber,
+                'role' => $user->role?->label ?? ucfirst($user->role?->name ?? 'N/A'),
+                'active' => (bool) $user->is_active,
+                'match' => $match,
+                'search' => match ($match) {
+                    'email' => $user->email,
+                    'student number' => $studentNumber ?? $user->name,
+                    default => $user->name,
+                },
+                'url' => route('admin.users.edit', $user),
+            ];
+        })->values();
+
+        return response()->json([
+            'query' => $term,
+            'results' => $results,
+        ]);
     }
 
     public function create(): View
@@ -150,11 +237,17 @@ class UserController extends Controller
         try {
             $oldRole = $user->role?->name;
 
-            $user->update([
+            $attributes = [
                 'name' => $request->name,
                 'email' => $request->email,
-                'role_id' => $request->role_id,
-            ]);
+            ];
+
+            // Role assignment is a System Administrator privilege.
+            if ($request->user()->isSystemAdmin() && $request->filled('role_id')) {
+                $attributes['role_id'] = $request->role_id;
+            }
+
+            $user->update($attributes);
 
             $newRole = $user->fresh()->role?->name;
 
@@ -244,6 +337,11 @@ class UserController extends Controller
             return back()->withErrors(['error' => 'You cannot deactivate your own account.']);
         }
 
+        // The System Administrator account can only be managed by itself.
+        if ($user->isSystemAdmin() && ! $authUser->isSystemAdmin()) {
+            return back()->withErrors(['error' => 'Only the System Administrator can deactivate this account.']);
+        }
+
         // Final active admin prevention
         if ($user->isAdmin()) {
             $activeAdminCount = User::where('is_active', true)
@@ -274,12 +372,20 @@ class UserController extends Controller
     {
         Gate::authorize('manage-users');
 
+        if ($user->isSystemAdmin() && ! auth()->user()->isSystemAdmin()) {
+            abort(403, 'Only the System Administrator can reset this account.');
+        }
+
         return view('admin.users.reset-password', compact('user'));
     }
 
     public function resetPassword(ResetUserPasswordRequest $request, User $user): RedirectResponse
     {
         Gate::authorize('manage-users');
+
+        if ($user->isSystemAdmin() && ! $request->user()->isSystemAdmin()) {
+            abort(403, 'Only the System Administrator can reset this account.');
+        }
 
         $user->update([
             'password' => Hash::make($request->password),

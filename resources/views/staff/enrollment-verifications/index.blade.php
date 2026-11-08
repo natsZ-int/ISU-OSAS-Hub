@@ -19,9 +19,7 @@
             <div class="form-group">
                 <label for="search">Search</label>
                 <input type="text" id="search" name="search" value="{{ request('search') }}"
-                       placeholder="Student ID, name, or email"
-                       data-live-search
-                       data-live-search-endpoint="{{ route('enrollment-verifications.quick-search') }}">
+                       placeholder="Student ID, name, or email">
             </div>
             <div class="form-group">
                 <label for="status">Status</label>

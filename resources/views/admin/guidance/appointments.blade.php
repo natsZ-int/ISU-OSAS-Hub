@@ -14,13 +14,6 @@
 <div class="card filter-card">
     <form method="GET" action="{{ route('admin.guidance.appointments') }}" class="filter-form">
         <div class="filter-row">
-            <div class="form-group" style="flex:2;">
-                <label for="search">Search</label>
-                <input type="search" id="search" name="search" value="{{ request('search') }}"
-                       placeholder="Student, appointment type, counselor, or schedule"
-                       data-live-search
-                       data-live-search-endpoint="{{ route('admin.quick-search', ['module' => 'appointments']) }}">
-            </div>
             <div class="form-group">
                 <label for="counselor_id">Counselor</label>
                 <select id="counselor_id" name="counselor_id">
@@ -64,7 +57,7 @@
         </thead>
         <tbody>
             @foreach ($appointments as $a)
-            <tr>
+            <tr id="appointment-{{ $a->id }}">
                 <td>{{ $a->appointment_date->format('M d, Y') }}</td>
                 <td>
                     {{ \Carbon\Carbon::parse($a->start_time)->format('g:i A') }} – 

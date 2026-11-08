@@ -15,7 +15,7 @@
         <div style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
             <div style="flex: 1; min-width: 220px;">
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 0.25rem;">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="App #, Student name, Student ID, Scholarship..." data-live-search data-live-search-endpoint="{{ route('admin.quick-search', ['module' => 'applications']) }}" style="width: 100%; padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem;">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="App #, Student name, Student ID, Scholarship..." style="width: 100%; padding: 0.4rem 0.5rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.85rem;">
             </div>
             <div>
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; margin-bottom: 0.25rem;">Status</label>

@@ -16,11 +16,26 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         $userId = $this->route('user')?->id;
+        $isSystemAdmin = (bool) $this->user()?->isSystemAdmin();
+        $currentRoleId = $this->route('user')?->role_id;
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
-            'role_id' => ['required', 'integer', Rule::exists('roles', 'id')],
+            'email' => [
+                'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId),
+                function ($attribute, $value, $fail) {
+                    $target = $this->route('user');
+
+                    if ($target?->isSystemAdmin() && strcasecmp((string) $value, (string) $target->email) !== 0) {
+                        $fail('The System Administrator e-mail cannot be changed.');
+                    }
+                },
+            ],
+            // Only the seeded System Administrator may change roles. For other
+            // admins the role can be omitted or resubmitted unchanged.
+            'role_id' => $isSystemAdmin
+                ? ['required', 'integer', Rule::exists('roles', 'id')]
+                : ['nullable', 'integer', Rule::exists('roles', 'id'), Rule::in(array_filter([$currentRoleId]))],
             'is_active' => ['sometimes', 'boolean'],
 
             'student_number' => ['nullable', 'string', 'max:20', Rule::unique('student_profiles', 'student_number')->ignore($userId, 'user_id')],
@@ -35,6 +50,13 @@ class UpdateUserRequest extends FormRequest
             'family_income' => ['nullable', 'numeric', 'min:0'],
             'address' => ['nullable', 'string', 'max:1000'],
             'enrollment_status' => ['nullable', Rule::in(EnrollmentStatus::values())],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'role_id.in' => 'Only the System Administrator can change a user\'s role.',
         ];
     }
 }

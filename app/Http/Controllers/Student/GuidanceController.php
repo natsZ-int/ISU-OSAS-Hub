@@ -26,14 +26,8 @@ class GuidanceController extends Controller
     {
         $query = User::whereHas('role', fn ($q) => $q->where('name', 'counselor'))
             ->where('is_active', true)
-            ->with('availabilities');
-
-        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
-            $like = '%'.addcslashes($search, '\\%_').'%';
-            $query->where(fn ($q) => $q->where('name', 'like', $like)->orWhere('email', 'like', $like));
-        }
-
-        $counselors = $query->orderBy('name')->get();
+            ->with('availabilities')
+            ->get();
 
         return view('student.guidance.counselors', compact('counselors'));
     }
@@ -100,21 +94,9 @@ class GuidanceController extends Controller
     {
         $profile = $request->user()->studentProfile;
 
-        $query = GuidanceAppointment::where('student_profile_id', $profile?->id)
-            ->with(['counselor', 'appointmentType']);
-
-        if ($search = $request->filled('search') ? trim((string) $request->input('search')) : null) {
-            $like = '%'.addcslashes($search, '\\%_').'%';
-
-            $query->where(function ($q) use ($like) {
-                $q->where('appointment_type', 'like', $like)
-                    ->orWhere('status', 'like', $like)
-                    ->orWhereHas('counselor', fn ($counselor) => $counselor->where('name', 'like', $like))
-                    ->orWhereHas('appointmentType', fn ($type) => $type->where('name', 'like', $like));
-            });
-        }
-
-        $appointments = $query->orderBy('appointment_date', 'desc')
+        $appointments = GuidanceAppointment::where('student_profile_id', $profile?->id)
+            ->with(['counselor', 'appointmentType'])
+            ->orderBy('appointment_date', 'desc')
             ->orderBy('start_time', 'desc')
             ->paginate(10)
             ->withQueryString();

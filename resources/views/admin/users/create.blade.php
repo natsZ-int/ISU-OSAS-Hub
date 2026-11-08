@@ -35,11 +35,16 @@
                     <select id="role_id" name="role_id" required onchange="toggleStudentFields()">
                         <option value="">Select Role</option>
                         @foreach ($roles as $r)
-                            <option value="{{ $r->id }}" {{ old('role_id') == $r->id ? 'selected' : '' }}>
-                                {{ $r->label ?? ucfirst($r->name) }}
-                            </option>
+                            @if (auth()->user()->isSystemAdmin() || $r->name !== \App\Models\Role::ADMIN)
+                                <option value="{{ $r->id }}" {{ old('role_id') == $r->id ? 'selected' : '' }}>
+                                    {{ $r->label ?? ucfirst($r->name) }}
+                                </option>
+                            @endif
                         @endforeach
                     </select>
+                    @unless (auth()->user()->isSystemAdmin())
+                        <span class="field-hint">Only the System Administrator can create Administrator accounts.</span>
+                    @endunless
                 </div>
                 <div class="form-group">
                     <label>

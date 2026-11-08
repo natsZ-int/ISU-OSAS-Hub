@@ -15,6 +15,27 @@
         <div class="alert alert-success" style="margin-bottom: 1.5rem; padding: 0.75rem 1rem; background: #d4edda; color: #155724; border-radius: 6px;">{{ session('status') }}</div>
     @endif
 
+    <div class="card filter-card" style="margin-bottom: 1.5rem;">
+        <form method="GET" action="{{ route('admin.service-types.index') }}" class="filter-form">
+            <div class="filter-row" style="align-items:flex-end;">
+                <div class="form-group" style="flex:2;">
+                    <label for="service-type-search">Search Service Types</label>
+                    <x-live-search
+                        id="service-type-search"
+                        name="search"
+                        :value="request('search')"
+                        :endpoint="route('quick-search.suggest', 'admin-service-types')"
+                        placeholder="Category name or description..."
+                        label="service types" />
+                </div>
+                <div class="filter-actions" style="margin:0;">
+                    <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                    <a href="{{ route('admin.service-types.index') }}" class="btn btn-outline-dark btn-sm">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
             <thead>

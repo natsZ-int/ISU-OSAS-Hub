@@ -33,6 +33,19 @@
 
     @include('admin.analytics._tabs')
 
+    @include('admin.analytics._record_search', [
+        'recordSearchTitle' => 'Find a Guidance Appointment',
+        'searches' => [
+            [
+                'id' => 'analytics-guidance-search',
+                'field' => 'Appointments',
+                'results' => 'appointments',
+                'endpoint' => route('quick-search.suggest', 'admin-guidance-appointments'),
+                'placeholder' => 'Student, counselor, type, or status...',
+            ],
+        ],
+    ])
+
     <div class="stat-grid">
         <x-metric-card label="Completed" :value="$data['completed']" tone="success" hint="Sessions finished" />
         <x-metric-card label="Cancelled" :value="$data['cancelled']" tone="neutral" />

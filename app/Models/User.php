@@ -53,6 +53,20 @@ class User extends Authenticatable
         return $this->hasRole(Role::ADMIN);
     }
 
+    /**
+     * The seeded system administrator is the only account allowed to assign
+     * or change user roles. Identified by the configured ADMIN_EMAIL.
+     */
+    public function isSystemAdmin(): bool
+    {
+        $email = (string) config('app.system_admin_email');
+
+        return $this->isAdmin()
+            && $email !== ''
+            && $this->email !== null
+            && strcasecmp($this->email, $email) === 0;
+    }
+
     public function isCounselor(): bool
     {
         return $this->hasRole(Role::COUNSELOR);
