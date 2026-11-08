@@ -36,6 +36,30 @@ class ScholarshipMatchingWeight extends Model
         return static::where('is_active', true)->latest()->first();
     }
 
+    /**
+     * Configured defaults used when no administrator-defined weights exist.
+     *
+     * Keeping a deterministic fallback means scholarship matching and
+     * recommendations continue to work on a freshly installed database,
+     * instead of silently returning an empty result set.
+     */
+    public static function defaults(): self
+    {
+        return new self([
+            'academic_weight' => 30,
+            'financial_weight' => 25,
+            'program_weight' => 20,
+            'year_level_weight' => 15,
+            'document_readiness_weight' => 10,
+            'is_active' => true,
+        ]);
+    }
+
+    public static function activeOrDefault(): self
+    {
+        return static::active() ?? static::defaults();
+    }
+
     public function total(): float
     {
         return (float) $this->academic_weight

@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateStudentProfileRequest;
 use App\Models\StudentProfile;
 use App\Services\AuditLogService;
 use App\Services\ScholarshipAnnouncementService;
+use App\Services\StudentProfilePasscodeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,6 +18,7 @@ class StudentProfileController extends Controller
 {
     public function __construct(
         private ScholarshipAnnouncementService $announcements,
+        private StudentProfilePasscodeService $passcodes,
     ) {}
 
     /**
@@ -86,6 +88,8 @@ class StudentProfileController extends Controller
         return view('admin.student-profiles.show', [
             'profile' => $studentProfile,
             'history' => $studentProfile->enrollmentVerifications,
+            'hasPasscode' => $this->passcodes->hasPasscode($studentProfile),
+            'sensitiveUnlocked' => $this->passcodes->isUnlocked($studentProfile, request()),
         ]);
     }
 
@@ -95,6 +99,11 @@ class StudentProfileController extends Controller
     public function edit(StudentProfile $studentProfile): View
     {
         Gate::authorize('manage-users');
+
+        if (! $this->passcodes->isUnlocked($studentProfile, request())) {
+            return redirect()->route('admin.student-profiles.show', $studentProfile)
+                ->withErrors(['passcode' => 'Unlock this protected profile before editing its information.']);
+        }
 
         $studentProfile->load('user');
 
@@ -110,6 +119,17 @@ class StudentProfileController extends Controller
     public function update(UpdateStudentProfileRequest $request, StudentProfile $studentProfile): RedirectResponse
     {
         Gate::authorize('manage-users');
+
+        if (! $this->passcodes->isUnlocked($studentProfile, $request)) {
+            $suppliedPasscode = $request->input('current_passcode', $request->input('passcode'));
+
+            if (! $this->passcodes->verify($studentProfile, is_string($suppliedPasscode) ? $suppliedPasscode : null)) {
+                return redirect()->route('admin.student-profiles.show', $studentProfile)
+                    ->withErrors(['passcode' => 'Unlock this protected profile before editing its information.']);
+            }
+
+            $this->passcodes->unlock($studentProfile, $request);
+        }
 
         $studentProfile->update($request->validated());
 

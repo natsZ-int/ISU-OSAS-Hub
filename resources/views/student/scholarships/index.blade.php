@@ -9,6 +9,27 @@
     </a>
 </div>
 
+{{-- Quick Search: one keyword box, no extra filter steps --}}
+<div class="card" style="margin-bottom:1rem;">
+    <form method="GET" action="{{ route('student.scholarships.index') }}" class="filter-form" role="search">
+        <div class="filter-row" style="align-items:flex-end;">
+            <div class="form-group" style="flex:3;">
+                <label for="quick_search">Quick Search</label>
+                <input type="search" id="quick_search" name="search"
+                       value="{{ request('search') }}"
+                       placeholder="Type a scholarship name, provider, program, or keyword..."
+                       maxlength="200">
+            </div>
+            <div class="filter-actions" style="margin:0;">
+                <button type="submit" class="btn btn-primary">Quick Search</button>
+                @if (request('search'))
+                    <a href="{{ route('student.scholarships.index') }}" class="btn btn-outline-dark">Clear</a>
+                @endif
+            </div>
+        </div>
+    </form>
+</div>
+
 {{-- Search and Filter Form --}}
 <div class="card filter-card">
     <form method="GET" action="{{ route('student.scholarships.index') }}" class="filter-form">

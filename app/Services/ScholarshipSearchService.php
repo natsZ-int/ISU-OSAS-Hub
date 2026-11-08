@@ -28,6 +28,8 @@ class ScholarshipSearchService
 
     public const MAX_CANDIDATE_LIMIT = 500;
 
+    public const MAX_QUICK_RESULTS = 20;
+
     public function __construct(
         protected ScholarshipMatchingService $matchingService,
         protected ScholarshipEligibilityService $eligibilityService,
@@ -42,7 +44,7 @@ class ScholarshipSearchService
 
         // Matching weights are identical for every scholarship in this request:
         // read them once instead of once per evaluated scholarship.
-        $weights = ScholarshipMatchingWeight::active();
+        $weights = ScholarshipMatchingWeight::activeOrDefault();
 
         // Match-score sort requires in-memory sorting
         if ($sort === 'match_score' && $profile) {
@@ -181,7 +183,7 @@ class ScholarshipSearchService
             ->availableForStudents()
             ->with('requirements');
 
-        $this->applyKeywordSearch($query, $request->input('search'));
+        $this->applyKeywordSearch($query, $this->keywordInput($request));
         $this->applyProgramFilter($query, $request->input('program'));
         $this->applyYearLevelFilter($query, $request->input('year_level'));
         $this->applyTypeFilter($query, $request->input('type'));
@@ -229,6 +231,129 @@ class ScholarshipSearchService
         $collapsed = preg_replace('/\s+/', ' ', $trimmed);
 
         return Str::limit($collapsed, self::MAX_SEARCH_LENGTH, '');
+    }
+
+    /**
+     * Accept the common quick-search parameter names so both the compact
+     * search boxes and the full filter form feed the same search pipeline.
+     */
+    protected function keywordInput(Request $request): ?string
+    {
+        foreach (['search', 'q', 'keyword', 'query'] as $key) {
+            $value = $request->input($key);
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Lightweight keyword search used by the persistent quick search bar.
+     * Results are relevance-ranked and include match information for the
+     * signed-in student when a profile is available.
+     */
+    public function quickSearch(?string $term, ?StudentProfile $profile = null, int $limit = 8): Collection
+    {
+        $normalized = $this->normalizeSearchInput($term);
+
+        if ($normalized === null) {
+            return collect();
+        }
+
+        $limit = max(1, min($limit, self::MAX_QUICK_RESULTS));
+
+        $query = Scholarship::query()
+            ->availableForStudents()
+            ->with('requirements');
+
+        $this->applyKeywordSearch($query, $normalized);
+
+        $candidates = $query->limit(self::MAX_CANDIDATE_LIMIT)->get();
+
+        if ($profile) {
+            $this->attachMatchScores(
+                $candidates,
+                $profile,
+                weights: ScholarshipMatchingWeight::activeOrDefault()
+            );
+        }
+
+        return $candidates
+            ->sort(function (Scholarship $a, Scholarship $b) use ($normalized) {
+                $relevance = $this->relevanceScore($b, $normalized) <=> $this->relevanceScore($a, $normalized);
+                if ($relevance !== 0) {
+                    return $relevance;
+                }
+
+                $deadline = $a->application_deadline <=> $b->application_deadline;
+                if ($deadline !== 0) {
+                    return $deadline;
+                }
+
+                return strcmp($a->title, $b->title);
+            })
+            ->take($limit)
+            ->values();
+    }
+
+    /**
+     * Score how closely a scholarship matches the entered keywords.
+     */
+    protected function relevanceScore(Scholarship $scholarship, string $term): int
+    {
+        $needle = Str::lower($term);
+
+        $title = Str::lower((string) $scholarship->title);
+        $provider = Str::lower((string) $scholarship->provider);
+        $type = Str::lower((string) $scholarship->scholarship_type);
+        $description = Str::lower((string) $scholarship->description);
+
+        if ($title === $needle) {
+            return 1000;
+        }
+
+        if (Str::startsWith($title, $needle)) {
+            return 800;
+        }
+
+        if (Str::contains($title, $needle)) {
+            return 600;
+        }
+
+        if (Str::contains($provider, $needle)) {
+            return 300;
+        }
+
+        if (Str::contains($type, $needle)) {
+            return 200;
+        }
+
+        if (Str::contains($description, $needle)) {
+            return 100;
+        }
+
+        // Multi-word queries are tokenised by the database query; reward
+        // results that contain more of the individual tokens.
+        $score = 0;
+        foreach (explode(' ', $needle) as $token) {
+            if ($token === '') {
+                continue;
+            }
+
+            if (Str::contains($title, $token)) {
+                $score += 40;
+            }
+            if (Str::contains($provider, $token)) {
+                $score += 20;
+            }
+            if (Str::contains($description, $token)) {
+                $score += 10;
+            }
+        }
+
+        return $score;
     }
 
     // ── Program Filter (Database Agnostic) ──────────

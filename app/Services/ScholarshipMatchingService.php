@@ -23,11 +23,9 @@ class ScholarshipMatchingService
      */
     public function recommendForStudent(StudentProfile $profile): Collection
     {
-        $weights = ScholarshipMatchingWeight::active();
-
-        if (! $weights) {
-            return collect();
-        }
+        // Fall back to the configured defaults when no active weights have
+        // been saved yet. This keeps matching functional on a fresh install.
+        $weights = ScholarshipMatchingWeight::activeOrDefault();
 
         // Retrieve available scholarships with eager loading
         $scholarships = Scholarship::availableForStudents()
@@ -66,7 +64,7 @@ class ScholarshipMatchingService
         ?ScholarshipApplication $application,
         ?ScholarshipMatchingWeight $weights = null
     ): ScholarshipMatchResult {
-        $weights = $weights ?? ScholarshipMatchingWeight::active();
+        $weights = $weights ?? ScholarshipMatchingWeight::activeOrDefault();
 
         // 1. Eligibility check (reuse existing engine)
         $eligibilityResult = $this->eligibilityService->evaluate($profile, $scholarship, $application);

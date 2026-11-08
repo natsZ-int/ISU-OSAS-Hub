@@ -25,9 +25,9 @@
     <p><strong>Status:</strong>
         @php $fsm = $scholarshipApplication->fsmStatus(); @endphp
         @if ($fsm)
-            <span class="badge badge-status-{{ $fsm->value }}">{{ $fsm->label() }}</span>
+            <x-status-badge :status="$fsm" />
         @else
-            <span class="badge badge-status-draft">Draft</span>
+            <x-status-badge status="draft" />
         @endif
     </p>
     <p><strong>Submitted:</strong> {{ $scholarshipApplication->submitted_at ? $scholarshipApplication->submitted_at->format('M d, Y H:i') : 'Not yet submitted' }}</p>

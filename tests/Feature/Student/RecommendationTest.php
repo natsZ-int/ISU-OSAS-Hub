@@ -3,6 +3,8 @@
 namespace Tests\Feature\Student;
 
 use App\Models\Role;
+use App\Models\Scholarship;
+use App\Models\ScholarshipApplication;
 use App\Models\StudentProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,5 +71,37 @@ class RecommendationTest extends TestCase
             ->get(route('student.scholarships.recommendations'))
             ->assertOk()
             ->assertSee('not a guarantee of scholarship approval');
+    }
+
+    public function test_eligible_scholarship_with_active_application_still_appears(): void
+    {
+        $profile = $this->student->studentProfile;
+
+        $scholarship = Scholarship::create([
+            'title' => 'Active Application Scholarship',
+            'description' => 'Eligible scholarship with an existing application.',
+            'provider' => 'CHED',
+            'scholarship_type' => 'academic',
+            'status' => 'open',
+            'application_start_date' => now()->subDays(10),
+            'application_deadline' => now()->addDays(30),
+            'minimum_gwa' => 2.0,
+            'created_by' => $this->admin->id,
+        ]);
+
+        ScholarshipApplication::create([
+            'application_number' => 'APP-FEAT-01',
+            'student_profile_id' => $profile->id,
+            'scholarship_id' => $scholarship->id,
+            'status' => 'submitted',
+            'submitted_at' => now(),
+        ]);
+
+        $this->actingAs($this->student)
+            ->get(route('student.scholarships.recommendations'))
+            ->assertOk()
+            ->assertSee('Eligible Recommendations')
+            ->assertSee($scholarship->title)
+            ->assertSee('View Application');
     }
 }

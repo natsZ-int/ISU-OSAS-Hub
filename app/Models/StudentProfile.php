@@ -25,6 +25,14 @@ class StudentProfile extends Model
         'gwa',
         'family_income',
         'address',
+        'profile_passcode_hash',
+    ];
+
+    /**
+     * The passcode hash must never be serialized to the frontend.
+     */
+    protected $hidden = [
+        'profile_passcode_hash',
     ];
 
     protected $casts = [
@@ -36,6 +44,11 @@ class StudentProfile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function hasProfilePasscode(): bool
+    {
+        return filled($this->profile_passcode_hash);
     }
 
     public function scholarshipApplications(): HasMany

@@ -29,7 +29,7 @@
                 <tr>
                     <td>{{ $app->application_number }}</td>
                     <td>{{ $app->scholarship->title }}</td>
-                    <td><span class="badge badge-status-{{ $app->status }}">{{ ucfirst(str_replace('_', ' ', $app->status)) }}</span></td>
+                    <td><x-status-badge :status="$app->status" /></td>
                     <td>{{ $app->submitted_at ? $app->submitted_at->format('M d, Y') : '—' }}</td>
                     <td><a href="{{ route('student.applications.show', $app) }}" class="btn btn-sm btn-outline">View</a></td>
                 </tr>

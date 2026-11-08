@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Scholarship;
 use App\Services\ScholarshipSearchService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -31,6 +33,65 @@ class ScholarshipController extends Controller
         return view('student.scholarships.index', compact(
             'scholarships', 'types', 'programs', 'profile'
         ));
+    }
+
+    /**
+     * Alias used by the quick search boxes. Both GET /scholarships?search=...
+     * and this endpoint go through the same service, so results stay
+     * consistent with the full filter page.
+     */
+    public function search(Request $request): View
+    {
+        return $this->index($request);
+    }
+
+    /**
+     * Lightweight quick-search endpoint. A normal form submit is redirected
+     * to the search page; AJAX/JSON callers receive the matching list.
+     */
+    public function quickSearch(Request $request): JsonResponse|RedirectResponse
+    {
+        $term = $request->input('q')
+            ?? $request->input('search')
+            ?? $request->input('keyword')
+            ?? $request->input('query');
+
+        $profile = $request->user()->studentProfile ?? null;
+
+        if ($request->expectsJson() || $request->ajax()) {
+            $results = $this->searchService->quickSearch(
+                is_string($term) ? $term : null,
+                $profile,
+                10
+            );
+
+            return response()->json([
+                'query' => is_string($term) ? trim($term) : '',
+                'count' => $results->count(),
+                'results' => $results->map(function (Scholarship $scholarship) {
+                    $match = $scholarship->match_result ?? null;
+
+                    return [
+                        'id' => $scholarship->id,
+                        'title' => $scholarship->title,
+                        'provider' => $scholarship->provider,
+                        'type' => $scholarship->scholarship_type,
+                        'deadline' => $scholarship->application_deadline?->format('M d, Y'),
+                        'eligible' => $match?->isEligible(),
+                        'match_score' => $match?->matchScore,
+                        'url' => route('student.scholarships.show', $scholarship),
+                    ];
+                })->values(),
+            ]);
+        }
+
+        if (! is_string($term) || trim($term) === '') {
+            return redirect()->route('student.scholarships.index');
+        }
+
+        return redirect()->route('student.scholarships.index', [
+            'search' => trim($term),
+        ]);
     }
 
     // Show details of a single open scholarship

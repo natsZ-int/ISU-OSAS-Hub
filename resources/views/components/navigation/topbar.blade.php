@@ -33,6 +33,18 @@
     </div>
 
     <div class="topbar-right">
+        @if ($isStudent)
+            <form method="GET" action="{{ route('student.scholarships.index') }}" role="search"
+                  class="quick-search-form" style="display:flex;align-items:center;gap:.35rem;">
+                <label for="global-quick-search" class="sr-only">Quick Search scholarships</label>
+                <input type="search" id="global-quick-search" name="search"
+                       value="{{ request()->routeIs('student.scholarships.*') ? request('search') : '' }}"
+                       placeholder="Quick Search scholarships..." maxlength="200"
+                       style="width:190px;padding:.35rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.82rem;">
+                <button type="submit" class="btn btn-outline btn-sm">Search</button>
+            </form>
+        @endif
+
         <a
             href="{{ route('notifications.index') }}"
             class="topbar-icon-link notification-bell"

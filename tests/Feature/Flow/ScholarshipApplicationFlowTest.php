@@ -77,6 +77,24 @@ class ScholarshipApplicationFlowTest extends TestCase
         $response->assertDontSee('existingApplication', false);
     }
 
+    public function test_application_show_page_renders_status_badge_for_enum_status(): void
+    {
+        // Regression: the shared status-badge component cast a native backed
+        // enum to string directly, causing a 500 on the application page.
+        $this->actingAs($this->studentA)
+            ->post(route('student.applications.store', $this->scholarship));
+
+        $application = ScholarshipApplication::where('student_profile_id', $this->profileA->id)->firstOrFail();
+        $application->update(['status' => 'submitted']);
+
+        $response = $this->actingAs($this->studentA)
+            ->get(route('student.applications.show', $application));
+
+        $response->assertOk();
+        $response->assertSee($application->application_number);
+        $response->assertSee('Submitted');
+    }
+
     public function test_full_application_flow_creates_history_audit_and_notifications(): void
     {
         Storage::fake('local');

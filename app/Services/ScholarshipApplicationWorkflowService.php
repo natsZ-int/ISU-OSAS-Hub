@@ -48,9 +48,42 @@ class ScholarshipApplicationWorkflowService
         return is_string($status) ? ScholarshipApplicationStatus::tryFrom($status) : null;
     }
 
-    public function getAllowedTransitions(string $currentState): array
-    {
-        return self::TRANSITIONS[$currentState] ?? [];
+    /**
+     * Return the valid next states for a status value, enum case, or model.
+     */
+    public function getAllowedTransitions(
+        string|ScholarshipApplicationStatus|ScholarshipApplication $currentState
+    ): array {
+        $state = $this->normalizeState($currentState);
+
+        if ($state === null) {
+            return [];
+        }
+
+        return self::TRANSITIONS[$state->value] ?? [];
+    }
+
+    /**
+     * Backwards-compatible alias for callers that read more naturally this way.
+     */
+    public function allowedTransitionsFor(
+        string|ScholarshipApplicationStatus|ScholarshipApplication $currentState
+    ): array {
+        return $this->getAllowedTransitions($currentState);
+    }
+
+    protected function normalizeState(
+        string|ScholarshipApplicationStatus|ScholarshipApplication $state
+    ): ?ScholarshipApplicationStatus {
+        if ($state instanceof ScholarshipApplicationStatus) {
+            return $state;
+        }
+
+        if ($state instanceof ScholarshipApplication) {
+            return $this->getCurrentState($state);
+        }
+
+        return ScholarshipApplicationStatus::tryFrom($state);
     }
 
     public function canTransition(

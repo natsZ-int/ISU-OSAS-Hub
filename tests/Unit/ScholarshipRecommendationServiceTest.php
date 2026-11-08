@@ -168,11 +168,11 @@ class ScholarshipRecommendationServiceTest extends TestCase
         $this->assertContains('Income Tax Return', $rec->requirementReadiness['missing']);
     }
 
-    public function test_active_application_is_excluded_from_recommendations(): void
+    public function test_eligible_scholarship_with_active_application_is_still_recommended(): void
     {
         $scholarship = $this->createScholarship(['minimum_gwa' => 2.0]);
 
-        ScholarshipApplication::create([
+        $application = ScholarshipApplication::create([
             'application_number' => 'APP-ACTIVE-01',
             'student_profile_id' => $this->profile->id,
             'scholarship_id' => $scholarship->id,
@@ -182,9 +182,16 @@ class ScholarshipRecommendationServiceTest extends TestCase
 
         $results = $this->service->recommendForStudent($this->profile);
 
-        $this->assertCount(0, $results['eligible']);
-        $this->assertCount(0, $results['potential']);
+        // The scholarship must still appear even though an active application
+        // exists, matching how it is shown in Browse Scholarships.
+        $this->assertCount(1, $results['eligible']);
         $this->assertCount(0, $results['not_eligible']);
+
+        $rec = $results['eligible']->first();
+        $this->assertSame($scholarship->id, $rec->scholarshipId);
+        $this->assertTrue($rec->hasExistingActiveApplication());
+        $this->assertSame($application->id, $rec->existingApplicationId);
+        $this->assertSame('submitted', $rec->existingApplicationStatus);
     }
 
     public function test_terminal_application_is_excluded(): void

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateOwnStudentProfileRequest;
 use App\Services\AuditLogService;
 use App\Services\ScholarshipAnnouncementService;
+use App\Services\StudentProfilePasscodeService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
@@ -14,6 +16,7 @@ class ProfileController extends Controller
 {
     public function __construct(
         private ScholarshipAnnouncementService $announcements,
+        private StudentProfilePasscodeService $passcodes,
     ) {}
 
     /**
@@ -35,7 +38,11 @@ class ProfileController extends Controller
             'enrollmentVerifications' => fn ($query) => $query->orderByDesc('created_at'),
         ]);
 
-        return view('student.profile.show', compact('profile'));
+        return view('student.profile.show', [
+            'profile' => $profile,
+            'hasPasscode' => $this->passcodes->hasPasscode($profile),
+            'sensitiveUnlocked' => $this->passcodes->isUnlocked($profile, request()),
+        ]);
     }
 
     /**
@@ -51,6 +58,11 @@ class ProfileController extends Controller
         }
 
         Gate::authorize('update', $profile);
+
+        if (! $this->passcodes->isUnlocked($profile, request())) {
+            return redirect()->route('student.profile.show')
+                ->withErrors(['passcode' => 'Enter your profile passcode to unlock protected information before editing.']);
+        }
 
         return view('student.profile.edit', compact('profile'));
     }
@@ -71,6 +83,17 @@ class ProfileController extends Controller
         }
 
         Gate::authorize('update', $profile);
+
+        if (! $this->passcodes->isUnlocked($profile, $request)) {
+            $suppliedPasscode = $request->input('current_passcode', $request->input('passcode'));
+
+            if (! $this->passcodes->verify($profile, is_string($suppliedPasscode) ? $suppliedPasscode : null)) {
+                return redirect()->route('student.profile.show')
+                    ->withErrors(['passcode' => 'Enter your profile passcode to unlock protected information before editing.']);
+            }
+
+            $this->passcodes->unlock($profile, $request);
+        }
 
         $profile->update($request->validated());
 

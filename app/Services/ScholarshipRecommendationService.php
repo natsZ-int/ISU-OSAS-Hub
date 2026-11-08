@@ -40,23 +40,25 @@ class ScholarshipRecommendationService
 
         // Matching weights change rarely and are identical for every
         // scholarship: read them once instead of once per scholarship.
-        $weights = ScholarshipMatchingWeight::active();
+        // Fall back to the built-in defaults when none have been saved.
+        $weights = ScholarshipMatchingWeight::activeOrDefault();
 
         $recommendations = collect();
 
         foreach ($scholarships as $scholarship) {
             $application = $applications->get($scholarship->id);
 
-            // Skip terminal applications (approved/rejected)
+            // Skip terminal applications (approved/rejected): those scholarships
+            // are already decided and can no longer be applied for.
             if ($application && $this->isTerminal($application)) {
                 continue;
             }
 
-            // Skip active non-draft applications (submitted/under_review/document_verification)
-            if ($application && $this->isActive($application)) {
-                continue;
-            }
-
+            // Active applications (submitted/under_review/document_verification)
+            // are still recommended when the student is eligible, so a
+            // scholarship never disappears from recommendations (as it does
+            // from Browse) just because an application already exists. The
+            // view renders a "View Application" action for these.
             $rec = $this->evaluateRecommendation($profile, $scholarship, $application, $weights);
             $recommendations->push($rec);
         }
@@ -344,11 +346,6 @@ class ScholarshipRecommendationService
     protected function isTerminal(ScholarshipApplication $app): bool
     {
         return in_array($this->rawStatus($app), ['approved', 'rejected'], true);
-    }
-
-    protected function isActive(ScholarshipApplication $app): bool
-    {
-        return in_array($this->rawStatus($app), ['submitted', 'under_review', 'document_verification'], true);
     }
 
     protected function isDraft(ScholarshipApplication $app): bool

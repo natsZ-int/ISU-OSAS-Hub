@@ -3,16 +3,18 @@
 
     $stages = ScholarshipApplicationStatus::workflowOrder();
     $currentValue = $currentStatus?->value;
-    $currentIndex = $currentStatus ? array_search($currentStatus, $stages) : -1;
+    $currentIndex = $currentStatus ? array_search($currentStatus, $stages, true) : false;
+    $currentIndex = $currentIndex === false ? -1 : $currentIndex;
     $isApproved = $currentStatus === ScholarshipApplicationStatus::APPROVED;
     $isRejected = $currentStatus === ScholarshipApplicationStatus::REJECTED;
+    $isTerminal = $isApproved || $isRejected;
 @endphp
 
 <div class="fsm-progress">
     <div class="fsm-steps">
         @foreach ($stages as $index => $stage)
             @php
-                $isCompleted = $currentIndex > $index || $isApproved || ($isRejected && $currentIndex > $index);
+                $isCompleted = $isTerminal || $currentIndex > $index;
                 $isCurrent = $currentIndex === $index;
                 $stepClass = $isCompleted ? 'fsm-step completed' : ($isCurrent ? 'fsm-step active' : 'fsm-step pending');
             @endphp

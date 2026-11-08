@@ -91,9 +91,9 @@ class ApplicationReviewController extends Controller
         try {
             $this->workflow->transition(
                 application: $scholarshipApplication,
-                targetState: $request->input('status'),
+                targetState: $request->input('status', $request->input('to_status')),
                 actor: $request->user(),
-                remarks: $request->input('remarks'),
+                remarks: $request->input('remarks', $request->input('reason')),
                 request: $request
             );
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ScholarshipController;
 use App\Http\Controllers\Admin\ServiceRequestController as AdminServiceRequestController;
 use App\Http\Controllers\Admin\ServiceTypeController as AdminServiceTypeController;
 use App\Http\Controllers\Admin\StudentProfileController as AdminStudentProfileController;
+use App\Http\Controllers\Admin\StudentProfileSecurityController as AdminStudentProfileSecurityController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Student\DocumentController;
 use App\Http\Controllers\Student\EligibilityController;
 use App\Http\Controllers\Student\GuidanceController as StudentGuidanceController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
+use App\Http\Controllers\Student\ProfileSecurityController as StudentProfileSecurityController;
 use App\Http\Controllers\Student\RecommendationController;
 use App\Http\Controllers\Student\ScholarshipController as StudentScholarshipController;
 use App\Http\Controllers\Student\ServiceRequestController as StudentServiceRequestController;
@@ -106,6 +108,11 @@ Route::middleware('auth')->group(function () {
 
         // Student Profile Management
         Route::get('/student-profiles', [AdminStudentProfileController::class, 'index'])->name('student-profiles.index');
+        Route::post('/student-profiles/{studentProfile}/unlock', [AdminStudentProfileSecurityController::class, 'unlock'])
+            ->middleware('throttle:10,1')->name('student-profiles.unlock');
+        Route::post('/student-profiles/{studentProfile}/lock', [AdminStudentProfileSecurityController::class, 'lock'])->name('student-profiles.lock');
+        Route::put('/student-profiles/{studentProfile}/passcode', [AdminStudentProfileSecurityController::class, 'reset'])
+            ->name('student-profiles.passcode.reset');
         Route::get('/student-profiles/{studentProfile}/edit', [AdminStudentProfileController::class, 'edit'])->name('student-profiles.edit');
         Route::put('/student-profiles/{studentProfile}', [AdminStudentProfileController::class, 'update'])->name('student-profiles.update');
         Route::get('/student-profiles/{studentProfile}', [AdminStudentProfileController::class, 'show'])->name('student-profiles.show');
@@ -174,14 +181,27 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile/edit', [StudentProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [StudentProfileController::class, 'update'])->name('profile.update');
 
+        // Student Profile Security (passcode protection)
+        Route::get('/profile/security', [StudentProfileSecurityController::class, 'show'])->name('profile.security');
+        Route::post('/profile/passcode', [StudentProfileSecurityController::class, 'store'])->name('profile.passcode.store');
+        Route::put('/profile/passcode', [StudentProfileSecurityController::class, 'store'])->name('profile.passcode.update');
+        Route::delete('/profile/passcode', [StudentProfileSecurityController::class, 'destroy'])->name('profile.passcode.destroy');
+        Route::post('/profile/unlock', [StudentProfileSecurityController::class, 'unlock'])
+            ->middleware('throttle:10,1')->name('profile.unlock');
+        Route::post('/profile/lock', [StudentProfileSecurityController::class, 'lock'])->name('profile.lock');
+
         // Recommendations
         Route::get('/recommended-scholarships', [RecommendationController::class, 'index'])->name('scholarships.recommendations');
+        Route::get('/recommended-scholarships/matches', [RecommendationController::class, 'matches'])->name('scholarships.matches');
 
         // Eligibility Preview
         Route::get('/scholarships/{scholarship}/eligibility', [EligibilityController::class, 'show'])->name('scholarships.eligibility');
 
         // Browse Scholarships
         Route::get('/scholarships', [StudentScholarshipController::class, 'index'])->name('scholarships.index');
+        // Quick Search must be declared before the dynamic {scholarship} route.
+        Route::get('/scholarships/quick-search', [StudentScholarshipController::class, 'quickSearch'])->name('scholarships.quick-search');
+        Route::get('/scholarships/search', [StudentScholarshipController::class, 'search'])->name('scholarships.search');
         Route::get('/scholarships/{scholarship}', [StudentScholarshipController::class, 'show'])->name('scholarships.show');
 
         // Applications
