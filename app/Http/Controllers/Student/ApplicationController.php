@@ -10,6 +10,7 @@ use App\Models\ScholarshipApplication;
 use App\Services\ApplicationNumberGenerator;
 use App\Services\AuditLogService;
 use App\Services\NotificationService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +18,7 @@ use Illuminate\View\View;
 
 class ApplicationController extends Controller
 {
-    public function __construct(protected NotificationService $notificationService)
-    {
-    }
+    public function __construct(protected NotificationService $notificationService) {}
 
     public function index(Request $request): View
     {
@@ -41,8 +40,8 @@ class ApplicationController extends Controller
         }
 
         $applications = $query->orderBy('created_at', 'desc')
-                              ->paginate(10)
-                              ->withQueryString();
+            ->paginate(10)
+            ->withQueryString();
 
         return view('student.applications.index', compact('applications'));
     }
@@ -86,19 +85,19 @@ class ApplicationController extends Controller
         DB::beginTransaction();
         try {
             $application = ScholarshipApplication::create([
-                'application_number'   => ApplicationNumberGenerator::generate(),
-                'student_profile_id'   => $profile->id,
-                'scholarship_id'       => $scholarship->id,
-                'status'               => ScholarshipApplication::STATUS_DRAFT,
+                'application_number' => ApplicationNumberGenerator::generate(),
+                'student_profile_id' => $profile->id,
+                'scholarship_id' => $scholarship->id,
+                'status' => ScholarshipApplication::STATUS_DRAFT,
             ]);
 
             ApplicationStatusHistory::create([
                 'scholarship_application_id' => $application->id,
-                'previous_status'            => null,
-                'new_status'                 => ScholarshipApplication::STATUS_DRAFT,
-                'changed_by'                 => $user->id,
-                'remarks'                    => 'Application created.',
-                'created_at'                 => now(),
+                'previous_status' => null,
+                'new_status' => ScholarshipApplication::STATUS_DRAFT,
+                'changed_by' => $user->id,
+                'remarks' => 'Application created.',
+                'created_at' => now(),
             ]);
 
             // Audit inside the transaction so a failure rolls back with the
@@ -117,14 +116,16 @@ class ApplicationController extends Controller
             return redirect()->route('student.applications.show', $application)
                 ->with('status', 'Application draft created. Please upload the required documents.');
 
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             DB::rollBack();
             if ($e->getCode() === '23000') {
                 return back()->withErrors(['error' => 'You already have an application for this scholarship.']);
             }
+
             return back()->withErrors(['error' => 'Failed to create application. Please try again.']);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withErrors(['error' => 'Failed to create application. Please try again.']);
         }
     }
@@ -150,17 +151,17 @@ class ApplicationController extends Controller
         DB::beginTransaction();
         try {
             $scholarshipApplication->update([
-                'status'       => ScholarshipApplication::STATUS_SUBMITTED,
+                'status' => ScholarshipApplication::STATUS_SUBMITTED,
                 'submitted_at' => now(),
             ]);
 
             ApplicationStatusHistory::create([
                 'scholarship_application_id' => $scholarshipApplication->id,
-                'previous_status'            => ScholarshipApplication::STATUS_DRAFT,
-                'new_status'                 => ScholarshipApplication::STATUS_SUBMITTED,
-                'changed_by'                 => $request->user()->id,
-                'remarks'                    => 'Application submitted by student.',
-                'created_at'                 => now(),
+                'previous_status' => ScholarshipApplication::STATUS_DRAFT,
+                'new_status' => ScholarshipApplication::STATUS_SUBMITTED,
+                'changed_by' => $request->user()->id,
+                'remarks' => 'Application submitted by student.',
+                'created_at' => now(),
             ]);
 
             DB::commit();
@@ -183,11 +184,11 @@ class ApplicationController extends Controller
                 'ScholarshipApplication',
                 $scholarshipApplication->id,
                 [
-                    'reference'       => $scholarshipApplication->application_number,
+                    'reference' => $scholarshipApplication->application_number,
                     'reference_label' => 'Application No.',
-                    'status'          => 'Submitted',
-                    'next_step'       => 'Wait for OSAS to review your application. You will be notified of any updates.',
-                    'url'             => route('student.applications.show', $scholarshipApplication->id),
+                    'status' => 'Submitted',
+                    'next_step' => 'Wait for OSAS to review your application. You will be notified of any updates.',
+                    'url' => route('student.applications.show', $scholarshipApplication->id),
                 ],
                 sendEmail: true,
             );
@@ -197,6 +198,7 @@ class ApplicationController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withErrors(['error' => 'Failed to submit application.']);
         }
     }

@@ -9,10 +9,13 @@ use Illuminate\Support\Facades\Hash;
 
 class OtpVerificationService
 {
-    public const CODE_LENGTH        = 6;
-    public const EXPIRY_MINUTES     = 5;
-    public const MAX_ATTEMPTS       = 5;
-    public const RESEND_COOLDOWN    = 60;
+    public const CODE_LENGTH = 6;
+
+    public const EXPIRY_MINUTES = 5;
+
+    public const MAX_ATTEMPTS = 5;
+
+    public const RESEND_COOLDOWN = 60;
 
     /**
      * Issue a new six-digit OTP for the user.
@@ -31,10 +34,10 @@ class OtpVerificationService
                 ->update(['consumed_at' => now()]);
 
             OtpVerification::create([
-                'user_id'    => $user->id,
-                'email'      => $user->email,
-                'code'       => Hash::make($code),
-                'attempts'   => 0,
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'code' => Hash::make($code),
+                'attempts' => 0,
                 'expires_at' => now()->addMinutes(self::EXPIRY_MINUTES),
             ]);
         });

@@ -11,25 +11,25 @@ return new class extends Migration
         // 1. Safely extend service_types
         if (Schema::hasTable('service_types')) {
             Schema::table('service_types', function (Blueprint $table) {
-                if (!Schema::hasColumn('service_types', 'instructions')) {
+                if (! Schema::hasColumn('service_types', 'instructions')) {
                     $table->text('instructions')->nullable()->after('description');
                 }
-                if (!Schema::hasColumn('service_types', 'is_active')) {
+                if (! Schema::hasColumn('service_types', 'is_active')) {
                     $table->boolean('is_active')->default(true)->after('instructions');
                 }
-                if (!Schema::hasColumn('service_types', 'display_order')) {
+                if (! Schema::hasColumn('service_types', 'display_order')) {
                     $table->integer('display_order')->default(0)->after('is_active');
                 }
             });
         }
 
         // 2. Safely create service_type_requirements
-        if (!Schema::hasTable('service_type_requirements')) {
+        if (! Schema::hasTable('service_type_requirements')) {
             Schema::create('service_type_requirements', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('service_type_id')
-                      ->constrained('service_types')
-                      ->cascadeOnDelete();
+                    ->constrained('service_types')
+                    ->cascadeOnDelete();
                 $table->string('name', 150);
                 $table->text('description')->nullable();
                 $table->boolean('is_required')->default(true);
@@ -41,7 +41,7 @@ return new class extends Migration
         }
 
         // 3. Create service_request_documents with short constraint names
-        if (!Schema::hasTable('service_request_documents')) {
+        if (! Schema::hasTable('service_request_documents')) {
             Schema::create('service_request_documents', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('student_service_request_id');
@@ -54,14 +54,14 @@ return new class extends Migration
                 $table->timestamps();
 
                 $table->foreign('student_service_request_id', 'fk_srd_ssr_id')
-                      ->references('id')
-                      ->on('student_service_requests')
-                      ->cascadeOnDelete();
+                    ->references('id')
+                    ->on('student_service_requests')
+                    ->cascadeOnDelete();
 
                 $table->foreign('service_type_requirement_id', 'fk_srd_str_id')
-                      ->references('id')
-                      ->on('service_type_requirements')
-                      ->nullOnDelete();
+                    ->references('id')
+                    ->on('service_type_requirements')
+                    ->nullOnDelete();
 
                 $table->index('student_service_request_id', 'idx_srd_ssr_id');
                 $table->index('service_type_requirement_id', 'idx_srd_str_id');
@@ -69,7 +69,7 @@ return new class extends Migration
         }
 
         // 4. Create student_service_request_histories with short constraint names
-        if (!Schema::hasTable('student_service_request_histories')) {
+        if (! Schema::hasTable('student_service_request_histories')) {
             Schema::create('student_service_request_histories', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('student_service_request_id');
@@ -80,9 +80,9 @@ return new class extends Migration
                 $table->timestamp('created_at')->nullable();
 
                 $table->foreign('student_service_request_id', 'fk_ssrh_ssr_id')
-                      ->references('id')
-                      ->on('student_service_requests')
-                      ->cascadeOnDelete();
+                    ->references('id')
+                    ->on('student_service_requests')
+                    ->cascadeOnDelete();
 
                 $table->index('student_service_request_id', 'idx_ssrh_ssr_id');
                 $table->index('new_status', 'idx_ssrh_new_status');

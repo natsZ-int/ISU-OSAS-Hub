@@ -2,19 +2,22 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
 
 class Scholarship extends Model
 {
     use HasFactory;
 
-    public const STATUS_DRAFT    = 'draft';
-    public const STATUS_OPEN     = 'open';
-    public const STATUS_CLOSED   = 'closed';
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_OPEN = 'open';
+
+    public const STATUS_CLOSED = 'closed';
+
     public const STATUS_ARCHIVED = 'archived';
 
     public const ALLOWED_STATUSES = [
@@ -41,12 +44,12 @@ class Scholarship extends Model
     ];
 
     protected $casts = [
-        'minimum_gwa'            => 'decimal:2',
-        'maximum_family_income'  => 'decimal:2',
-        'eligible_programs'      => 'array',
-        'eligible_year_levels'   => 'array',
+        'minimum_gwa' => 'decimal:2',
+        'maximum_family_income' => 'decimal:2',
+        'eligible_programs' => 'array',
+        'eligible_year_levels' => 'array',
         'application_start_date' => 'date',
-        'application_deadline'   => 'date',
+        'application_deadline' => 'date',
     ];
 
     public function creator(): BelongsTo
@@ -67,8 +70,8 @@ class Scholarship extends Model
     public function scopeOpen(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_OPEN)
-                     ->where('application_start_date', '<=', now()->toDateString())
-                     ->where('application_deadline', '>=', now()->toDateString());
+            ->where('application_start_date', '<=', now()->toDateString())
+            ->where('application_deadline', '>=', now()->toDateString());
     }
 
     public function scopeAvailableForStudents(Builder $query): Builder

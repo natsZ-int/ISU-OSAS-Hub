@@ -22,9 +22,9 @@ return new class extends Migration
             $table->date('application_deadline');
             $table->string('status', 20)->default('draft');
             $table->foreignId('created_by')
-                  ->nullable()
-                  ->constrained('users')
-                  ->nullOnDelete();
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->timestamps();
 
             $table->index('status');

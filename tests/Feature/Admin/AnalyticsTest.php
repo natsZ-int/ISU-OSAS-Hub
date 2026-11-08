@@ -16,8 +16,11 @@ class AnalyticsTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $student;
+
     protected User $counselor;
+
     protected User $inactiveAdmin;
 
     protected function setUp(): void

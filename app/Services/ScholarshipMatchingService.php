@@ -6,7 +6,6 @@ use App\DataObjects\EligibilityEvaluationResult;
 use App\DataObjects\FactorResult;
 use App\DataObjects\ScholarshipMatchResult;
 use App\Enums\OverallEligibility;
-use App\Models\ApplicationDocument;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
 use App\Models\ScholarshipMatchingWeight;
@@ -24,11 +23,9 @@ class ScholarshipMatchingService
      */
     public function recommendForStudent(StudentProfile $profile): Collection
     {
-        $weights = ScholarshipMatchingWeight::active();
-
-        if (! $weights) {
-            return collect();
-        }
+        // Fall back to the configured defaults when no active weights have
+        // been saved yet. This keeps matching functional on a fresh install.
+        $weights = ScholarshipMatchingWeight::activeOrDefault();
 
         // Retrieve available scholarships with eager loading
         $scholarships = Scholarship::availableForStudents()
@@ -67,7 +64,7 @@ class ScholarshipMatchingService
         ?ScholarshipApplication $application,
         ?ScholarshipMatchingWeight $weights = null
     ): ScholarshipMatchResult {
-        $weights = $weights ?? ScholarshipMatchingWeight::active();
+        $weights = $weights ?? ScholarshipMatchingWeight::activeOrDefault();
 
         // 1. Eligibility check (reuse existing engine)
         $eligibilityResult = $this->eligibilityService->evaluate($profile, $scholarship, $application);
@@ -295,6 +292,7 @@ class ScholarshipMatchingService
                     $reasons[] = $c->explanation;
                 }
             }
+
             return $reasons;
         }
 
@@ -326,15 +324,21 @@ class ScholarshipMatchingService
         $ranked = $eligible->sort(function (ScholarshipMatchResult $a, ScholarshipMatchResult $b) {
             // Primary: score descending
             $scoreComp = ($b->matchScore ?? 0) <=> ($a->matchScore ?? 0);
-            if ($scoreComp !== 0) return $scoreComp;
+            if ($scoreComp !== 0) {
+                return $scoreComp;
+            }
 
             // Tie-break 1: earlier deadline first
             $deadlineComp = strcmp($a->deadline, $b->deadline);
-            if ($deadlineComp !== 0) return $deadlineComp;
+            if ($deadlineComp !== 0) {
+                return $deadlineComp;
+            }
 
             // Tie-break 2: title ascending
             $titleComp = strcmp($a->scholarshipTitle, $b->scholarshipTitle);
-            if ($titleComp !== 0) return $titleComp;
+            if ($titleComp !== 0) {
+                return $titleComp;
+            }
 
             // Tie-break 3: id ascending
             return $a->scholarshipId <=> $b->scholarshipId;
@@ -361,7 +365,7 @@ class ScholarshipMatchingService
         });
 
         return collect([
-            'eligible'   => $rankedWithPosition,
+            'eligible' => $rankedWithPosition,
             'ineligible' => $ineligible->values(),
         ]);
     }

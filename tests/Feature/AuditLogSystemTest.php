@@ -14,6 +14,7 @@ class AuditLogSystemTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $student;
 
     protected function setUp(): void
@@ -25,12 +26,12 @@ class AuditLogSystemTest extends TestCase
         Role::updateOrCreate(['name' => 'counselor'], ['label' => 'Counselor']);
 
         $this->admin = User::factory()->create([
-            'role_id'   => $adminRole->id,
+            'role_id' => $adminRole->id,
             'is_active' => true,
         ]);
 
         $this->student = User::factory()->create([
-            'role_id'   => $studentRole->id,
+            'role_id' => $studentRole->id,
             'is_active' => true,
         ]);
     }
@@ -49,12 +50,12 @@ class AuditLogSystemTest extends TestCase
         );
 
         $this->assertDatabaseHas('audit_logs', [
-            'action'      => 'test_action',
-            'module'      => 'test_module',
+            'action' => 'test_action',
+            'module' => 'test_module',
             'record_type' => 'User',
-            'record_id'   => $this->admin->id,
+            'record_id' => $this->admin->id,
             'description' => 'Test description.',
-            'user_id'     => $this->admin->id,
+            'user_id' => $this->admin->id,
         ]);
     }
 
@@ -76,13 +77,13 @@ class AuditLogSystemTest extends TestCase
     public function test_successful_login_creates_audit_record()
     {
         $this->post(route('login.store'), [
-            'email'    => $this->admin->email,
+            'email' => $this->admin->email,
             'password' => 'password',
         ]);
 
         $this->assertDatabaseHas('audit_logs', [
-            'action'  => 'login',
-            'module'  => 'authentication',
+            'action' => 'login',
+            'module' => 'authentication',
             'user_id' => $this->admin->id,
         ]);
     }
@@ -90,7 +91,7 @@ class AuditLogSystemTest extends TestCase
     public function test_failed_login_creates_audit_record_without_password()
     {
         $this->post(route('login.store'), [
-            'email'    => $this->admin->email,
+            'email' => $this->admin->email,
             'password' => 'wrong-password',
         ]);
 
@@ -109,8 +110,8 @@ class AuditLogSystemTest extends TestCase
             ->post(route('logout'));
 
         $this->assertDatabaseHas('audit_logs', [
-            'action'  => 'logout',
-            'module'  => 'authentication',
+            'action' => 'logout',
+            'module' => 'authentication',
             'user_id' => $this->admin->id,
         ]);
     }
@@ -195,7 +196,7 @@ class AuditLogSystemTest extends TestCase
         $response = $this->actingAs($this->admin)
             ->get(route('admin.audit-logs.index', [
                 'date_from' => now()->subDay()->format('Y-m-d'),
-                'date_to'   => now()->addDay()->format('Y-m-d'),
+                'date_to' => now()->addDay()->format('Y-m-d'),
             ]));
 
         $response->assertStatus(200);
@@ -207,7 +208,7 @@ class AuditLogSystemTest extends TestCase
     public function test_audit_log_does_not_store_passwords()
     {
         $this->post(route('login.store'), [
-            'email'    => $this->admin->email,
+            'email' => $this->admin->email,
             'password' => 'SuperSecretPassword123!',
         ]);
 

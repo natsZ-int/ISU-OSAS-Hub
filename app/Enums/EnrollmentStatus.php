@@ -4,16 +4,16 @@ namespace App\Enums;
 
 enum EnrollmentStatus: string
 {
-    case ENROLLED     = 'enrolled';
+    case ENROLLED = 'enrolled';
     case NOT_ENROLLED = 'not_enrolled';
-    case UNKNOWN      = 'unknown';
+    case UNKNOWN = 'unknown';
 
     public function label(): string
     {
         return match ($this) {
-            self::ENROLLED     => 'Enrolled',
+            self::ENROLLED => 'Enrolled',
             self::NOT_ENROLLED => 'Not Enrolled',
-            self::UNKNOWN      => 'Unknown',
+            self::UNKNOWN => 'Unknown',
         };
     }
 

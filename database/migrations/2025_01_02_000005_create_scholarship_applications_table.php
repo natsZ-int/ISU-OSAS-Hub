@@ -12,11 +12,11 @@ return new class extends Migration
             $table->id();
             $table->string('application_number', 30)->unique();
             $table->foreignId('student_profile_id')
-                  ->constrained('student_profiles')
-                  ->restrictOnDelete();
+                ->constrained('student_profiles')
+                ->restrictOnDelete();
             $table->foreignId('scholarship_id')
-                  ->constrained('scholarships')
-                  ->restrictOnDelete();
+                ->constrained('scholarships')
+                ->restrictOnDelete();
             $table->string('status', 30)->default('draft');
             $table->timestamp('submitted_at')->nullable();
             $table->text('remarks')->nullable();

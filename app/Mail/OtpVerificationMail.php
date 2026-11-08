@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -16,8 +17,7 @@ class OtpVerificationMail extends Mailable
     public function __construct(
         public User $user,
         public string $otpCode,
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {
@@ -34,7 +34,7 @@ class OtpVerificationMail extends Mailable
     }
 
     /**
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

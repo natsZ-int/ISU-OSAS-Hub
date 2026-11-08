@@ -23,8 +23,8 @@ class OtpVerification extends Model
     protected function casts(): array
     {
         return [
-            'attempts'    => 'integer',
-            'expires_at'  => 'datetime',
+            'attempts' => 'integer',
+            'expires_at' => 'datetime',
             'consumed_at' => 'datetime',
         ];
     }

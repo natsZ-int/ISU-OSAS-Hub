@@ -16,32 +16,37 @@ class StudentServiceFlowTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $studentA;
+
     protected User $studentB;
+
     protected User $handler;
+
     protected StudentProfile $profileA;
+
     protected ServiceType $serviceType;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $adminRole     = Role::firstOrCreate(['name' => Role::ADMIN], ['label' => 'Administrator']);
-        $studentRole   = Role::firstOrCreate(['name' => Role::STUDENT], ['label' => 'Student']);
+        $adminRole = Role::firstOrCreate(['name' => Role::ADMIN], ['label' => 'Administrator']);
+        $studentRole = Role::firstOrCreate(['name' => Role::STUDENT], ['label' => 'Student']);
         $counselorRole = Role::firstOrCreate(['name' => Role::COUNSELOR], ['label' => 'Counselor']);
 
-        $this->admin    = User::factory()->create(['role_id' => $adminRole->id, 'is_active' => true]);
+        $this->admin = User::factory()->create(['role_id' => $adminRole->id, 'is_active' => true]);
         $this->studentA = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
         $this->studentB = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
-        $this->handler  = User::factory()->create(['role_id' => $counselorRole->id, 'is_active' => true]);
+        $this->handler = User::factory()->create(['role_id' => $counselorRole->id, 'is_active' => true]);
 
         $this->profileA = StudentProfile::factory()->create(['user_id' => $this->studentA->id]);
         StudentProfile::factory()->create(['user_id' => $this->studentB->id]);
 
         $this->serviceType = ServiceType::create([
-            'name'          => 'Good Moral Request',
-            'description'   => 'Integration flow service',
-            'is_active'     => true,
+            'name' => 'Good Moral Request',
+            'description' => 'Integration flow service',
+            'is_active' => true,
             'display_order' => 1,
         ]);
     }
@@ -50,7 +55,7 @@ class StudentServiceFlowTest extends TestCase
     {
         $this->actingAs($this->studentA)->post(route('student.services.store'), [
             'service_type_id' => $this->serviceType->id,
-            'description'     => 'Please process my good moral request.',
+            'description' => 'Please process my good moral request.',
         ]);
 
         return StudentServiceRequest::where('student_profile_id', $this->profileA->id)->firstOrFail();
@@ -64,12 +69,12 @@ class StudentServiceFlowTest extends TestCase
         $this->assertStringStartsWith('SR-', $request->request_number);
         $this->assertDatabaseHas('student_service_request_histories', [
             'student_service_request_id' => $request->id,
-            'new_status'                 => 'submitted',
+            'new_status' => 'submitted',
         ]);
         $this->assertDatabaseHas('audit_logs', [
-            'action'      => 'Submitted Service Request',
+            'action' => 'Submitted Service Request',
             'record_type' => 'StudentServiceRequest',
-            'record_id'   => $request->id,
+            'record_id' => $request->id,
         ]);
     }
 
@@ -105,7 +110,7 @@ class StudentServiceFlowTest extends TestCase
 
         $this->actingAs($this->admin)
             ->patch(route('admin.student-service-requests.transition', $request), [
-                'status'  => 'requires_information',
+                'status' => 'requires_information',
                 'remarks' => 'Please upload a clearer scanned copy.',
             ])
             ->assertSessionHas('status');
@@ -113,7 +118,7 @@ class StudentServiceFlowTest extends TestCase
         $this->assertEquals('requires_information', $request->fresh()->getRawOriginal('status'));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $this->studentA->id,
-            'type'    => 'student_services.additional_information_required',
+            'type' => 'student_services.additional_information_required',
         ]);
     }
 
@@ -128,25 +133,25 @@ class StudentServiceFlowTest extends TestCase
 
         $this->actingAs($this->admin)
             ->patch(route('admin.student-service-requests.transition', $request), [
-                'status'  => 'completed',
+                'status' => 'completed',
                 'remarks' => '',
             ])
             ->assertSessionHas('error');
 
         $this->actingAs($this->admin)
             ->patch(route('admin.student-service-requests.transition', $request), [
-                'status'  => 'completed',
+                'status' => 'completed',
                 'remarks' => 'Released to student.',
             ]);
 
         $this->assertEquals('completed', $request->fresh()->getRawOriginal('status'));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $this->studentA->id,
-            'type'    => 'student_services.request_completed',
+            'type' => 'student_services.request_completed',
         ]);
         $this->assertDatabaseHas('audit_logs', [
             'record_type' => 'StudentServiceRequest',
-            'record_id'   => $request->id,
+            'record_id' => $request->id,
         ]);
     }
 

@@ -40,23 +40,25 @@ class ScholarshipRecommendationService
 
         // Matching weights change rarely and are identical for every
         // scholarship: read them once instead of once per scholarship.
-        $weights = ScholarshipMatchingWeight::active();
+        // Fall back to the built-in defaults when none have been saved.
+        $weights = ScholarshipMatchingWeight::activeOrDefault();
 
         $recommendations = collect();
 
         foreach ($scholarships as $scholarship) {
             $application = $applications->get($scholarship->id);
 
-            // Skip terminal applications (approved/rejected)
+            // Skip terminal applications (approved/rejected): those scholarships
+            // are already decided and can no longer be applied for.
             if ($application && $this->isTerminal($application)) {
                 continue;
             }
 
-            // Skip active non-draft applications (submitted/under_review/document_verification)
-            if ($application && $this->isActive($application)) {
-                continue;
-            }
-
+            // Active applications (submitted/under_review/document_verification)
+            // are still recommended when the student is eligible, so a
+            // scholarship never disappears from recommendations (as it does
+            // from Browse) just because an application already exists. The
+            // view renders a "View Application" action for these.
             $rec = $this->evaluateRecommendation($profile, $scholarship, $application, $weights);
             $recommendations->push($rec);
         }
@@ -149,24 +151,24 @@ class ScholarshipRecommendationService
 
         if ($total === 0) {
             return [
-                'total_required'       => 0,
-                'uploaded'             => 0,
-                'verified'             => 0,
-                'missing'              => [],
+                'total_required' => 0,
+                'uploaded' => 0,
+                'verified' => 0,
+                'missing' => [],
                 'pending_verification' => [],
-                'rejected'             => [],
+                'rejected' => [],
                 'all_requirements_met' => true,
             ];
         }
 
         if (! $application) {
             return [
-                'total_required'       => $total,
-                'uploaded'             => 0,
-                'verified'             => 0,
-                'missing'              => $required->pluck('requirement_name')->toArray(),
+                'total_required' => $total,
+                'uploaded' => 0,
+                'verified' => 0,
+                'missing' => $required->pluck('requirement_name')->toArray(),
                 'pending_verification' => [],
-                'rejected'             => [],
+                'rejected' => [],
                 'all_requirements_met' => false,
             ];
         }
@@ -197,12 +199,12 @@ class ScholarshipRecommendationService
         }
 
         return [
-            'total_required'       => $total,
-            'uploaded'             => $uploaded,
-            'verified'             => $verified,
-            'missing'              => $missing,
+            'total_required' => $total,
+            'uploaded' => $uploaded,
+            'verified' => $verified,
+            'missing' => $missing,
             'pending_verification' => $pending,
-            'rejected'             => $rejected,
+            'rejected' => $rejected,
             'all_requirements_met' => empty($missing) && empty($pending) && empty($rejected),
         ];
     }
@@ -226,6 +228,7 @@ class ScholarshipRecommendationService
                     $reasons[] = $c->explanation;
                 }
             }
+
             return $reasons;
         }
 
@@ -280,14 +283,20 @@ class ScholarshipRecommendationService
             ->filter(fn (ScholarshipRecommendationResult $r) => $r->isEligibleRecommendation())
             ->sort(function (ScholarshipRecommendationResult $a, ScholarshipRecommendationResult $b) {
                 $score = ($b->matchScore ?? 0) <=> ($a->matchScore ?? 0);
-                if ($score !== 0) return $score;
+                if ($score !== 0) {
+                    return $score;
+                }
 
                 // Parse deadline strings to timestamps for chronological comparison
                 $deadline = strtotime($a->deadline) <=> strtotime($b->deadline);
-                if ($deadline !== 0) return $deadline;
+                if ($deadline !== 0) {
+                    return $deadline;
+                }
 
                 $title = strcmp($a->scholarshipTitle, $b->scholarshipTitle);
-                if ($title !== 0) return $title;
+                if ($title !== 0) {
+                    return $title;
+                }
 
                 return $a->scholarshipId <=> $b->scholarshipId;
             })
@@ -319,8 +328,8 @@ class ScholarshipRecommendationService
             ->values();
 
         return [
-            'eligible'     => $eligible,
-            'potential'    => $potential,
+            'eligible' => $eligible,
+            'potential' => $potential,
             'not_eligible' => $notEligible,
         ];
     }
@@ -330,17 +339,13 @@ class ScholarshipRecommendationService
     protected function rawStatus(ScholarshipApplication $app): string
     {
         $raw = $app->getRawOriginal('status') ?? $app->status;
+
         return is_object($raw) ? $raw->value : (string) $raw;
     }
 
     protected function isTerminal(ScholarshipApplication $app): bool
     {
         return in_array($this->rawStatus($app), ['approved', 'rejected'], true);
-    }
-
-    protected function isActive(ScholarshipApplication $app): bool
-    {
-        return in_array($this->rawStatus($app), ['submitted', 'under_review', 'document_verification'], true);
     }
 
     protected function isDraft(ScholarshipApplication $app): bool

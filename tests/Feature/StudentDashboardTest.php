@@ -2,13 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\GuidanceAppointment;
 use App\Models\Notification;
 use App\Models\Role;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
 use App\Models\StudentProfile;
-use App\Models\StudentServiceRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -18,9 +16,13 @@ class StudentDashboardTest extends TestCase
     use RefreshDatabase;
 
     protected User $studentUser;
+
     protected StudentProfile $studentProfile;
+
     protected Role $studentRole;
+
     protected Role $adminRole;
+
     protected Role $counselorRole;
 
     protected function setUp(): void

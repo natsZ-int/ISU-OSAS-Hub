@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
 
 class Notification extends Model
 {
@@ -26,8 +26,8 @@ class Notification extends Model
     protected function casts(): array
     {
         return [
-            'data'       => 'array',
-            'read_at'    => 'datetime',
+            'data' => 'array',
+            'read_at' => 'datetime',
             'emailed_at' => 'datetime',
             'related_id' => 'integer',
         ];
@@ -77,10 +77,10 @@ class Notification extends Model
     public function getCategoryLabel(): string
     {
         return match (true) {
-            str_starts_with($this->type, 'scholarship.')       => 'Scholarship',
-            str_starts_with($this->type, 'guidance.')          => 'Guidance',
-            str_starts_with($this->type, 'student_services.')  => 'Student Services',
-            default                                            => 'General',
+            str_starts_with($this->type, 'scholarship.') => 'Scholarship',
+            str_starts_with($this->type, 'guidance.') => 'Guidance',
+            str_starts_with($this->type, 'student_services.') => 'Student Services',
+            default => 'General',
         };
     }
 
@@ -164,13 +164,13 @@ class Notification extends Model
                 'ScholarshipApplication' => $isCounselor
                     ? null
                     : route('student.applications.show', $this->related_id),
-                'GuidanceAppointment'    => $isCounselor
+                'GuidanceAppointment' => $isCounselor
                     ? route('counselor.guidance.appointments.show', $this->related_id)
                     : route('student.guidance.appointments.show', $this->related_id),
-                'StudentServiceRequest'  => $isCounselor
+                'StudentServiceRequest' => $isCounselor
                     ? null
                     : route('student.services.show', $this->related_id),
-                default                  => null,
+                default => null,
             };
         } catch (\Throwable) {
             return null;

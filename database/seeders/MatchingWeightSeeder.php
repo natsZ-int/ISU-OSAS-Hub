@@ -12,10 +12,10 @@ class MatchingWeightSeeder extends Seeder
         ScholarshipMatchingWeight::firstOrCreate(
             ['is_active' => true],
             [
-                'academic_weight'           => 30.00,
-                'financial_weight'          => 25.00,
-                'program_weight'            => 20.00,
-                'year_level_weight'         => 15.00,
+                'academic_weight' => 30.00,
+                'financial_weight' => 25.00,
+                'program_weight' => 20.00,
+                'year_level_weight' => 15.00,
                 'document_readiness_weight' => 10.00,
             ]
         );

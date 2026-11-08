@@ -1,7 +1,14 @@
 @props(['status'])
 
 @php
-    $raw = is_object($status) && method_exists($status, 'value') ? $status->value : (string) $status;
+    $raw = match (true) {
+        $status instanceof \BackedEnum => (string) $status->value,
+        $status instanceof \UnitEnum => $status->name,
+        is_object($status) && isset($status->value) => (string) $status->value,
+        is_object($status) && method_exists($status, '__toString') => (string) $status,
+        is_scalar($status) => (string) $status,
+        default => '',
+    };
     $key = strtolower(trim($raw));
 
     $map = [

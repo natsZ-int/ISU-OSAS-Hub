@@ -14,19 +14,21 @@ class AdminFlowTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $student;
+
     protected User $counselor;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $adminRole     = Role::firstOrCreate(['name' => Role::ADMIN], ['label' => 'Administrator']);
-        $studentRole   = Role::firstOrCreate(['name' => Role::STUDENT], ['label' => 'Student']);
+        $adminRole = Role::firstOrCreate(['name' => Role::ADMIN], ['label' => 'Administrator']);
+        $studentRole = Role::firstOrCreate(['name' => Role::STUDENT], ['label' => 'Student']);
         $counselorRole = Role::firstOrCreate(['name' => Role::COUNSELOR], ['label' => 'Counselor']);
 
-        $this->admin     = User::factory()->create(['role_id' => $adminRole->id, 'is_active' => true]);
-        $this->student   = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
+        $this->admin = User::factory()->create(['role_id' => $adminRole->id, 'is_active' => true]);
+        $this->student = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
         $this->counselor = User::factory()->create(['role_id' => $counselorRole->id, 'is_active' => true]);
     }
 
@@ -48,8 +50,8 @@ class AdminFlowTest extends TestCase
         // non-autoloadable namespace, so the badge never rendered.
         Notification::create([
             'user_id' => $this->admin->id,
-            'type'    => 'user_management.notice',
-            'title'   => 'Test Notice',
+            'type' => 'user_management.notice',
+            'title' => 'Test Notice',
             'message' => 'Badge check',
         ]);
 
@@ -62,22 +64,22 @@ class AdminFlowTest extends TestCase
     public function test_audit_module_filter_actually_filters_modules_the_app_writes(): void
     {
         AuditLog::create([
-            'user_id'     => $this->admin->id,
-            'action'      => 'Application Started',
-            'module'      => 'Scholarship Application',
+            'user_id' => $this->admin->id,
+            'action' => 'Application Started',
+            'module' => 'Scholarship Application',
             'record_type' => 'ScholarshipApplication',
-            'record_id'   => 1,
+            'record_id' => 1,
             'description' => 'SCHOLARSHIP-FLOW-MARKER',
-            'created_at'  => now(),
+            'created_at' => now(),
         ]);
         AuditLog::create([
-            'user_id'     => $this->admin->id,
-            'action'      => 'User Created',
-            'module'      => 'User Management',
+            'user_id' => $this->admin->id,
+            'action' => 'User Created',
+            'module' => 'User Management',
             'record_type' => 'User',
-            'record_id'   => 2,
+            'record_id' => 2,
             'description' => 'USER-MGMT-MARKER',
-            'created_at'  => now(),
+            'created_at' => now(),
         ]);
 
         // Regression: this module was missing from the whitelist, so the
@@ -122,17 +124,17 @@ class AdminFlowTest extends TestCase
         $role = Role::firstOrCreate(['name' => 'counselor'], ['label' => 'Counselor']);
 
         $this->actingAs($this->admin)->post(route('admin.users.store'), [
-            'name'                 => 'New Counselor',
-            'email'                => 'counselor.new@isu.local',
-            'password'             => 'Secret123!',
+            'name' => 'New Counselor',
+            'email' => 'counselor.new@isu.local',
+            'password' => 'Secret123!',
             'password_confirmation' => 'Secret123!',
-            'role_id'              => $role->id,
+            'role_id' => $role->id,
         ])->assertRedirect(route('admin.users.index'));
 
         $this->assertDatabaseHas('users', ['email' => 'counselor.new@isu.local']);
         $this->assertDatabaseHas('audit_logs', [
-            'action'      => 'User Created',
-            'module'      => 'User Management',
+            'action' => 'User Created',
+            'module' => 'User Management',
             'record_type' => 'User',
         ]);
     }

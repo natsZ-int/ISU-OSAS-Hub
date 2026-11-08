@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\EnrollmentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,17 +25,30 @@ class StudentProfile extends Model
         'gwa',
         'family_income',
         'address',
+        'profile_passcode_hash',
+    ];
+
+    /**
+     * The passcode hash must never be serialized to the frontend.
+     */
+    protected $hidden = [
+        'profile_passcode_hash',
     ];
 
     protected $casts = [
-        'gwa'           => 'decimal:2',
+        'gwa' => 'decimal:2',
         'family_income' => 'decimal:2',
-        'year_level'    => 'integer',
+        'year_level' => 'integer',
     ];
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function hasProfilePasscode(): bool
+    {
+        return filled($this->profile_passcode_hash);
     }
 
     public function scholarshipApplications(): HasMany

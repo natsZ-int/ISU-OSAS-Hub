@@ -4,10 +4,10 @@ namespace Tests\Feature\Auth;
 
 use App\Mail\OtpVerificationMail;
 use App\Models\Role;
-use App\Models\StudentEnrollmentVerification;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Services\OtpVerificationService;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use RuntimeException;
@@ -20,7 +20,7 @@ class OtpVerificationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\RolesSeeder::class);
+        $this->seed(RolesSeeder::class);
     }
 
     private function otp(): OtpVerificationService
@@ -31,19 +31,19 @@ class OtpVerificationTest extends TestCase
     private function createUnverifiedStudent(array $overrides = []): User
     {
         $user = User::create(array_merge([
-            'name'     => 'OTP Student',
-            'email'    => 'otp@student.local',
+            'name' => 'OTP Student',
+            'email' => 'otp@student.local',
             'password' => 'secret-password',
-            'role_id'  => Role::where('name', Role::STUDENT)->first()->id,
+            'role_id' => Role::where('name', Role::STUDENT)->first()->id,
             'is_active' => true,
         ], $overrides));
 
         StudentProfile::create([
-            'user_id'        => $user->id,
+            'user_id' => $user->id,
             'student_number' => '2026-2001',
-            'first_name'     => 'OTP',
-            'last_name'      => 'Student',
-            'year_level'     => 1,
+            'first_name' => 'OTP',
+            'last_name' => 'Student',
+            'year_level' => 1,
         ]);
 
         return $user;
@@ -87,9 +87,9 @@ class OtpVerificationTest extends TestCase
 
         $this->assertDatabaseHas('student_enrollment_verifications', [
             'student_profile_id' => $user->studentProfile->id,
-            'academic_year'      => config('academic.current_year'),
-            'semester'           => config('academic.current_semester'),
-            'status'             => 'pending',
+            'academic_year' => config('academic.current_year'),
+            'semester' => config('academic.current_semester'),
+            'status' => 'pending',
         ]);
     }
 
@@ -163,7 +163,7 @@ class OtpVerificationTest extends TestCase
 
     public function test_resend_invalidates_the_previous_code(): void
     {
-        $user  = $this->createUnverifiedStudent();
+        $user = $this->createUnverifiedStudent();
         $code1 = $this->otp()->issue($user);
 
         $this->travel(OtpVerificationService::RESEND_COOLDOWN + 1)->seconds();
@@ -220,17 +220,17 @@ class OtpVerificationTest extends TestCase
         Mail::fake();
 
         $this->post('/register', [
-            'student_number'   => '2026-2002',
-            'name'             => 'Auto OTP Student',
-            'email'            => 'autootp@student.local',
-            'password'         => 'secret-password',
+            'student_number' => '2026-2002',
+            'name' => 'Auto OTP Student',
+            'email' => 'autootp@student.local',
+            'password' => 'secret-password',
             'password_confirmation' => 'secret-password',
-            'college'          => 'College of Engineering',
-            'program'          => 'BS Computer Engineering',
-            'contact_number'   => '09171234567',
-            'gwa'              => '1.75',
-            'family_income'    => '150000',
-            'address'          => '123 Sampaguita St., Isabela',
+            'college' => 'College of Engineering',
+            'program' => 'BS Computer Engineering',
+            'contact_number' => '09171234567',
+            'gwa' => '1.75',
+            'family_income' => '150000',
+            'address' => '123 Sampaguita St., Isabela',
             'privacy_accepted' => '1',
         ]);
 
@@ -242,17 +242,17 @@ class OtpVerificationTest extends TestCase
         Mail::shouldReceive('to')->andThrow(new RuntimeException('SMTP down'));
 
         $response = $this->post('/register', [
-            'student_number'   => '2026-2003',
-            'name'             => 'Mail Fail Student',
-            'email'            => 'mailfail@student.local',
-            'password'         => 'secret-password',
+            'student_number' => '2026-2003',
+            'name' => 'Mail Fail Student',
+            'email' => 'mailfail@student.local',
+            'password' => 'secret-password',
             'password_confirmation' => 'secret-password',
-            'college'          => 'College of Engineering',
-            'program'          => 'BS Computer Engineering',
-            'contact_number'   => '09171234567',
-            'gwa'              => '1.75',
-            'family_income'    => '150000',
-            'address'          => '123 Sampaguita St., Isabela',
+            'college' => 'College of Engineering',
+            'program' => 'BS Computer Engineering',
+            'contact_number' => '09171234567',
+            'gwa' => '1.75',
+            'family_income' => '150000',
+            'address' => '123 Sampaguita St., Isabela',
             'privacy_accepted' => '1',
         ]);
 
@@ -298,14 +298,14 @@ class OtpVerificationTest extends TestCase
 
     public function test_another_user_cannot_verify_someone_elses_account(): void
     {
-        $victim  = $this->createUnverifiedStudent();
+        $victim = $this->createUnverifiedStudent();
         $victimCode = $this->otp()->issue($victim);
 
         $attacker = User::create([
-            'name'     => 'Attacker',
-            'email'    => 'attacker@student.local',
+            'name' => 'Attacker',
+            'email' => 'attacker@student.local',
             'password' => 'secret-password',
-            'role_id'  => Role::where('name', Role::STUDENT)->first()->id,
+            'role_id' => Role::where('name', Role::STUDENT)->first()->id,
             'is_active' => true,
         ]);
         $attacker->markEmailAsVerified();

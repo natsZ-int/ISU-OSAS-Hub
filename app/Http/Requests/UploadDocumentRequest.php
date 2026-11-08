@@ -15,7 +15,7 @@ class UploadDocumentRequest extends FormRequest
     {
         return [
             'scholarship_requirement_id' => ['required', 'integer', 'exists:scholarship_requirements,id'],
-            'document'                   => [
+            'document' => [
                 'required',
                 'file',
                 'mimes:pdf,jpg,jpeg,png',
@@ -28,7 +28,7 @@ class UploadDocumentRequest extends FormRequest
     {
         return [
             'document.mimes' => 'Allowed file types: PDF, JPG, JPEG, PNG.',
-            'document.max'   => 'Maximum file size is 5 MB.',
+            'document.max' => 'Maximum file size is 5 MB.',
         ];
     }
 }

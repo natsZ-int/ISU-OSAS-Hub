@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\ApplicationReviewController;
+use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\DocumentVerificationController;
 use App\Http\Controllers\Admin\GuidanceController as AdminGuidanceController;
 use App\Http\Controllers\Admin\MatchingWeightController;
@@ -8,8 +10,9 @@ use App\Http\Controllers\Admin\RequirementController;
 use App\Http\Controllers\Admin\ScholarshipController;
 use App\Http\Controllers\Admin\ServiceRequestController as AdminServiceRequestController;
 use App\Http\Controllers\Admin\ServiceTypeController as AdminServiceTypeController;
+use App\Http\Controllers\Admin\StudentProfileController as AdminStudentProfileController;
+use App\Http\Controllers\Admin\StudentProfileSecurityController as AdminStudentProfileSecurityController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\VerificationController;
@@ -21,6 +24,8 @@ use App\Http\Controllers\Student\ApplicationController;
 use App\Http\Controllers\Student\DocumentController;
 use App\Http\Controllers\Student\EligibilityController;
 use App\Http\Controllers\Student\GuidanceController as StudentGuidanceController;
+use App\Http\Controllers\Student\ProfileController as StudentProfileController;
+use App\Http\Controllers\Student\ProfileSecurityController as StudentProfileSecurityController;
 use App\Http\Controllers\Student\RecommendationController;
 use App\Http\Controllers\Student\ScholarshipController as StudentScholarshipController;
 use App\Http\Controllers\Student\ServiceRequestController as StudentServiceRequestController;
@@ -38,16 +43,16 @@ Route::get('/', function () {
     }
 
     return match (true) {
-        $user->isAdmin()     => redirect()->route('admin.dashboard'),
+        $user->isAdmin() => redirect()->route('admin.dashboard'),
         $user->isCounselor() => redirect()->route('counselor.dashboard'),
-        $user->isStudent()   => redirect()->route('student.dashboard'),
-        default              => abort(403, 'No dashboard is configured for this account role.'),
+        $user->isStudent() => redirect()->route('student.dashboard'),
+        default => abort(403, 'No dashboard is configured for this account role.'),
     };
 });
 
 // ─── Guest ─────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
-    Route::get('/login',  [LoginController::class, 'show'])->name('login');
+    Route::get('/login', [LoginController::class, 'show'])->name('login');
     Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:5,1')->name('login.store');
 
     Route::get('/register', [RegisterController::class, 'show'])->name('register');
@@ -73,17 +78,17 @@ Route::middleware('auth')->group(function () {
             Route::patch('/{enrollmentVerification}', [EnrollmentVerificationController::class, 'update'])->name('update');
         });
 
-        // ─── Admin ─────────────────────────────────────────────────────────
-        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+    // ─── Admin ─────────────────────────────────────────────────────────
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
-    
-            // Analytics (Admin Only, Active Account Required)
+
+        // Analytics (Admin Only, Active Account Required)
         Route::middleware('active')->prefix('analytics')->name('analytics.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('index');
-            Route::get('/scholarships', [\App\Http\Controllers\Admin\AnalyticsController::class, 'scholarships'])->name('scholarships');
-            Route::get('/guidance', [\App\Http\Controllers\Admin\AnalyticsController::class, 'guidance'])->name('guidance');
-            Route::get('/student-services', [\App\Http\Controllers\Admin\AnalyticsController::class, 'services'])->name('services');
-            Route::get('/export', [\App\Http\Controllers\Admin\AnalyticsController::class, 'export'])->name('export');
+            Route::get('/', [AnalyticsController::class, 'index'])->name('index');
+            Route::get('/scholarships', [AnalyticsController::class, 'scholarships'])->name('scholarships');
+            Route::get('/guidance', [AnalyticsController::class, 'guidance'])->name('guidance');
+            Route::get('/student-services', [AnalyticsController::class, 'services'])->name('services');
+            Route::get('/export', [AnalyticsController::class, 'export'])->name('export');
         });
 
         // Matching Weights
@@ -101,6 +106,17 @@ Route::middleware('auth')->group(function () {
         Route::get('/users/{user}/reset-password', [UserController::class, 'showResetPasswordForm'])->name('users.reset-password');
         Route::patch('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password.update');
 
+        // Student Profile Management
+        Route::get('/student-profiles', [AdminStudentProfileController::class, 'index'])->name('student-profiles.index');
+        Route::post('/student-profiles/{studentProfile}/unlock', [AdminStudentProfileSecurityController::class, 'unlock'])
+            ->middleware('throttle:10,1')->name('student-profiles.unlock');
+        Route::post('/student-profiles/{studentProfile}/lock', [AdminStudentProfileSecurityController::class, 'lock'])->name('student-profiles.lock');
+        Route::put('/student-profiles/{studentProfile}/passcode', [AdminStudentProfileSecurityController::class, 'reset'])
+            ->name('student-profiles.passcode.reset');
+        Route::get('/student-profiles/{studentProfile}/edit', [AdminStudentProfileController::class, 'edit'])->name('student-profiles.edit');
+        Route::put('/student-profiles/{studentProfile}', [AdminStudentProfileController::class, 'update'])->name('student-profiles.update');
+        Route::get('/student-profiles/{studentProfile}', [AdminStudentProfileController::class, 'show'])->name('student-profiles.show');
+
         // Scholarship Management
         Route::get('/scholarships', [ScholarshipController::class, 'index'])->name('scholarships.index');
         Route::get('/scholarships/create', [ScholarshipController::class, 'create'])->name('scholarships.create');
@@ -109,6 +125,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/scholarships/{scholarship}', [ScholarshipController::class, 'update'])->name('scholarships.update');
         Route::patch('/scholarships/{scholarship}/activate', [ScholarshipController::class, 'activate'])->name('scholarships.activate');
         Route::patch('/scholarships/{scholarship}/deactivate', [ScholarshipController::class, 'deactivate'])->name('scholarships.deactivate');
+        Route::patch('/scholarships/{scholarship}/announce', [ScholarshipController::class, 'announceNow'])->name('scholarships.announce');
 
         // Requirements
         Route::get('/scholarships/{scholarship}/requirements', [RequirementController::class, 'index'])->name('scholarships.requirements.index');
@@ -159,14 +176,32 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['role:student', 'verified.email'])->prefix('student')->name('student.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'student'])->name('dashboard');
 
+        // Student Profile
+        Route::get('/profile', [StudentProfileController::class, 'show'])->name('profile.show');
+        Route::get('/profile/edit', [StudentProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [StudentProfileController::class, 'update'])->name('profile.update');
+
+        // Student Profile Security (passcode protection)
+        Route::get('/profile/security', [StudentProfileSecurityController::class, 'show'])->name('profile.security');
+        Route::post('/profile/passcode', [StudentProfileSecurityController::class, 'store'])->name('profile.passcode.store');
+        Route::put('/profile/passcode', [StudentProfileSecurityController::class, 'store'])->name('profile.passcode.update');
+        Route::delete('/profile/passcode', [StudentProfileSecurityController::class, 'destroy'])->name('profile.passcode.destroy');
+        Route::post('/profile/unlock', [StudentProfileSecurityController::class, 'unlock'])
+            ->middleware('throttle:10,1')->name('profile.unlock');
+        Route::post('/profile/lock', [StudentProfileSecurityController::class, 'lock'])->name('profile.lock');
+
         // Recommendations
         Route::get('/recommended-scholarships', [RecommendationController::class, 'index'])->name('scholarships.recommendations');
+        Route::get('/recommended-scholarships/matches', [RecommendationController::class, 'matches'])->name('scholarships.matches');
 
         // Eligibility Preview
         Route::get('/scholarships/{scholarship}/eligibility', [EligibilityController::class, 'show'])->name('scholarships.eligibility');
 
         // Browse Scholarships
         Route::get('/scholarships', [StudentScholarshipController::class, 'index'])->name('scholarships.index');
+        // Quick Search must be declared before the dynamic {scholarship} route.
+        Route::get('/scholarships/quick-search', [StudentScholarshipController::class, 'quickSearch'])->name('scholarships.quick-search');
+        Route::get('/scholarships/search', [StudentScholarshipController::class, 'search'])->name('scholarships.search');
         Route::get('/scholarships/{scholarship}', [StudentScholarshipController::class, 'show'])->name('scholarships.show');
 
         // Applications

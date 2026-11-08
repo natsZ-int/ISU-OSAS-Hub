@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,7 +15,7 @@ class LoginPasswordToggleTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\RolesSeeder::class);
+        $this->seed(RolesSeeder::class);
     }
 
     public function test_login_page_shows_password_hidden_by_default(): void
@@ -72,16 +73,16 @@ class LoginPasswordToggleTest extends TestCase
     public function test_existing_login_functionality_remains_intact(): void
     {
         $user = User::create([
-            'name'              => 'Login Test',
-            'email'             => 'logintest@test.local',
-            'password'          => 'secret-password',
-            'role_id'           => Role::where('name', Role::ADMIN)->first()->id,
-            'is_active'         => true,
+            'name' => 'Login Test',
+            'email' => 'logintest@test.local',
+            'password' => 'secret-password',
+            'role_id' => Role::where('name', Role::ADMIN)->first()->id,
+            'is_active' => true,
             'email_verified_at' => now(),
         ]);
 
         $this->post('/login', [
-            'email'    => 'logintest@test.local',
+            'email' => 'logintest@test.local',
             'password' => 'secret-password',
         ])->assertRedirect(route('admin.dashboard'));
 
@@ -91,17 +92,17 @@ class LoginPasswordToggleTest extends TestCase
     public function test_invalid_credentials_still_rejected(): void
     {
         User::create([
-            'name'              => 'Login Test',
-            'email'             => 'logintest2@test.local',
-            'password'          => 'secret-password',
-            'role_id'           => Role::where('name', Role::ADMIN)->first()->id,
-            'is_active'         => true,
+            'name' => 'Login Test',
+            'email' => 'logintest2@test.local',
+            'password' => 'secret-password',
+            'role_id' => Role::where('name', Role::ADMIN)->first()->id,
+            'is_active' => true,
             'email_verified_at' => now(),
         ]);
 
         $this->from('/login')
             ->post('/login', [
-                'email'    => 'logintest2@test.local',
+                'email' => 'logintest2@test.local',
                 'password' => 'wrong-password',
             ])
             ->assertSessionHasErrors('email');

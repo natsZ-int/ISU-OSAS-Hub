@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\CounselorAvailability;
 use App\Models\GuidanceAppointment;
 use App\Models\User;
-use Illuminate\Support\Collection;
 
 class CounselorDashboardService
 {

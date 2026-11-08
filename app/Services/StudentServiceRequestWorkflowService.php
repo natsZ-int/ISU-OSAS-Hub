@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\NotificationType;
-use App\Models\Notification;
 use App\Models\StudentServiceRequest;
 use App\Models\StudentServiceRequestHistory;
 use App\Models\User;
@@ -13,6 +12,7 @@ use InvalidArgumentException;
 class StudentServiceRequestWorkflowService
 {
     protected AuditLogService $auditLogService;
+
     protected NotificationService $notificationService;
 
     public function __construct(
@@ -54,7 +54,7 @@ class StudentServiceRequestWorkflowService
         }
 
         $allowed = $this->getAllowedTransitions($request);
-        if (!in_array($targetStatus, $allowed, true)) {
+        if (! in_array($targetStatus, $allowed, true)) {
             return false;
         }
 
@@ -62,6 +62,7 @@ class StudentServiceRequestWorkflowService
             if ($targetStatus === StudentServiceRequest::STATUS_CANCELLED) {
                 return $request->studentProfile && $request->studentProfile->user_id === $actor->id;
             }
+
             return false;
         }
 
@@ -83,16 +84,16 @@ class StudentServiceRequestWorkflowService
         ?string $remarks = null,
         ?string $internalRemarks = null
     ): StudentServiceRequest {
-        if (!$this->canTransition($request, $targetStatus, $actor)) {
+        if (! $this->canTransition($request, $targetStatus, $actor)) {
             throw new InvalidArgumentException("Transition from [{$request->status}] to [{$targetStatus}] is not permitted for this user.");
         }
 
         if ($targetStatus === StudentServiceRequest::STATUS_REQUIRES_INFORMATION && empty(trim((string) $remarks))) {
-            throw new InvalidArgumentException("A clear explanation is required when requesting additional information from the student.");
+            throw new InvalidArgumentException('A clear explanation is required when requesting additional information from the student.');
         }
 
         if ($targetStatus === StudentServiceRequest::STATUS_COMPLETED && empty(trim((string) $remarks))) {
-            throw new InvalidArgumentException("Completion remarks are required when marking a request completed.");
+            throw new InvalidArgumentException('Completion remarks are required when marking a request completed.');
         }
 
         $result = DB::transaction(function () use ($request, $targetStatus, $actor, $remarks, $internalRemarks) {
@@ -100,7 +101,7 @@ class StudentServiceRequestWorkflowService
             $previousStatus = $lockedRequest->status;
 
             $updateData = [
-                'status'  => $targetStatus,
+                'status' => $targetStatus,
                 'remarks' => $remarks ?: $lockedRequest->remarks,
             ];
 
@@ -121,11 +122,11 @@ class StudentServiceRequestWorkflowService
 
             StudentServiceRequestHistory::create([
                 'student_service_request_id' => $lockedRequest->id,
-                'previous_status'            => $previousStatus,
-                'new_status'                 => $targetStatus,
-                'changed_by'                 => $actor->id,
-                'remarks'                    => $remarks,
-                'created_at'                 => now(),
+                'previous_status' => $previousStatus,
+                'new_status' => $targetStatus,
+                'changed_by' => $actor->id,
+                'remarks' => $remarks,
+                'created_at' => now(),
             ]);
 
             AuditLogService::log(
@@ -182,7 +183,7 @@ class StudentServiceRequestWorkflowService
     ): void {
         $studentUser = $request->studentProfile?->user;
 
-        if (!$studentUser) {
+        if (! $studentUser) {
             return;
         }
 
@@ -239,7 +240,7 @@ class StudentServiceRequestWorkflowService
             $request->id,
             $this->emailData($request, $newStatus, [
                 'next_step' => $nextStep,
-                'reason'    => $reason,
+                'reason' => $reason,
             ]),
             sendEmail: true,
         );
@@ -256,23 +257,23 @@ class StudentServiceRequestWorkflowService
         $serviceName = $request->serviceType?->name;
 
         return array_merge([
-            'reference'       => $request->request_number,
+            'reference' => $request->request_number,
             'reference_label' => 'Request No.',
-            'status'          => $this->statusLabel($status),
-            'service'         => $serviceName,
-            'url'             => route('student.services.show', $request->id),
+            'status' => $this->statusLabel($status),
+            'service' => $serviceName,
+            'url' => route('student.services.show', $request->id),
         ], $overrides);
     }
 
     protected function statusLabel(string $status): string
     {
         return match ($status) {
-            StudentServiceRequest::STATUS_SUBMITTED            => 'Submitted',
-            StudentServiceRequest::STATUS_PROCESSING           => 'Processing',
+            StudentServiceRequest::STATUS_SUBMITTED => 'Submitted',
+            StudentServiceRequest::STATUS_PROCESSING => 'Processing',
             StudentServiceRequest::STATUS_REQUIRES_INFORMATION => 'Additional Information Required',
-            StudentServiceRequest::STATUS_COMPLETED            => 'Completed',
-            StudentServiceRequest::STATUS_CANCELLED            => 'Cancelled',
-            default                                            => ucfirst(str_replace('_', ' ', $status)),
+            StudentServiceRequest::STATUS_COMPLETED => 'Completed',
+            StudentServiceRequest::STATUS_CANCELLED => 'Cancelled',
+            default => ucfirst(str_replace('_', ' ', $status)),
         };
     }
 }

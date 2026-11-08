@@ -18,45 +18,51 @@ class ScholarshipApplicationFlowTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $studentA;
+
     protected User $studentB;
+
     protected User $counselor;
+
     protected StudentProfile $profileA;
+
     protected StudentProfile $profileB;
+
     protected Scholarship $scholarship;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $adminRole     = Role::firstOrCreate(['name' => Role::ADMIN], ['label' => 'Administrator']);
-        $studentRole   = Role::firstOrCreate(['name' => Role::STUDENT], ['label' => 'Student']);
+        $adminRole = Role::firstOrCreate(['name' => Role::ADMIN], ['label' => 'Administrator']);
+        $studentRole = Role::firstOrCreate(['name' => Role::STUDENT], ['label' => 'Student']);
         $counselorRole = Role::firstOrCreate(['name' => Role::COUNSELOR], ['label' => 'Counselor']);
 
-        $this->admin     = User::factory()->create(['role_id' => $adminRole->id, 'is_active' => true]);
-        $this->studentA  = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
-        $this->studentB  = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
+        $this->admin = User::factory()->create(['role_id' => $adminRole->id, 'is_active' => true]);
+        $this->studentA = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
+        $this->studentB = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
         $this->counselor = User::factory()->create(['role_id' => $counselorRole->id, 'is_active' => true]);
 
         $this->profileA = StudentProfile::factory()->create(['user_id' => $this->studentA->id]);
         $this->profileB = StudentProfile::factory()->create(['user_id' => $this->studentB->id]);
 
         $this->scholarship = Scholarship::create([
-            'title'                  => 'Integration Flow Scholarship',
-            'description'            => 'Used by the application flow integration test.',
-            'provider'               => 'ISU OSAS',
-            'scholarship_type'       => 'Academic',
-            'status'                 => Scholarship::STATUS_OPEN,
-            'created_by'             => $this->admin->id,
+            'title' => 'Integration Flow Scholarship',
+            'description' => 'Used by the application flow integration test.',
+            'provider' => 'ISU OSAS',
+            'scholarship_type' => 'Academic',
+            'status' => Scholarship::STATUS_OPEN,
+            'created_by' => $this->admin->id,
             'application_start_date' => now()->subDay()->toDateString(),
-            'application_deadline'   => now()->addDays(30)->toDateString(),
+            'application_deadline' => now()->addDays(30)->toDateString(),
         ]);
 
         $this->scholarship->requirements()->create([
             'requirement_name' => 'Certificate of Registration',
-            'description'      => 'Scanned COR',
-            'is_required'      => true,
-            'display_order'    => 1,
+            'description' => 'Scanned COR',
+            'is_required' => true,
+            'display_order' => 1,
         ]);
     }
 
@@ -69,6 +75,24 @@ class ScholarshipApplicationFlowTest extends TestCase
         $response->assertOk();
         $response->assertSee('Start Application');
         $response->assertDontSee('existingApplication', false);
+    }
+
+    public function test_application_show_page_renders_status_badge_for_enum_status(): void
+    {
+        // Regression: the shared status-badge component cast a native backed
+        // enum to string directly, causing a 500 on the application page.
+        $this->actingAs($this->studentA)
+            ->post(route('student.applications.store', $this->scholarship));
+
+        $application = ScholarshipApplication::where('student_profile_id', $this->profileA->id)->firstOrFail();
+        $application->update(['status' => 'submitted']);
+
+        $response = $this->actingAs($this->studentA)
+            ->get(route('student.applications.show', $application));
+
+        $response->assertOk();
+        $response->assertSee($application->application_number);
+        $response->assertSee('Submitted');
     }
 
     public function test_full_application_flow_creates_history_audit_and_notifications(): void
@@ -85,12 +109,12 @@ class ScholarshipApplicationFlowTest extends TestCase
         $this->assertEquals('draft', $application->getRawOriginal('status'));
         $this->assertDatabaseHas('application_status_histories', [
             'scholarship_application_id' => $application->id,
-            'new_status'                 => 'draft',
+            'new_status' => 'draft',
         ]);
         $this->assertDatabaseHas('audit_logs', [
-            'action'      => 'Application Started',
+            'action' => 'Application Started',
             'record_type' => 'ScholarshipApplication',
-            'record_id'   => $application->id,
+            'record_id' => $application->id,
         ]);
 
         // 2. Student uploads the required document
@@ -98,7 +122,7 @@ class ScholarshipApplicationFlowTest extends TestCase
         $this->actingAs($this->studentA)
             ->post(route('student.documents.store', $application), [
                 'scholarship_requirement_id' => $this->scholarship->requirements->first()->id,
-                'document'                   => $file,
+                'document' => $file,
             ])
             ->assertRedirect();
 
@@ -108,9 +132,9 @@ class ScholarshipApplicationFlowTest extends TestCase
 
         // Audit must reference the DOCUMENT id (not the application id).
         $this->assertDatabaseHas('audit_logs', [
-            'action'      => 'Document Uploaded',
+            'action' => 'Document Uploaded',
             'record_type' => 'ApplicationDocument',
-            'record_id'   => $document->id,
+            'record_id' => $document->id,
         ]);
 
         // 3. Student submits
@@ -121,7 +145,7 @@ class ScholarshipApplicationFlowTest extends TestCase
         $this->assertEquals('submitted', $application->fresh()->getRawOriginal('status'));
         $this->assertDatabaseHas('application_status_histories', [
             'scholarship_application_id' => $application->id,
-            'new_status'                 => 'submitted',
+            'new_status' => 'submitted',
         ]);
 
         // 4. Admin moves to under review — student is notified
@@ -132,10 +156,10 @@ class ScholarshipApplicationFlowTest extends TestCase
             ->assertRedirect();
 
         $this->assertDatabaseHas('notifications', [
-            'user_id'      => $this->studentA->id,
-            'type'         => 'scholarship.application_under_review',
+            'user_id' => $this->studentA->id,
+            'type' => 'scholarship.application_under_review',
             'related_type' => 'ScholarshipApplication',
-            'related_id'   => $application->id,
+            'related_id' => $application->id,
         ]);
 
         // 5. Admin verifies the document
@@ -164,16 +188,16 @@ class ScholarshipApplicationFlowTest extends TestCase
         $this->assertEquals('approved', $application->fresh()->getRawOriginal('status'));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $this->studentA->id,
-            'type'    => 'scholarship.application_approved',
+            'type' => 'scholarship.application_approved',
         ]);
         $this->assertDatabaseHas('audit_logs', [
-            'action'      => 'Application Approved',
+            'action' => 'Application Approved',
             'record_type' => 'ScholarshipApplication',
-            'record_id'   => $application->id,
+            'record_id' => $application->id,
         ]);
         $this->assertDatabaseHas('application_status_histories', [
             'scholarship_application_id' => $application->id,
-            'new_status'                 => 'approved',
+            'new_status' => 'approved',
         ]);
     }
 
@@ -189,7 +213,7 @@ class ScholarshipApplicationFlowTest extends TestCase
         $this->actingAs($this->studentA)
             ->post(route('student.documents.store', $application), [
                 'scholarship_requirement_id' => $this->scholarship->requirements->first()->id,
-                'document'                   => $file,
+                'document' => $file,
             ]);
         $document = ApplicationDocument::first();
 
@@ -201,7 +225,7 @@ class ScholarshipApplicationFlowTest extends TestCase
         $this->actingAs($this->studentB)
             ->post(route('student.documents.store', $application), [
                 'scholarship_requirement_id' => $this->scholarship->requirements->first()->id,
-                'document'                   => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
+                'document' => UploadedFile::fake()->create('x.pdf', 10, 'application/pdf'),
             ])
             ->assertForbidden();
 

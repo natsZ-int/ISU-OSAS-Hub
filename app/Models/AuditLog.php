@@ -26,7 +26,7 @@ class AuditLog extends Model
     {
         return [
             'created_at' => 'datetime',
-            'record_id'  => 'integer',
+            'record_id' => 'integer',
         ];
     }
 
@@ -61,12 +61,12 @@ class AuditLog extends Model
 
     public function scopeDateFrom(Builder $query, string $date): Builder
     {
-        return $query->where('created_at', '>=', $date . ' 00:00:00');
+        return $query->where('created_at', '>=', $date.' 00:00:00');
     }
 
     public function scopeDateTo(Builder $query, string $date): Builder
     {
-        return $query->where('created_at', '<=', $date . ' 23:59:59');
+        return $query->where('created_at', '<=', $date.' 23:59:59');
     }
 
     public function scopeSearch(Builder $query, string $term): Builder
@@ -76,14 +76,14 @@ class AuditLog extends Model
 
         return $query->where(function (Builder $q) use ($term) {
             $q->where('description', 'like', "%{$term}%")
-              ->orWhere('action', 'like', "%{$term}%")
-              ->orWhere('module', 'like', "%{$term}%")
-              ->orWhere('record_type', 'like', "%{$term}%")
-              ->orWhere('record_id', $term)
-              ->orWhereHas('user', function (Builder $uq) use ($term) {
-                  $uq->where('name', 'like', "%{$term}%")
-                     ->orWhere('email', 'like', "%{$term}%");
-              });
+                ->orWhere('action', 'like', "%{$term}%")
+                ->orWhere('module', 'like', "%{$term}%")
+                ->orWhere('record_type', 'like', "%{$term}%")
+                ->orWhere('record_id', $term)
+                ->orWhereHas('user', function (Builder $uq) use ($term) {
+                    $uq->where('name', 'like', "%{$term}%")
+                        ->orWhere('email', 'like', "%{$term}%");
+                });
         });
     }
 

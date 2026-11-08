@@ -27,6 +27,7 @@
 
             <p class="nav-section-label">Management</p>
             <x-navigation.link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">User Management</x-navigation.link>
+            <x-navigation.link :href="route('admin.student-profiles.index')" :active="request()->routeIs('admin.student-profiles.*')">Student Profiles</x-navigation.link>
             <x-navigation.link :href="route('enrollment-verifications.index')" :active="request()->routeIs('enrollment-verifications.*')">Enrollment Verification</x-navigation.link>
             <x-navigation.link :href="route('admin.scholarships.index')" :active="request()->routeIs('admin.scholarships.*')">Scholarships</x-navigation.link>
             <x-navigation.link :href="route('admin.scholarship-applications.index')" :active="request()->routeIs('admin.scholarship-applications.*')">Scholarship Applications</x-navigation.link>
@@ -70,6 +71,9 @@
         @endif
 
         <p class="nav-section-label">Account</p>
+        @if ($isStudent)
+            <x-navigation.link :href="route('student.profile.show')" :active="request()->routeIs('student.profile.*')">My Profile</x-navigation.link>
+        @endif
         <x-navigation.link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
             Notifications
             @if ($unreadCount > 0)

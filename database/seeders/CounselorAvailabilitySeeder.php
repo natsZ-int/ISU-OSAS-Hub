@@ -17,6 +17,7 @@ class CounselorAvailabilitySeeder extends Seeder
 
         if (! $counselorRole) {
             $this->command->warn('Counselor role not found. Skipping availability seed.');
+
             return;
         }
 
@@ -24,10 +25,10 @@ class CounselorAvailabilitySeeder extends Seeder
 
         if (! $counselor) {
             $counselor = User::create([
-                'name'     => env('COUNSELOR_NAME', 'Dev Counselor'),
-                'email'    => env('COUNSELOR_EMAIL', 'counselor@isu.local'),
+                'name' => env('COUNSELOR_NAME', 'Dev Counselor'),
+                'email' => env('COUNSELOR_EMAIL', 'counselor@isu.local'),
                 'password' => Hash::make(env('COUNSELOR_PASSWORD', 'ChangeMe!Counselor2025')),
-                'role_id'  => $counselorRole->id,
+                'role_id' => $counselorRole->id,
             ]);
             $this->command->info("Created development counselor: {$counselor->email}");
         }
@@ -43,8 +44,8 @@ class CounselorAvailabilitySeeder extends Seeder
             CounselorAvailability::updateOrCreate(
                 [
                     'counselor_id' => $slot['counselor_id'],
-                    'day_of_week'  => $slot['day_of_week'],
-                    'start_time'   => $slot['start_time'],
+                    'day_of_week' => $slot['day_of_week'],
+                    'start_time' => $slot['start_time'],
                 ],
                 $slot
             );

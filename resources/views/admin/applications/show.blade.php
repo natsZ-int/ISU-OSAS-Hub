@@ -31,9 +31,9 @@
     <h3>Scholarship: {{ $scholarshipApplication->scholarship->title }}</h3>
     <p><strong>Current Status:</strong>
         @if ($fsmStatus)
-            <span class="badge badge-status-{{ $fsmStatus->value }}">{{ $fsmStatus->label() }}</span>
+            <x-status-badge :status="$fsmStatus" />
         @else
-            <span class="badge badge-status-draft">Draft (Pre-Submission)</span>
+            <x-status-badge status="draft" /> <small class="muted">(Pre-Submission)</small>
         @endif
     </p>
     <p><strong>Submitted:</strong> {{ $scholarshipApplication->submitted_at?->format('M d, Y H:i') ?? 'Not submitted' }}</p>

@@ -20,7 +20,7 @@ class ScholarshipRequirement extends Model
     ];
 
     protected $casts = [
-        'is_required'   => 'boolean',
+        'is_required' => 'boolean',
         'display_order' => 'integer',
     ];
 

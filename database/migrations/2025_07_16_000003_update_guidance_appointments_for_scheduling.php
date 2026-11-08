@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::table('guidance_appointments', function (Blueprint $table) {
             // Add foreign key to appointment types
             $table->foreignId('appointment_type_id')
-                  ->nullable()
-                  ->after('counselor_id')
-                  ->constrained('guidance_appointment_types')
-                  ->nullOnDelete();
+                ->nullable()
+                ->after('counselor_id')
+                ->constrained('guidance_appointment_types')
+                ->nullOnDelete();
 
             // Add rejection reason
             $table->text('rejection_reason')->nullable()->after('status');

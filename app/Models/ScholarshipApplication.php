@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Enums\ScholarshipApplicationStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
 
 class ScholarshipApplication extends Model
 {
@@ -18,10 +18,15 @@ class ScholarshipApplication extends Model
      * The FSM formally begins at SUBMITTED.
      */
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_SUBMITTED = 'submitted';
+
     public const STATUS_UNDER_REVIEW = 'under_review';
+
     public const STATUS_DOCUMENT_VERIFICATION = 'document_verification';
+
     public const STATUS_APPROVED = 'approved';
+
     public const STATUS_REJECTED = 'rejected';
 
     public const ALLOWED_STATUSES = [
@@ -74,6 +79,7 @@ class ScholarshipApplication extends Model
     {
         $raw = $this->getRawOriginal('status') ?? $this->status;
         $statusStr = is_object($raw) ? $raw->value : (string) $raw;
+
         return $statusStr === self::STATUS_DRAFT;
     }
 

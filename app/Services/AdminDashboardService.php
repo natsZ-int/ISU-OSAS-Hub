@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ScholarshipApplicationStatus;
 use App\Models\AuditLog;
 use App\Models\GuidanceAppointment;
 use App\Models\Role;
@@ -9,7 +10,6 @@ use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
 use App\Models\StudentServiceRequest;
 use App\Models\User;
-use App\Enums\ScholarshipApplicationStatus;
 use Illuminate\Database\Eloquent\Builder;
 
 class AdminDashboardService
@@ -38,10 +38,10 @@ class AdminDashboardService
             ->toArray();
 
         return [
-            'total_students'       => $roleCounts[Role::STUDENT] ?? 0,
-            'total_counselors'     => $roleCounts[Role::COUNSELOR] ?? 0,
+            'total_students' => $roleCounts[Role::STUDENT] ?? 0,
+            'total_counselors' => $roleCounts[Role::COUNSELOR] ?? 0,
             'total_administrators' => $roleCounts[Role::ADMIN] ?? 0,
-            'active_users'         => User::where('is_active', true)->count(),
+            'active_users' => User::where('is_active', true)->count(),
         ];
     }
 
@@ -60,9 +60,9 @@ class AdminDashboardService
         }
 
         return [
-            'active_count'          => Scholarship::where('status', Scholarship::STATUS_OPEN)->count(),
-            'total_applications'    => array_sum($counts),
-            'pending_applications'  => $pending,
+            'active_count' => Scholarship::where('status', Scholarship::STATUS_OPEN)->count(),
+            'total_applications' => array_sum($counts),
+            'pending_applications' => $pending,
             'approved_applications' => $counts[ScholarshipApplicationStatus::APPROVED->value] ?? 0,
             'rejected_applications' => $counts[ScholarshipApplicationStatus::REJECTED->value] ?? 0,
         ];
@@ -82,11 +82,11 @@ class AdminDashboardService
         $counts = $this->statusCounts(GuidanceAppointment::query());
 
         return [
-            'upcoming_count'  => GuidanceAppointment::whereIn('status', [GuidanceAppointment::STATUS_REQUESTED, GuidanceAppointment::STATUS_CONFIRMED])
+            'upcoming_count' => GuidanceAppointment::whereIn('status', [GuidanceAppointment::STATUS_REQUESTED, GuidanceAppointment::STATUS_CONFIRMED])
                 ->whereDate('appointment_date', '>=', now()->toDateString())
                 ->count(),
-            'upcoming_items'  => $upcomingAppointments,
-            'pending_count'   => $counts[GuidanceAppointment::STATUS_REQUESTED] ?? 0,
+            'upcoming_items' => $upcomingAppointments,
+            'pending_count' => $counts[GuidanceAppointment::STATUS_REQUESTED] ?? 0,
             'completed_count' => $counts[GuidanceAppointment::STATUS_COMPLETED] ?? 0,
         ];
     }
@@ -97,10 +97,10 @@ class AdminDashboardService
         $counts = $this->statusCounts(StudentServiceRequest::query());
 
         return [
-            'pending_count'       => $counts[StudentServiceRequest::STATUS_SUBMITTED] ?? 0,
-            'processing_count'    => $counts[StudentServiceRequest::STATUS_PROCESSING] ?? 0,
+            'pending_count' => $counts[StudentServiceRequest::STATUS_SUBMITTED] ?? 0,
+            'processing_count' => $counts[StudentServiceRequest::STATUS_PROCESSING] ?? 0,
             'requires_info_count' => $counts[StudentServiceRequest::STATUS_REQUIRES_INFORMATION] ?? 0,
-            'completed_count'     => $counts[StudentServiceRequest::STATUS_COMPLETED] ?? 0,
+            'completed_count' => $counts[StudentServiceRequest::STATUS_COMPLETED] ?? 0,
         ];
     }
 

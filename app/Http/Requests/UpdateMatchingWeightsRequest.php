@@ -14,11 +14,11 @@ class UpdateMatchingWeightsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'academic_weight'            => ['required', 'numeric', 'min:0', 'max:100'],
-            'financial_weight'           => ['required', 'numeric', 'min:0', 'max:100'],
-            'program_weight'             => ['required', 'numeric', 'min:0', 'max:100'],
-            'year_level_weight'          => ['required', 'numeric', 'min:0', 'max:100'],
-            'document_readiness_weight'  => ['required', 'numeric', 'min:0', 'max:100'],
+            'academic_weight' => ['required', 'numeric', 'min:0', 'max:100'],
+            'financial_weight' => ['required', 'numeric', 'min:0', 'max:100'],
+            'program_weight' => ['required', 'numeric', 'min:0', 'max:100'],
+            'year_level_weight' => ['required', 'numeric', 'min:0', 'max:100'],
+            'document_readiness_weight' => ['required', 'numeric', 'min:0', 'max:100'],
         ];
     }
 

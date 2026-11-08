@@ -25,15 +25,15 @@ class AuditLogService
         ?Request $request = null
     ): AuditLog {
         return AuditLog::create([
-            'user_id'     => $userId ?? auth()->id(),
-            'action'      => $action,
-            'module'      => $module,
+            'user_id' => $userId ?? auth()->id(),
+            'action' => $action,
+            'module' => $module,
             'record_type' => $recordType,
-            'record_id'   => $recordId,
+            'record_id' => $recordId,
             'description' => $description,
-            'ip_address'  => $request?->ip() ?? request()?->ip(),
-            'user_agent'  => $request?->userAgent() ?? request()?->userAgent(),
-            'created_at'  => now(),
+            'ip_address' => $request?->ip() ?? request()?->ip(),
+            'user_agent' => $request?->userAgent() ?? request()?->userAgent(),
+            'created_at' => now(),
         ]);
     }
 }

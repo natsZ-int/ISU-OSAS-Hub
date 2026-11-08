@@ -14,7 +14,7 @@ class AnalyticsController extends Controller
     public function index(Request $request)
     {
         $filters = $this->analytics->validateFilters($request->all());
-        $data    = $this->analytics->getAllAnalytics($filters);
+        $data = $this->analytics->getAllAnalytics($filters);
         $options = $this->analytics->getFilterOptions();
 
         return view('admin.analytics.index', array_merge($data, [
@@ -25,12 +25,12 @@ class AnalyticsController extends Controller
     public function scholarships(Request $request)
     {
         $filters = $this->analytics->validateFilters($request->all());
-        $data    = $this->analytics->getScholarshipAnalytics($filters);
+        $data = $this->analytics->getScholarshipAnalytics($filters);
         $options = $this->analytics->getFilterOptions();
 
         return view('admin.analytics.scholarships', [
-            'data'          => $data,
-            'filters'       => $filters,
+            'data' => $data,
+            'filters' => $filters,
             'filterOptions' => $options,
         ]);
     }
@@ -38,12 +38,12 @@ class AnalyticsController extends Controller
     public function guidance(Request $request)
     {
         $filters = $this->analytics->validateFilters($request->all());
-        $data    = $this->analytics->getGuidanceAnalytics($filters);
+        $data = $this->analytics->getGuidanceAnalytics($filters);
         $options = $this->analytics->getFilterOptions();
 
         return view('admin.analytics.guidance', [
-            'data'          => $data,
-            'filters'       => $filters,
+            'data' => $data,
+            'filters' => $filters,
             'filterOptions' => $options,
         ]);
     }
@@ -51,12 +51,12 @@ class AnalyticsController extends Controller
     public function services(Request $request)
     {
         $filters = $this->analytics->validateFilters($request->all());
-        $data    = $this->analytics->getServiceAnalytics($filters);
+        $data = $this->analytics->getServiceAnalytics($filters);
         $options = $this->analytics->getFilterOptions();
 
         return view('admin.analytics.services', [
-            'data'          => $data,
-            'filters'       => $filters,
+            'data' => $data,
+            'filters' => $filters,
             'filterOptions' => $options,
         ]);
     }
@@ -64,13 +64,13 @@ class AnalyticsController extends Controller
     public function export(Request $request): StreamedResponse
     {
         $filters = $this->analytics->validateFilters($request->all());
-        $data    = $this->analytics->getExportData($filters);
+        $data = $this->analytics->getExportData($filters);
 
-        $dateLabel = !empty($filters['date_from']) || !empty($filters['date_to'])
-            ? ($filters['date_from'] ?? 'start') . '_to_' . ($filters['date_to'] ?? 'now')
+        $dateLabel = ! empty($filters['date_from']) || ! empty($filters['date_to'])
+            ? ($filters['date_from'] ?? 'start').'_to_'.($filters['date_to'] ?? 'now')
             : 'all-time';
 
-        $filename = 'isu-osas-analytics-' . $dateLabel . '.csv';
+        $filename = 'isu-osas-analytics-'.$dateLabel.'.csv';
 
         return response()->streamDownload(function () use ($data) {
             $handle = fopen('php://output', 'w');

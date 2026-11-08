@@ -9,15 +9,16 @@ use App\Models\ApplicationDocument;
 use App\Models\ApplicationStatusHistory;
 use App\Models\ScholarshipApplication;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ScholarshipApplicationWorkflowService
 {
     private const TRANSITIONS = [
-        ScholarshipApplicationStatus::SUBMITTED->value             => [
+        ScholarshipApplicationStatus::SUBMITTED->value => [
             ScholarshipApplicationStatus::UNDER_REVIEW,
         ],
-        ScholarshipApplicationStatus::UNDER_REVIEW->value          => [
+        ScholarshipApplicationStatus::UNDER_REVIEW->value => [
             ScholarshipApplicationStatus::DOCUMENT_VERIFICATION,
             ScholarshipApplicationStatus::REJECTED,
         ],
@@ -25,8 +26,8 @@ class ScholarshipApplicationWorkflowService
             ScholarshipApplicationStatus::APPROVED,
             ScholarshipApplicationStatus::REJECTED,
         ],
-        ScholarshipApplicationStatus::APPROVED->value              => [],
-        ScholarshipApplicationStatus::REJECTED->value              => [],
+        ScholarshipApplicationStatus::APPROVED->value => [],
+        ScholarshipApplicationStatus::REJECTED->value => [],
     ];
 
     protected NotificationService $notificationService;
@@ -47,9 +48,42 @@ class ScholarshipApplicationWorkflowService
         return is_string($status) ? ScholarshipApplicationStatus::tryFrom($status) : null;
     }
 
-    public function getAllowedTransitions(string $currentState): array
-    {
-        return self::TRANSITIONS[$currentState] ?? [];
+    /**
+     * Return the valid next states for a status value, enum case, or model.
+     */
+    public function getAllowedTransitions(
+        string|ScholarshipApplicationStatus|ScholarshipApplication $currentState
+    ): array {
+        $state = $this->normalizeState($currentState);
+
+        if ($state === null) {
+            return [];
+        }
+
+        return self::TRANSITIONS[$state->value] ?? [];
+    }
+
+    /**
+     * Backwards-compatible alias for callers that read more naturally this way.
+     */
+    public function allowedTransitionsFor(
+        string|ScholarshipApplicationStatus|ScholarshipApplication $currentState
+    ): array {
+        return $this->getAllowedTransitions($currentState);
+    }
+
+    protected function normalizeState(
+        string|ScholarshipApplicationStatus|ScholarshipApplication $state
+    ): ?ScholarshipApplicationStatus {
+        if ($state instanceof ScholarshipApplicationStatus) {
+            return $state;
+        }
+
+        if ($state instanceof ScholarshipApplication) {
+            return $this->getCurrentState($state);
+        }
+
+        return ScholarshipApplicationStatus::tryFrom($state);
     }
 
     public function canTransition(
@@ -112,7 +146,7 @@ class ScholarshipApplicationWorkflowService
 
         return [
             'canApprove' => empty($reasons),
-            'reasons'    => $reasons,
+            'reasons' => $reasons,
         ];
     }
 
@@ -121,7 +155,7 @@ class ScholarshipApplicationWorkflowService
         string|ScholarshipApplicationStatus $targetState,
         User $actor,
         ?string $remarks = null,
-        ?\Illuminate\Http\Request $request = null
+        ?Request $request = null
     ): ScholarshipApplication {
         if (! $actor->isAdmin() || ! $actor->isActive()) {
             throw new InvalidTransitionException('Only active administrators may change application status.');
@@ -155,7 +189,7 @@ class ScholarshipApplicationWorkflowService
             if (! in_array($target, $allowed, true)) {
                 throw new InvalidTransitionException(
                     "Cannot transition from '{$currentState->label()}' to '{$target->label()}'. "
-                    . "Allowed transitions: " . implode(', ', array_map(fn ($s) => $s->label(), $allowed)) . '.'
+                    .'Allowed transitions: '.implode(', ', array_map(fn ($s) => $s->label(), $allowed)).'.'
                 );
             }
 
@@ -172,7 +206,7 @@ class ScholarshipApplicationWorkflowService
                     $reasonList = implode(' ', $readiness['reasons']);
                     throw new InvalidTransitionException(
                         'This application cannot be approved because required documents are incomplete or not verified. '
-                        . $reasonList
+                        .$reasonList
                     );
                 }
             }
@@ -182,11 +216,11 @@ class ScholarshipApplicationWorkflowService
 
             ApplicationStatusHistory::create([
                 'scholarship_application_id' => $locked->id,
-                'previous_status'            => $previousStatus,
-                'new_status'                 => $target->value,
-                'changed_by'                 => $actor->id,
-                'remarks'                    => $remarks,
-                'created_at'                 => now(),
+                'previous_status' => $previousStatus,
+                'new_status' => $target->value,
+                'changed_by' => $actor->id,
+                'remarks' => $remarks,
+                'created_at' => now(),
             ]);
 
             $actionLabel = match ($target) {
@@ -221,7 +255,7 @@ class ScholarshipApplicationWorkflowService
     ): void {
         $studentUser = $application->studentProfile?->user;
 
-        if (!$studentUser) {
+        if (! $studentUser) {
             return;
         }
 
@@ -272,12 +306,12 @@ class ScholarshipApplicationWorkflowService
             'ScholarshipApplication',
             $application->id,
             [
-                'reference'       => $appNumber,
+                'reference' => $appNumber,
                 'reference_label' => 'Application No.',
-                'status'          => $newStatus->label(),
-                'next_step'       => $nextStep,
-                'url'             => route('student.applications.show', $application->id),
-                'reason'          => $reason,
+                'status' => $newStatus->label(),
+                'next_step' => $nextStep,
+                'url' => route('student.applications.show', $application->id),
+                'reason' => $reason,
             ],
             sendEmail: true,
         );

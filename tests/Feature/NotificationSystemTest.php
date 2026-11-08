@@ -5,9 +5,9 @@ namespace Tests\Feature;
 use App\Enums\NotificationType;
 use App\Models\Notification;
 use App\Models\Role;
+use App\Models\ServiceType;
 use App\Models\StudentProfile;
 use App\Models\StudentServiceRequest;
-use App\Models\ServiceType;
 use App\Models\User;
 use App\Services\NotificationService;
 use App\Services\StudentServiceRequestWorkflowService;
@@ -19,7 +19,9 @@ class NotificationSystemTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $studentUser;
+
     protected StudentProfile $studentProfile;
 
     protected function setUp(): void
@@ -30,12 +32,12 @@ class NotificationSystemTest extends TestCase
         $studentRole = Role::updateOrCreate(['name' => 'student'], ['label' => 'Student']);
 
         $this->admin = User::factory()->create([
-            'role_id'   => $adminRole->id,
+            'role_id' => $adminRole->id,
             'is_active' => true,
         ]);
 
         $this->studentUser = User::factory()->create([
-            'role_id'   => $studentRole->id,
+            'role_id' => $studentRole->id,
             'is_active' => true,
         ]);
 
@@ -62,8 +64,8 @@ class NotificationSystemTest extends TestCase
         $this->assertNotNull($notification);
         $this->assertDatabaseHas('notifications', [
             'user_id' => $this->studentUser->id,
-            'type'    => 'scholarship.application_approved',
-            'title'   => 'Application Approved',
+            'type' => 'scholarship.application_approved',
+            'title' => 'Application Approved',
         ]);
         $this->assertNull($notification->read_at);
     }
@@ -146,8 +148,8 @@ class NotificationSystemTest extends TestCase
     {
         $notification = Notification::create([
             'user_id' => $this->studentUser->id,
-            'type'    => 'scholarship.application_approved',
-            'title'   => 'Approved',
+            'type' => 'scholarship.application_approved',
+            'title' => 'Approved',
             'message' => 'Your application was approved.',
         ]);
 
@@ -161,8 +163,8 @@ class NotificationSystemTest extends TestCase
     {
         $notification = Notification::create([
             'user_id' => $this->admin->id,
-            'type'    => 'student_services.request_submitted',
-            'title'   => 'New Request',
+            'type' => 'student_services.request_submitted',
+            'title' => 'New Request',
             'message' => 'A student submitted a request.',
         ]);
 
@@ -177,8 +179,8 @@ class NotificationSystemTest extends TestCase
     {
         $notification = Notification::create([
             'user_id' => $this->studentUser->id,
-            'type'    => 'guidance.appointment_confirmed',
-            'title'   => 'Confirmed',
+            'type' => 'guidance.appointment_confirmed',
+            'title' => 'Confirmed',
             'message' => 'Confirmed.',
         ]);
 
@@ -235,11 +237,11 @@ class NotificationSystemTest extends TestCase
         ]);
 
         $request = StudentServiceRequest::create([
-            'request_number'     => 'SR-2025-000099',
+            'request_number' => 'SR-2025-000099',
             'student_profile_id' => $this->studentProfile->id,
-            'service_type_id'    => $serviceType->id,
-            'description'        => 'Test request',
-            'status'             => 'submitted',
+            'service_type_id' => $serviceType->id,
+            'description' => 'Test request',
+            'status' => 'submitted',
         ]);
 
         $workflowService = app(StudentServiceRequestWorkflowService::class);
@@ -247,7 +249,7 @@ class NotificationSystemTest extends TestCase
 
         $this->assertDatabaseHas('notifications', [
             'user_id' => $this->studentUser->id,
-            'type'    => 'student_services.request_processing',
+            'type' => 'student_services.request_processing',
         ]);
     }
 
@@ -258,11 +260,11 @@ class NotificationSystemTest extends TestCase
         ]);
 
         $request = StudentServiceRequest::create([
-            'request_number'     => 'SR-2025-000098',
+            'request_number' => 'SR-2025-000098',
             'student_profile_id' => $this->studentProfile->id,
-            'service_type_id'    => $serviceType->id,
-            'description'        => 'Test request',
-            'status'             => 'submitted',
+            'service_type_id' => $serviceType->id,
+            'description' => 'Test request',
+            'status' => 'submitted',
         ]);
 
         $workflowService = app(StudentServiceRequestWorkflowService::class);
@@ -275,7 +277,7 @@ class NotificationSystemTest extends TestCase
 
         $this->assertDatabaseMissing('notifications', [
             'user_id' => $this->studentUser->id,
-            'type'    => 'student_services.request_completed',
+            'type' => 'student_services.request_completed',
         ]);
     }
 }

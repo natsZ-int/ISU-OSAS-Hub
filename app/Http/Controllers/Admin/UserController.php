@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\StudentProfile;
 use App\Models\User;
 use App\Services\AuditLogService;
+use App\Services\ScholarshipAnnouncementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,10 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private ScholarshipAnnouncementService $announcements,
+    ) {}
+
     public function index(Request $request): View
     {
         Gate::authorize('manage-users');
@@ -29,10 +34,10 @@ class UserController extends Controller
         if ($search = $request->filled('search') ? $request->input('search') : null) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhereHas('studentProfile', function ($sq) use ($search) {
-                      $sq->where('student_number', 'like', "%{$search}%");
-                  });
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('studentProfile', function ($sq) use ($search) {
+                        $sq->where('student_number', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -53,8 +58,8 @@ class UserController extends Controller
         }
 
         $users = $query->orderBy('created_at', 'desc')
-                       ->paginate(15)
-                       ->withQueryString();
+            ->paginate(15)
+            ->withQueryString();
 
         $roles = Role::orderBy('name')->get();
 
@@ -77,10 +82,10 @@ class UserController extends Controller
         DB::beginTransaction();
         try {
             $user = User::create([
-                'name'      => $request->name,
-                'email'     => $request->email,
-                'role_id'   => $request->role_id,
-                'password'  => Hash::make($request->password),
+                'name' => $request->name,
+                'email' => $request->email,
+                'role_id' => $request->role_id,
+                'password' => Hash::make($request->password),
                 'is_active' => $request->boolean('is_active', true),
             ]);
 
@@ -91,18 +96,18 @@ class UserController extends Controller
             // Create student profile if role is student
             if ($user->isStudent()) {
                 StudentProfile::create([
-                    'user_id'        => $user->id,
+                    'user_id' => $user->id,
                     'student_number' => $request->student_number,
-                    'first_name'     => $request->first_name,
-                    'last_name'      => $request->last_name,
-                    'middle_name'    => $request->middle_name,
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'middle_name' => $request->middle_name,
                     'contact_number' => $request->contact_number,
-                    'college'        => $request->college,
-                    'program'        => $request->program,
-                    'year_level'     => $request->year_level ?? 1,
-                    'gwa'            => $request->gwa,
-                    'family_income'  => $request->family_income,
-                    'address'        => $request->address,
+                    'college' => $request->college,
+                    'program' => $request->program,
+                    'year_level' => $request->year_level ?? 1,
+                    'gwa' => $request->gwa,
+                    'family_income' => $request->family_income,
+                    'address' => $request->address,
                 ]);
             }
 
@@ -122,6 +127,7 @@ class UserController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withInput()->withErrors(['error' => 'Failed to create user. Please try again.']);
         }
     }
@@ -145,8 +151,8 @@ class UserController extends Controller
             $oldRole = $user->role?->name;
 
             $user->update([
-                'name'    => $request->name,
-                'email'   => $request->email,
+                'name' => $request->name,
+                'email' => $request->email,
                 'role_id' => $request->role_id,
             ]);
 
@@ -181,22 +187,29 @@ class UserController extends Controller
             if ($oldRole !== $newRole) {
                 $changes[] = "Role changed from '{$oldRole}' to '{$newRole}'.";
             }
-            $changes[] = "User details updated.";
+            $changes[] = 'User details updated.';
 
             AuditLogService::log(
                 action: $oldRole !== $newRole ? 'User Role Changed' : 'User Updated',
                 module: 'User Management',
                 recordType: 'User',
                 recordId: $user->id,
-                description: implode(' ', $changes) . " User: {$user->name} ({$user->email}).",
+                description: implode(' ', $changes)." User: {$user->name} ({$user->email}).",
                 request: $request
             );
+
+            // Staff edits here also change eligibility inputs, so announce any
+            // open scholarships the student now qualifies for.
+            if ($user->isStudent() && $studentProfile = $user->studentProfile()->first()) {
+                $this->announcements->announceToStudent($studentProfile);
+            }
 
             return redirect()->route('admin.users.index')
                 ->with('status', "User '{$user->name}' updated successfully.");
 
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withInput()->withErrors(['error' => 'Failed to update user. Please try again.']);
         }
     }

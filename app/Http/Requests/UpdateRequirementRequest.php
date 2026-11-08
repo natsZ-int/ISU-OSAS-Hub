@@ -15,9 +15,9 @@ class UpdateRequirementRequest extends FormRequest
     {
         return [
             'requirement_name' => ['required', 'string', 'max:255'],
-            'description'      => ['nullable', 'string', 'max:1000'],
-            'is_required'      => ['sometimes', 'boolean'],
-            'display_order'    => ['required', 'integer', 'min:0'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'is_required' => ['sometimes', 'boolean'],
+            'display_order' => ['required', 'integer', 'min:0'],
         ];
     }
 }

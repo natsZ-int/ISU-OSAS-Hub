@@ -3,7 +3,6 @@
 namespace Tests\Unit;
 
 use App\Enums\EligibilityStatus;
-use App\Enums\EnrollmentStatus;
 use App\Enums\OverallEligibility;
 use App\Models\Scholarship;
 use App\Models\StudentProfile;
@@ -17,34 +16,36 @@ class ScholarshipEligibilityServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new ScholarshipEligibilityService();
+        $this->service = new ScholarshipEligibilityService;
     }
 
     private function makeProfile(array $attrs = []): StudentProfile
     {
         $profile = new StudentProfile(array_merge([
-            'gwa'               => 1.50,
-            'family_income'     => 20000,
-            'program'           => 'BSIT',
-            'year_level'        => 3,
+            'gwa' => 1.50,
+            'family_income' => 20000,
+            'program' => 'BSIT',
+            'year_level' => 3,
             'enrollment_status' => 'enrolled',
         ], $attrs));
         $profile->id = 1;
         $profile->exists = true;
+
         return $profile;
     }
 
     private function makeScholarship(array $attrs = []): Scholarship
     {
         $scholarship = new Scholarship(array_merge([
-            'minimum_gwa'                => 1.75,
-            'maximum_family_income'      => 30000,
-            'eligible_programs'          => ['BSIT', 'BSCS'],
-            'eligible_year_levels'       => [2, 3, 4],
+            'minimum_gwa' => 1.75,
+            'maximum_family_income' => 30000,
+            'eligible_programs' => ['BSIT', 'BSCS'],
+            'eligible_year_levels' => [2, 3, 4],
             'required_enrollment_status' => 'enrolled',
         ], $attrs));
         $scholarship->id = 1;
         $scholarship->exists = true;
+
         return $scholarship;
     }
 

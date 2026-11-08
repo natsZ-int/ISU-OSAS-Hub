@@ -5,6 +5,7 @@ namespace Tests\Feature\Flow;
 use App\Models\CounselorAvailability;
 use App\Models\GuidanceAppointment;
 use App\Models\GuidanceAppointmentType;
+use App\Models\GuidanceSchedulingSettings;
 use App\Models\Role;
 use App\Models\StudentProfile;
 use App\Models\User;
@@ -17,25 +18,32 @@ class GuidanceAppointmentFlowTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $studentA;
+
     protected User $studentB;
+
     protected User $counselor1;
+
     protected User $counselor2;
+
     protected StudentProfile $profileA;
+
     protected GuidanceAppointmentType $type;
+
     protected Carbon $bookDate;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $adminRole     = Role::firstOrCreate(['name' => Role::ADMIN], ['label' => 'Administrator']);
-        $studentRole   = Role::firstOrCreate(['name' => Role::STUDENT], ['label' => 'Student']);
+        $adminRole = Role::firstOrCreate(['name' => Role::ADMIN], ['label' => 'Administrator']);
+        $studentRole = Role::firstOrCreate(['name' => Role::STUDENT], ['label' => 'Student']);
         $counselorRole = Role::firstOrCreate(['name' => Role::COUNSELOR], ['label' => 'Counselor']);
 
-        $this->admin     = User::factory()->create(['role_id' => $adminRole->id, 'is_active' => true]);
-        $this->studentA  = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
-        $this->studentB  = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
+        $this->admin = User::factory()->create(['role_id' => $adminRole->id, 'is_active' => true]);
+        $this->studentA = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
+        $this->studentB = User::factory()->create(['role_id' => $studentRole->id, 'is_active' => true]);
         $this->counselor1 = User::factory()->create(['role_id' => $counselorRole->id, 'is_active' => true]);
         $this->counselor2 = User::factory()->create(['role_id' => $counselorRole->id, 'is_active' => true]);
 
@@ -52,9 +60,9 @@ class GuidanceAppointmentFlowTest extends TestCase
         foreach ([$this->counselor1, $this->counselor2] as $counselor) {
             CounselorAvailability::create([
                 'counselor_id' => $counselor->id,
-                'day_of_week'  => (int) $this->bookDate->dayOfWeek,
-                'start_time'   => '09:00:00',
-                'end_time'     => '12:00:00',
+                'day_of_week' => (int) $this->bookDate->dayOfWeek,
+                'start_time' => '09:00:00',
+                'end_time' => '12:00:00',
                 'is_available' => true,
             ]);
         }
@@ -63,15 +71,15 @@ class GuidanceAppointmentFlowTest extends TestCase
     protected function book(User $student, User $counselor, string $time = '09:30'): GuidanceAppointment
     {
         $this->actingAs($student)->post(route('student.guidance.appointments.store'), [
-            'counselor_id'        => $counselor->id,
+            'counselor_id' => $counselor->id,
             'appointment_type_id' => $this->type->id,
-            'appointment_date'    => $this->bookDate->toDateString(),
-            'start_time'          => $time,
-            'reason'              => 'Integration flow booking',
+            'appointment_date' => $this->bookDate->toDateString(),
+            'start_time' => $time,
+            'reason' => 'Integration flow booking',
         ]);
 
         return GuidanceAppointment::where('counselor_id', $counselor->id)
-            ->where('start_time', $time . ':00')
+            ->where('start_time', $time.':00')
             ->firstOrFail();
     }
 
@@ -82,17 +90,17 @@ class GuidanceAppointmentFlowTest extends TestCase
         $this->assertEquals('requested', $appointment->getRawOriginal('status'));
 
         $this->assertDatabaseHas('audit_logs', [
-            'action'      => 'Appointment Requested',
+            'action' => 'Appointment Requested',
             'record_type' => 'GuidanceAppointment',
-            'record_id'   => $appointment->id,
+            'record_id' => $appointment->id,
         ]);
 
         // Regression: booking notification must use the enum type, not a raw string.
         $this->assertDatabaseHas('notifications', [
-            'user_id'      => $this->counselor1->id,
-            'type'         => 'guidance.appointment_requested',
+            'user_id' => $this->counselor1->id,
+            'type' => 'guidance.appointment_requested',
             'related_type' => 'GuidanceAppointment',
-            'related_id'   => $appointment->id,
+            'related_id' => $appointment->id,
         ]);
     }
 
@@ -104,8 +112,8 @@ class GuidanceAppointmentFlowTest extends TestCase
             ->get(route('notifications.index'));
 
         $response->assertOk();
-        $response->assertSee('/counselor/guidance/appointments/' . $appointment->id, false);
-        $response->assertDontSee('/student/guidance/appointments/' . $appointment->id, false);
+        $response->assertSee('/counselor/guidance/appointments/'.$appointment->id, false);
+        $response->assertDontSee('/student/guidance/appointments/'.$appointment->id, false);
     }
 
     public function test_another_counselor_cannot_confirm_someone_elses_appointment(): void
@@ -147,7 +155,7 @@ class GuidanceAppointmentFlowTest extends TestCase
         $this->assertEquals('rejected', $appointment->fresh()->getRawOriginal('status'));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $this->studentA->id,
-            'type'    => 'guidance.appointment_rejected',
+            'type' => 'guidance.appointment_rejected',
         ]);
     }
 
@@ -162,7 +170,7 @@ class GuidanceAppointmentFlowTest extends TestCase
         $this->assertEquals('cancelled', $appointment->fresh()->getRawOriginal('status'));
         $this->assertDatabaseHas('notifications', [
             'user_id' => $this->counselor1->id,
-            'type'    => 'guidance.appointment_cancelled',
+            'type' => 'guidance.appointment_cancelled',
         ]);
     }
 
@@ -172,10 +180,10 @@ class GuidanceAppointmentFlowTest extends TestCase
 
         $this->actingAs($this->studentA)
             ->post(route('student.guidance.appointments.store'), [
-                'counselor_id'        => $this->counselor1->id,
+                'counselor_id' => $this->counselor1->id,
                 'appointment_type_id' => $this->type->id,
-                'appointment_date'    => $this->bookDate->toDateString(),
-                'start_time'          => '09:30',
+                'appointment_date' => $this->bookDate->toDateString(),
+                'start_time' => '09:30',
             ])
             ->assertForbidden();
 
@@ -184,7 +192,7 @@ class GuidanceAppointmentFlowTest extends TestCase
 
     public function test_slots_page_honors_settings_based_booking_window(): void
     {
-        $settings = \App\Models\GuidanceSchedulingSettings::getActive();
+        $settings = GuidanceSchedulingSettings::getActive();
         $settings->update(['maximum_future_booking_days' => 60]);
 
         $response = $this->actingAs($this->studentA)

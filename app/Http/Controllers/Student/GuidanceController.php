@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\GuidanceAppointment;
 use App\Models\GuidanceAppointmentType;
+use App\Models\GuidanceSchedulingSettings;
 use App\Models\User;
 use App\Services\GuidanceAppointmentSchedulingService;
 use App\Services\GuidanceAppointmentWorkflowService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class GuidanceController extends Controller
 {
@@ -45,7 +46,7 @@ class GuidanceController extends Controller
 
         $slots = $this->schedulingService->getAvailableSlots($counselor, $date, $appointmentType);
         $types = GuidanceAppointmentType::active()->get();
-        $maxBookingDays = \App\Models\GuidanceSchedulingSettings::getActive()->maximum_future_booking_days;
+        $maxBookingDays = GuidanceSchedulingSettings::getActive()->maximum_future_booking_days;
 
         return view('student.guidance.slots', compact('counselor', 'date', 'slots', 'types', 'appointmentType', 'maxBookingDays'));
     }
@@ -54,11 +55,11 @@ class GuidanceController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'counselor_id'        => 'required|exists:users,id',
+            'counselor_id' => 'required|exists:users,id',
             'appointment_type_id' => 'required|exists:guidance_appointment_types,id',
-            'appointment_date'    => 'required|date|after_or_equal:today',
-            'start_time'          => 'required|date_format:H:i',
-            'reason'              => 'nullable|string|max:500',
+            'appointment_date' => 'required|date|after_or_equal:today',
+            'start_time' => 'required|date_format:H:i',
+            'reason' => 'nullable|string|max:500',
         ]);
 
         $user = $request->user();

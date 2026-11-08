@@ -4,11 +4,11 @@ namespace App\Enums;
 
 enum ScholarshipApplicationStatus: string
 {
-    case SUBMITTED            = 'submitted';
-    case UNDER_REVIEW         = 'under_review';
+    case SUBMITTED = 'submitted';
+    case UNDER_REVIEW = 'under_review';
     case DOCUMENT_VERIFICATION = 'document_verification';
-    case APPROVED             = 'approved';
-    case REJECTED             = 'rejected';
+    case APPROVED = 'approved';
+    case REJECTED = 'rejected';
 
     /**
      * Human-readable label for Blade views.
@@ -16,11 +16,11 @@ enum ScholarshipApplicationStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::SUBMITTED             => 'Submitted',
-            self::UNDER_REVIEW          => 'Under Review',
+            self::SUBMITTED => 'Submitted',
+            self::UNDER_REVIEW => 'Under Review',
             self::DOCUMENT_VERIFICATION => 'Document Verification',
-            self::APPROVED              => 'Approved',
-            self::REJECTED              => 'Rejected',
+            self::APPROVED => 'Approved',
+            self::REJECTED => 'Rejected',
         };
     }
 

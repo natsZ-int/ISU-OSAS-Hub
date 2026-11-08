@@ -11,14 +11,14 @@ return new class extends Migration
         Schema::create('application_status_histories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('scholarship_application_id')
-                  ->constrained('scholarship_applications')
-                  ->cascadeOnDelete();
+                ->constrained('scholarship_applications')
+                ->cascadeOnDelete();
             $table->string('previous_status', 30)->nullable();
             $table->string('new_status', 30);
             $table->foreignId('changed_by')
-                  ->nullable()
-                  ->constrained('users')
-                  ->nullOnDelete();
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
             $table->text('remarks')->nullable();
             $table->timestamp('created_at')->nullable();
 

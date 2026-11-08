@@ -16,7 +16,7 @@ class VerifyDocumentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'verification_status'  => ['required', Rule::in([
+            'verification_status' => ['required', Rule::in([
                 ApplicationDocument::VERIFICATION_PENDING,
                 ApplicationDocument::VERIFICATION_VERIFIED,
                 ApplicationDocument::VERIFICATION_REJECTED,

@@ -22,7 +22,7 @@ class ServiceTypeRequirement extends Model
     protected function casts(): array
     {
         return [
-            'is_required'   => 'boolean',
+            'is_required' => 'boolean',
             'display_order' => 'integer',
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EnrollmentVerificationStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -30,8 +31,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'is_active'         => 'boolean',
+            'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -109,17 +110,17 @@ class User extends Authenticatable
             return true;
         }
 
-        $hasAnyRecord = \App\Models\StudentEnrollmentVerification::where('student_profile_id', $profile->id)
+        $hasAnyRecord = StudentEnrollmentVerification::where('student_profile_id', $profile->id)
             ->exists();
 
         if (! $hasAnyRecord) {
             return true;
         }
 
-        return \App\Models\StudentEnrollmentVerification::where('student_profile_id', $profile->id)
+        return StudentEnrollmentVerification::where('student_profile_id', $profile->id)
             ->where('academic_year', config('academic.current_year'))
             ->where('semester', config('academic.current_semester'))
-            ->where('status', \App\Enums\EnrollmentVerificationStatus::VERIFIED->value)
+            ->where('status', EnrollmentVerificationStatus::VERIFIED->value)
             ->exists();
     }
 

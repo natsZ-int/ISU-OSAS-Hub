@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\CounselorAvailability;
 use App\Models\GuidanceAppointment;
 use App\Models\GuidanceSchedulingSettings;
+use App\Services\AuditLogService;
 use App\Services\GuidanceAppointmentWorkflowService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class GuidanceController extends Controller
 {
@@ -36,14 +37,14 @@ class GuidanceController extends Controller
     {
         $request->validate([
             'day_of_week' => 'required|integer|min:0|max:6',
-            'start_time'  => 'required|date_format:H:i',
-            'end_time'    => 'required|date_format:H:i|after:start_time',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
         ]);
 
         $counselor = $request->user();
         $settings = GuidanceSchedulingSettings::getActive();
-        $startTime = $request->start_time . ':00';
-        $endTime = $request->end_time . ':00';
+        $startTime = $request->start_time.':00';
+        $endTime = $request->end_time.':00';
 
         if ($startTime < $settings->office_start_time || $endTime > $settings->office_end_time) {
             return back()->withErrors(['time' => 'Availability must be within office hours.']);
@@ -61,13 +62,13 @@ class GuidanceController extends Controller
 
         CounselorAvailability::create([
             'counselor_id' => $counselor->id,
-            'day_of_week'  => $request->day_of_week,
-            'start_time'   => $startTime,
-            'end_time'     => $endTime,
+            'day_of_week' => $request->day_of_week,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
             'is_available' => true,
         ]);
 
-        \App\Services\AuditLogService::log(
+        AuditLogService::log(
             action: 'Availability Created',
             module: 'Guidance Scheduling',
             recordType: 'CounselorAvailability',
@@ -85,7 +86,7 @@ class GuidanceController extends Controller
 
         $availability->update(['is_available' => false]);
 
-        \App\Services\AuditLogService::log(
+        AuditLogService::log(
             action: 'Availability Deactivated',
             module: 'Guidance Scheduling',
             recordType: 'CounselorAvailability',
@@ -139,6 +140,7 @@ class GuidanceController extends Controller
                 GuidanceAppointment::STATUS_CONFIRMED,
                 $counselor
             );
+
             return back()->with('status', 'Appointment confirmed.');
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['transition' => $e->getMessage()]);
@@ -159,6 +161,7 @@ class GuidanceController extends Controller
                 $counselor,
                 $request->rejection_reason
             );
+
             return back()->with('status', 'Appointment rejected.');
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['transition' => $e->getMessage()]);
@@ -176,6 +179,7 @@ class GuidanceController extends Controller
                 GuidanceAppointment::STATUS_COMPLETED,
                 $counselor
             );
+
             return back()->with('status', 'Appointment marked as completed.');
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['transition' => $e->getMessage()]);

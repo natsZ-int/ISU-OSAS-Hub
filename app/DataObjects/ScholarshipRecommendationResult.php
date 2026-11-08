@@ -9,8 +9,7 @@ class ScholarshipRecommendationResult
 {
     /**
      * @param  FactorResult[]  $factors
-     * @param  string[]        $reasons
-     * @param  array           $requirementReadiness
+     * @param  string[]  $reasons
      */
     public function __construct(
         public readonly int $scholarshipId,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Enums\EnrollmentStatus;
+use App\Enums\NotificationType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterStudentRequest;
 use App\Mail\OtpVerificationMail;
@@ -12,7 +13,6 @@ use App\Models\User;
 use App\Services\AuditLogService;
 use App\Services\NotificationService;
 use App\Services\OtpVerificationService;
-use App\Enums\NotificationType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,8 +25,7 @@ class RegisterController extends Controller
     public function __construct(
         private OtpVerificationService $otpService,
         private NotificationService $notificationService,
-    ) {
-    }
+    ) {}
 
     public function show(): View
     {
@@ -45,28 +44,28 @@ class RegisterController extends Controller
         try {
             $nameParts = preg_split('/\s+/', trim($request->name), 2);
             $firstName = $nameParts[0];
-            $lastName  = $nameParts[1] ?? '';
+            $lastName = $nameParts[1] ?? '';
 
             $user = User::create([
-                'name'      => $request->name,
-                'email'     => $request->email,
-                'password'  => $request->password,
-                'role_id'   => $studentRole->id,
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => $request->password,
+                'role_id' => $studentRole->id,
                 'is_active' => true,
             ]);
 
             StudentProfile::create([
-                'user_id'           => $user->id,
-                'student_number'    => $request->student_number,
-                'first_name'        => $firstName,
-                'last_name'         => $lastName,
-                'college'           => $request->college,
-                'program'           => $request->program,
-                'contact_number'    => $request->contact_number,
-                'gwa'               => $request->gwa,
-                'family_income'     => $request->family_income,
-                'address'           => $request->address,
-                'year_level'        => 1,
+                'user_id' => $user->id,
+                'student_number' => $request->student_number,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'college' => $request->college,
+                'program' => $request->program,
+                'contact_number' => $request->contact_number,
+                'gwa' => $request->gwa,
+                'family_income' => $request->family_income,
+                'address' => $request->address,
+                'year_level' => 1,
                 'enrollment_status' => EnrollmentStatus::UNKNOWN->value,
             ]);
 

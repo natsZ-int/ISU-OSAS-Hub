@@ -16,12 +16,19 @@ use Illuminate\Support\Str;
 
 class ScholarshipSearchService
 {
-    public const ALLOWED_SORTS       = ['deadline', 'name', 'match_score', 'newest'];
+    public const ALLOWED_SORTS = ['deadline', 'name', 'match_score', 'newest'];
+
     public const ALLOWED_ELIGIBILITY = ['all', 'eligible', 'potentially_eligible', 'not_eligible'];
-    public const ALLOWED_DEADLINES   = ['all', 'within_7_days', 'within_30_days'];
-    public const MAX_SEARCH_LENGTH   = 200;
-    public const DEFAULT_PAGE_SIZE   = 10;
+
+    public const ALLOWED_DEADLINES = ['all', 'within_7_days', 'within_30_days'];
+
+    public const MAX_SEARCH_LENGTH = 200;
+
+    public const DEFAULT_PAGE_SIZE = 10;
+
     public const MAX_CANDIDATE_LIMIT = 500;
+
+    public const MAX_QUICK_RESULTS = 20;
 
     public function __construct(
         protected ScholarshipMatchingService $matchingService,
@@ -37,7 +44,7 @@ class ScholarshipSearchService
 
         // Matching weights are identical for every scholarship in this request:
         // read them once instead of once per evaluated scholarship.
-        $weights = ScholarshipMatchingWeight::active();
+        $weights = ScholarshipMatchingWeight::activeOrDefault();
 
         // Match-score sort requires in-memory sorting
         if ($sort === 'match_score' && $profile) {
@@ -92,7 +99,8 @@ class ScholarshipSearchService
             $app = $applications->get($s->id);
             $result = $this->matchingService->evaluateMatch($profile, $s, $app, $weights);
             $s->match_result = $result;
-            $s->match_score  = $result->matchScore;
+            $s->match_score = $result->matchScore;
+
             return $s;
         });
 
@@ -101,16 +109,24 @@ class ScholarshipSearchService
             $aEligible = $a->match_result?->isEligible() ? 1 : 0;
             $bEligible = $b->match_result?->isEligible() ? 1 : 0;
 
-            if ($aEligible !== $bEligible) return $bEligible <=> $aEligible;
+            if ($aEligible !== $bEligible) {
+                return $bEligible <=> $aEligible;
+            }
 
             $scoreComp = ($b->match_score ?? 0) <=> ($a->match_score ?? 0);
-            if ($scoreComp !== 0) return $scoreComp;
+            if ($scoreComp !== 0) {
+                return $scoreComp;
+            }
 
             $deadlineComp = $a->application_deadline <=> $b->application_deadline;
-            if ($deadlineComp !== 0) return $deadlineComp;
+            if ($deadlineComp !== 0) {
+                return $deadlineComp;
+            }
 
             $titleComp = strcmp($a->title, $b->title);
-            if ($titleComp !== 0) return $titleComp;
+            if ($titleComp !== 0) {
+                return $titleComp;
+            }
 
             return $a->id <=> $b->id;
         })->values();
@@ -140,18 +156,18 @@ class ScholarshipSearchService
             $isEligible = $result->overall === OverallEligibility::ELIGIBLE;
 
             return match ($eligibility) {
-                'eligible'             => $isEligible,
+                'eligible' => $isEligible,
                 'potentially_eligible' => ! $isEligible && $this->isPotentiallyEligible($profile, $s),
-                'not_eligible'         => ! $isEligible && ! $this->isPotentiallyEligible($profile, $s),
-                default                => true,
+                'not_eligible' => ! $isEligible && ! $this->isPotentiallyEligible($profile, $s),
+                default => true,
             };
         });
 
         // Sort the filtered list
         $sorted = match ($sort) {
-            'name'   => $filtered->sortBy('title')->values(),
+            'name' => $filtered->sortBy('title')->values(),
             'newest' => $filtered->sortByDesc('created_at')->values(),
-            default  => $filtered->sortBy('application_deadline')->values(),
+            default => $filtered->sortBy('application_deadline')->values(),
         };
 
         $this->attachMatchScores($sorted, $profile, $applications, $weights);
@@ -167,7 +183,7 @@ class ScholarshipSearchService
             ->availableForStudents()
             ->with('requirements');
 
-        $this->applyKeywordSearch($query, $request->input('search'));
+        $this->applyKeywordSearch($query, $this->keywordInput($request));
         $this->applyProgramFilter($query, $request->input('program'));
         $this->applyYearLevelFilter($query, $request->input('year_level'));
         $this->applyTypeFilter($query, $request->input('type'));
@@ -181,21 +197,23 @@ class ScholarshipSearchService
     protected function applyKeywordSearch(Builder $query, ?string $rawSearch): void
     {
         $normalized = $this->normalizeSearchInput($rawSearch);
-        if ($normalized === null) return;
+        if ($normalized === null) {
+            return;
+        }
 
         $tokens = explode(' ', $normalized);
 
         $query->where(function (Builder $outer) use ($tokens) {
             foreach ($tokens as $token) {
                 $escaped = addcslashes($token, '%_\\');
-                $like = '%' . $escaped . '%';
+                $like = '%'.$escaped.'%';
 
                 $outer->where(function (Builder $inner) use ($like) {
                     $inner->where('title', 'like', $like)
-                          ->orWhere('provider', 'like', $like)
-                          ->orWhere('scholarship_type', 'like', $like)
-                          ->orWhere('description', 'like', $like)
-                          ->orWhere('eligible_programs', 'like', $like);
+                        ->orWhere('provider', 'like', $like)
+                        ->orWhere('scholarship_type', 'like', $like)
+                        ->orWhere('description', 'like', $like)
+                        ->orWhere('eligible_programs', 'like', $like);
                 });
             }
         });
@@ -203,11 +221,139 @@ class ScholarshipSearchService
 
     public function normalizeSearchInput(?string $input): ?string
     {
-        if ($input === null) return null;
+        if ($input === null) {
+            return null;
+        }
         $trimmed = trim($input);
-        if ($trimmed === '') return null;
+        if ($trimmed === '') {
+            return null;
+        }
         $collapsed = preg_replace('/\s+/', ' ', $trimmed);
+
         return Str::limit($collapsed, self::MAX_SEARCH_LENGTH, '');
+    }
+
+    /**
+     * Accept the common quick-search parameter names so both the compact
+     * search boxes and the full filter form feed the same search pipeline.
+     */
+    protected function keywordInput(Request $request): ?string
+    {
+        foreach (['search', 'q', 'keyword', 'query'] as $key) {
+            $value = $request->input($key);
+            if (is_string($value) && trim($value) !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Lightweight keyword search used by the persistent quick search bar.
+     * Results are relevance-ranked and include match information for the
+     * signed-in student when a profile is available.
+     */
+    public function quickSearch(?string $term, ?StudentProfile $profile = null, int $limit = 8): Collection
+    {
+        $normalized = $this->normalizeSearchInput($term);
+
+        if ($normalized === null) {
+            return collect();
+        }
+
+        $limit = max(1, min($limit, self::MAX_QUICK_RESULTS));
+
+        $query = Scholarship::query()
+            ->availableForStudents()
+            ->with('requirements');
+
+        $this->applyKeywordSearch($query, $normalized);
+
+        $candidates = $query->limit(self::MAX_CANDIDATE_LIMIT)->get();
+
+        if ($profile) {
+            $this->attachMatchScores(
+                $candidates,
+                $profile,
+                weights: ScholarshipMatchingWeight::activeOrDefault()
+            );
+        }
+
+        return $candidates
+            ->sort(function (Scholarship $a, Scholarship $b) use ($normalized) {
+                $relevance = $this->relevanceScore($b, $normalized) <=> $this->relevanceScore($a, $normalized);
+                if ($relevance !== 0) {
+                    return $relevance;
+                }
+
+                $deadline = $a->application_deadline <=> $b->application_deadline;
+                if ($deadline !== 0) {
+                    return $deadline;
+                }
+
+                return strcmp($a->title, $b->title);
+            })
+            ->take($limit)
+            ->values();
+    }
+
+    /**
+     * Score how closely a scholarship matches the entered keywords.
+     */
+    protected function relevanceScore(Scholarship $scholarship, string $term): int
+    {
+        $needle = Str::lower($term);
+
+        $title = Str::lower((string) $scholarship->title);
+        $provider = Str::lower((string) $scholarship->provider);
+        $type = Str::lower((string) $scholarship->scholarship_type);
+        $description = Str::lower((string) $scholarship->description);
+
+        if ($title === $needle) {
+            return 1000;
+        }
+
+        if (Str::startsWith($title, $needle)) {
+            return 800;
+        }
+
+        if (Str::contains($title, $needle)) {
+            return 600;
+        }
+
+        if (Str::contains($provider, $needle)) {
+            return 300;
+        }
+
+        if (Str::contains($type, $needle)) {
+            return 200;
+        }
+
+        if (Str::contains($description, $needle)) {
+            return 100;
+        }
+
+        // Multi-word queries are tokenised by the database query; reward
+        // results that contain more of the individual tokens.
+        $score = 0;
+        foreach (explode(' ', $needle) as $token) {
+            if ($token === '') {
+                continue;
+            }
+
+            if (Str::contains($title, $token)) {
+                $score += 40;
+            }
+            if (Str::contains($provider, $token)) {
+                $score += 20;
+            }
+            if (Str::contains($description, $token)) {
+                $score += 10;
+            }
+        }
+
+        return $score;
     }
 
     // ── Program Filter (Database Agnostic) ──────────
@@ -215,14 +361,18 @@ class ScholarshipSearchService
     // Using Laravel's database-agnostic JSON features so tests pass on SQLite
     protected function applyProgramFilter(Builder $query, ?string $program): void
     {
-        if (blank($program)) return;
+        if (blank($program)) {
+            return;
+        }
         $safeProgram = trim($program);
-        if (strlen($safeProgram) > 100) return;
+        if (strlen($safeProgram) > 100) {
+            return;
+        }
 
         $query->where(function (Builder $q) use ($safeProgram) {
             $q->whereNull('eligible_programs')
-              ->orWhere('eligible_programs', '[]')
-              ->orWhereJsonContains('eligible_programs', $safeProgram);
+                ->orWhere('eligible_programs', '[]')
+                ->orWhereJsonContains('eligible_programs', $safeProgram);
         });
     }
 
@@ -231,14 +381,18 @@ class ScholarshipSearchService
     // Using Laravel's database-agnostic JSON features so tests pass on SQLite
     protected function applyYearLevelFilter(Builder $query, ?string $yearLevel): void
     {
-        if (blank($yearLevel)) return;
+        if (blank($yearLevel)) {
+            return;
+        }
         $yl = (int) $yearLevel;
-        if ($yl < 1 || $yl > 6) return;
+        if ($yl < 1 || $yl > 6) {
+            return;
+        }
 
         $query->where(function (Builder $q) use ($yl) {
             $q->whereNull('eligible_year_levels')
-              ->orWhere('eligible_year_levels', '[]')
-              ->orWhereJsonContains('eligible_year_levels', $yl);
+                ->orWhere('eligible_year_levels', '[]')
+                ->orWhereJsonContains('eligible_year_levels', $yl);
         });
     }
 
@@ -246,9 +400,13 @@ class ScholarshipSearchService
 
     protected function applyTypeFilter(Builder $query, ?string $type): void
     {
-        if (blank($type)) return;
+        if (blank($type)) {
+            return;
+        }
         $safeType = trim($type);
-        if (strlen($safeType) > 100) return;
+        if (strlen($safeType) > 100) {
+            return;
+        }
 
         $query->where('scholarship_type', $safeType);
     }
@@ -257,14 +415,16 @@ class ScholarshipSearchService
 
     protected function applyDeadlineFilter(Builder $query, ?string $deadline): void
     {
-        if (blank($deadline) || ! in_array($deadline, self::ALLOWED_DEADLINES, true)) return;
+        if (blank($deadline) || ! in_array($deadline, self::ALLOWED_DEADLINES, true)) {
+            return;
+        }
 
         $today = now()->toDateString();
 
         match ($deadline) {
-            'within_7_days'  => $query->whereBetween('application_deadline', [$today, now()->addDays(7)->toDateString()]),
+            'within_7_days' => $query->whereBetween('application_deadline', [$today, now()->addDays(7)->toDateString()]),
             'within_30_days' => $query->whereBetween('application_deadline', [$today, now()->addDays(30)->toDateString()]),
-            default          => null,
+            default => null,
         };
     }
 
@@ -272,28 +432,34 @@ class ScholarshipSearchService
 
     public function normalizeSort(?string $sort): string
     {
-        if (in_array($sort, self::ALLOWED_SORTS, true)) return $sort;
+        if (in_array($sort, self::ALLOWED_SORTS, true)) {
+            return $sort;
+        }
+
         return 'deadline';
     }
 
     public function normalizeEligibility(?string $eligibility): string
     {
-        if (in_array($eligibility, self::ALLOWED_ELIGIBILITY, true)) return $eligibility;
+        if (in_array($eligibility, self::ALLOWED_ELIGIBILITY, true)) {
+            return $eligibility;
+        }
+
         return 'all';
     }
 
     protected function applyDatabaseSort(Builder $query, string $sort): void
     {
         match ($sort) {
-            'name'   => $query->orderBy('title', 'asc')
-                              ->orderBy('application_deadline', 'asc')
-                              ->orderBy('id', 'asc'),
+            'name' => $query->orderBy('title', 'asc')
+                ->orderBy('application_deadline', 'asc')
+                ->orderBy('id', 'asc'),
             'newest' => $query->orderBy('created_at', 'desc')
-                              ->orderBy('title', 'asc')
-                              ->orderBy('id', 'asc'),
-            default  => $query->orderBy('application_deadline', 'asc')
-                              ->orderBy('title', 'asc')
-                              ->orderBy('id', 'asc'),
+                ->orderBy('title', 'asc')
+                ->orderBy('id', 'asc'),
+            default => $query->orderBy('application_deadline', 'asc')
+                ->orderBy('title', 'asc')
+                ->orderBy('id', 'asc'),
         };
     }
 
@@ -311,7 +477,7 @@ class ScholarshipSearchService
             $app = $applications->get($scholarship->id);
             $result = $this->matchingService->evaluateMatch($profile, $scholarship, $app, $weights);
             $scholarship->match_result = $result;
-            $scholarship->match_score  = $result->matchScore;
+            $scholarship->match_score = $result->matchScore;
         }
     }
 
@@ -362,9 +528,9 @@ class ScholarshipSearchService
 
     protected function paginateCollection(Collection $items, Request $request): LengthAwarePaginator
     {
-        $page    = max(1, (int) $request->input('page', 1));
+        $page = max(1, (int) $request->input('page', 1));
         $perPage = self::DEFAULT_PAGE_SIZE;
-        $slice   = $items->slice(($page - 1) * $perPage, $perPage)->values();
+        $slice = $items->slice(($page - 1) * $perPage, $perPage)->values();
 
         $paginator = new Paginator(
             $slice,
@@ -372,7 +538,7 @@ class ScholarshipSearchService
             $perPage,
             $page,
             [
-                'path'     => $request->url(),
+                'path' => $request->url(),
                 'pageName' => 'page',
             ]
         );
@@ -383,7 +549,7 @@ class ScholarshipSearchService
     public function availableFilterOptions(): array
     {
         return [
-            'types'    => Scholarship::availableForStudents()->distinct()->pluck('scholarship_type')->filter()->values(),
+            'types' => Scholarship::availableForStudents()->distinct()->pluck('scholarship_type')->filter()->values(),
             'programs' => $this->extractAllPrograms(),
         ];
     }
@@ -396,9 +562,12 @@ class ScholarshipSearchService
             ->pluck('eligible_programs')
             ->each(function ($list) use ($programs) {
                 if (is_array($list)) {
-                    foreach ($list as $p) $programs->push($p);
+                    foreach ($list as $p) {
+                        $programs->push($p);
+                    }
                 }
             });
+
         return $programs->unique()->sort()->values();
     }
 }
