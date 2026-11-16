@@ -38,7 +38,11 @@
 
 <h3>{{ $date->format('l, F j, Y') }}</h3>
 
-@if ($slots->count() > 0)
+@if ($types->isEmpty())
+    <div class="card">
+        <p class="empty-state">No appointment types are currently available. Please contact the guidance office.</p>
+    </div>
+@elseif ($slots->count() > 0)
     <div class="scholarship-grid">
         @foreach ($slots as $slot)
         <div class="card scholarship-card" style="text-align: center;">

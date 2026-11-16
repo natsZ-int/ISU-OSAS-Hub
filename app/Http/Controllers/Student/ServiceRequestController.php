@@ -13,10 +13,10 @@ use App\Services\AuditLogService;
 use App\Services\NotificationService;
 use App\Services\ServiceRequestNumberGenerator;
 use App\Services\StudentServiceRequestWorkflowService;
+use App\Support\DocumentStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 
 class ServiceRequestController extends Controller
 {
@@ -101,7 +101,7 @@ class ServiceRequestController extends Controller
                 $inputName = "requirement_{$requirement->id}";
                 if ($request->hasFile($inputName)) {
                     $file = $request->file($inputName);
-                    $path = $file->store("private/student-service-requests/{$serviceRequest->id}", 'local');
+                    $path = $file->store("student-service-requests/{$serviceRequest->id}", 'local');
 
                     ServiceRequestDocument::create([
                         'student_service_request_id' => $serviceRequest->id,
@@ -240,14 +240,14 @@ class ServiceRequestController extends Controller
 
         DB::transaction(function () use ($request, $studentServiceRequest, $requirementId, $requirementName) {
             $file = $request->file('file');
-            $path = $file->store("private/student-service-requests/{$studentServiceRequest->id}", 'local');
+            $path = $file->store("student-service-requests/{$studentServiceRequest->id}", 'local');
 
             $existing = ServiceRequestDocument::where('student_service_request_id', $studentServiceRequest->id)
                 ->where('service_type_requirement_id', $requirementId)
                 ->first();
 
             if ($existing) {
-                Storage::disk('local')->delete($existing->file_path);
+                DocumentStorage::delete($existing->file_path);
                 $existing->delete();
             }
 
@@ -290,10 +290,16 @@ class ServiceRequestController extends Controller
             abort(403);
         }
 
-        if (! Storage::disk('local')->exists($serviceRequestDocument->file_path)) {
-            abort(404, 'The requested document file was not found.');
+        $response = DocumentStorage::download(
+            $serviceRequestDocument->file_path,
+            $serviceRequestDocument->original_filename,
+            $serviceRequestDocument->mime_type,
+        );
+
+        if ($response === null) {
+            return back()->with('error', 'The attached file could not be found. Please upload the document again.');
         }
 
-        return Storage::disk('local')->download($serviceRequestDocument->file_path, $serviceRequestDocument->original_filename);
+        return $response;
     }
 }
