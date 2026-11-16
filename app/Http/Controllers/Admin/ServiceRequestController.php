@@ -9,8 +9,8 @@ use App\Models\StudentServiceRequest;
 use App\Models\User;
 use App\Services\AuditLogService;
 use App\Services\StudentServiceRequestWorkflowService;
+use App\Support\DocumentStorage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ServiceRequestController extends Controller
 {
@@ -151,10 +151,16 @@ class ServiceRequestController extends Controller
             abort(403);
         }
 
-        if (! Storage::disk('local')->exists($serviceRequestDocument->file_path)) {
-            abort(404, 'The requested document file was not found.');
+        $response = DocumentStorage::download(
+            $serviceRequestDocument->file_path,
+            $serviceRequestDocument->original_filename,
+            $serviceRequestDocument->mime_type,
+        );
+
+        if ($response === null) {
+            return back()->with('error', 'The attached file could not be found. Please ask the student to upload the document again.');
         }
 
-        return Storage::disk('local')->download($serviceRequestDocument->file_path, $serviceRequestDocument->original_filename);
+        return $response;
     }
 }

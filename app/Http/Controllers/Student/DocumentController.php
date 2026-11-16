@@ -7,10 +7,10 @@ use App\Http\Requests\UploadDocumentRequest;
 use App\Models\ApplicationDocument;
 use App\Models\ScholarshipApplication;
 use App\Services\AuditLogService;
+use App\Support\DocumentStorage;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DocumentController extends Controller
 {
@@ -37,7 +37,7 @@ class DocumentController extends Controller
 
         if ($existingDoc) {
             // Replace: delete old file
-            Storage::disk('local')->delete($existingDoc->file_path);
+            DocumentStorage::delete($existingDoc->file_path);
             $existingDoc->delete();
         }
 
@@ -89,7 +89,7 @@ class DocumentController extends Controller
             abort(403);
         }
 
-        Storage::disk('local')->delete($applicationDocument->file_path);
+        DocumentStorage::delete($applicationDocument->file_path);
         $applicationDocument->delete();
 
         AuditLogService::log(
@@ -104,10 +104,14 @@ class DocumentController extends Controller
         return back()->with('status', 'Document removed.');
     }
 
-    public function download(ApplicationDocument $applicationDocument): StreamedResponse
+    public function download(ApplicationDocument $applicationDocument): BinaryFileResponse|RedirectResponse
     {
         $user = auth()->user();
         $application = $applicationDocument->application;
+
+        if (! $application) {
+            abort(404);
+        }
 
         // Students can only download their own documents
         if ($user->isStudent()) {
@@ -119,14 +123,17 @@ class DocumentController extends Controller
             abort(403);
         }
 
-        if (! Storage::disk('local')->exists($applicationDocument->file_path)) {
-            abort(404, 'File not found.');
+        $response = DocumentStorage::download(
+            $applicationDocument->file_path,
+            $applicationDocument->original_filename,
+            $applicationDocument->mime_type,
+        );
+
+        if ($response === null) {
+            return back()->with('error', 'The attached file could not be found. Please upload the document again.');
         }
 
-        return Storage::disk('local')->download(
-            $applicationDocument->file_path,
-            $applicationDocument->original_filename
-        );
+        return $response;
     }
 
     protected function authorizeOwnership(ScholarshipApplication $application): void

@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             ScholarshipSeeder::class,
             ScholarshipRequirementSeeder::class,
             ServiceTypeSeeder::class,
+            GuidanceSeeder::class,
             CounselorAvailabilitySeeder::class,
             MatchingWeightSeeder::class,
         ]);
