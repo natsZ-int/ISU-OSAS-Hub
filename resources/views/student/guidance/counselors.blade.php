@@ -6,6 +6,28 @@
     <a href="{{ route('student.guidance.appointments') }}" class="btn btn-outline-dark">My Appointments</a>
 </div>
 
+<div class="card filter-card">
+    <form method="GET" action="{{ route('student.guidance.counselors') }}" class="filter-form" role="search">
+        <div class="filter-row">
+            <div class="form-group" style="flex:2;">
+                <label for="counselor_search">Search Counselors</label>
+                <input type="search" id="counselor_search" name="search"
+                       value="{{ request('search') }}"
+                       placeholder="Counselor name or email..."
+                       maxlength="200"
+                       data-live-search
+                       data-live-search-endpoint="{{ route('student.quick-search', ['module' => 'counselors']) }}">
+            </div>
+            <div class="form-group" style="align-self:flex-end;">
+                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                @if (request('search'))
+                    <a href="{{ route('student.guidance.counselors') }}" class="btn btn-outline-dark btn-sm">Clear</a>
+                @endif
+            </div>
+        </div>
+    </form>
+</div>
+
 @if ($counselors->count() > 0)
     <div class="scholarship-grid">
         @foreach ($counselors as $c)

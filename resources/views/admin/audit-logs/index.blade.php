@@ -16,7 +16,7 @@
             <div style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr; gap: 0.75rem; margin-bottom: 0.75rem;">
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 0.2rem;">Search</label>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Description, action, user..." style="width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 0.4rem; font-size: 0.85rem;">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Description, action, user..." data-live-search data-live-search-endpoint="{{ route('admin.quick-search', ['module' => 'audit-logs']) }}" style="width: 100%; border: 1px solid #d1d5db; border-radius: 4px; padding: 0.4rem; font-size: 0.85rem;">
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 0.2rem;">User</label>

@@ -20,6 +20,28 @@
     <x-alert type="success">{{ session('status') }}</x-alert>
 @endif
 
+<x-card class="filter-card">
+    <form method="GET" action="{{ route('notifications.index') }}" class="filter-form" role="search">
+        <div class="filter-row">
+            <div class="form-group" style="flex:2;">
+                <label for="notification_search">Search Notifications</label>
+                <input type="search" id="notification_search" name="search"
+                       value="{{ request('search') }}"
+                       placeholder="Title, message, category, or reference..."
+                       maxlength="200"
+                       data-live-search
+                       data-live-search-endpoint="{{ route('notifications.quick-search') }}">
+            </div>
+            <div class="form-group" style="align-self:flex-end;">
+                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                @if (request('search'))
+                    <a href="{{ route('notifications.index') }}" class="btn btn-outline-dark btn-sm">Clear</a>
+                @endif
+            </div>
+        </div>
+    </form>
+</x-card>
+
 @if ($notifications->count() > 0)
     <div class="notification-list">
         @foreach ($notifications as $notification)

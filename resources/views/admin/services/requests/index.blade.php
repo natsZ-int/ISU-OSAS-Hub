@@ -11,7 +11,7 @@
     <!-- Filter Bar -->
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
         <form action="{{ route('admin.student-service-requests.index') }}" method="GET" style="display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr auto; gap: 0.75rem; align-items: center;">
-            <input type="text" name="search" placeholder="Search request #, student name..." value="{{ request('search') }}" style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; font-size: 0.85rem;">
+            <input type="text" name="search" placeholder="Search request #, student name..." value="{{ request('search') }}" data-live-search data-live-search-endpoint="{{ route('admin.quick-search', ['module' => 'service-requests']) }}" style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; font-size: 0.85rem;">
             
             <select name="service_type_id" style="border: 1px solid #d1d5db; border-radius: 4px; padding: 0.5rem; font-size: 0.85rem;">
                 <option value="">All Service Types</option>

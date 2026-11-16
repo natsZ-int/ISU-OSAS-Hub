@@ -15,6 +15,14 @@
 <x-card class="filter-card">
     <form method="GET" action="{{ route('counselor.guidance.appointments') }}" class="filter-form">
         <div class="filter-row">
+            <div class="form-group" style="flex:2;">
+                <label for="search">Search</label>
+                <input type="search" id="search" name="search" value="{{ request('search') }}"
+                       placeholder="Student, appointment type, or status..."
+                       maxlength="200"
+                       data-live-search
+                       data-live-search-endpoint="{{ route('counselor.quick-search', ['module' => 'appointments']) }}">
+            </div>
             <div class="form-group">
                 <label for="status">Filter by Status</label>
                 <select id="status" name="status" onchange="this.form.submit()">
@@ -26,8 +34,9 @@
                     <option value="rejected" @selected(request('status') === 'rejected')>Rejected</option>
                 </select>
             </div>
-            @if (request('status'))
-                <div class="form-group" style="align-self: flex-end;">
+            <div class="form-group" style="align-self: flex-end;">
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                @if (request()->hasAny(['search', 'status']))
                     <a href="{{ route('counselor.guidance.appointments') }}" class="btn btn-outline-dark btn-sm">Clear Filter</a>
                 @endif
             </div>
