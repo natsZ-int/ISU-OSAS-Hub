@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MK-04 &middot; Email verification (OTP) &middot; ISU OSAS Hub mockup</title>
+<link rel="stylesheet" href="../../assets/mockup.css">
+</head>
+<body>
+<div class="mk-head">
+  <span class="id">MK-04</span>
+  <h1>Email verification (OTP)</h1>
+</div>
+<div class="mk-meta">
+  <span><b>Role</b>Guest</span>
+  <span><b>Screen</b><code>WF-G-03</code></span>
+  <span><b>Route</b><code>verification.notice</code></span>
+  <span><b>Module</b>M01</span>
+  <span><b>Requirements</b><code>FR-AUTH-05, FR-AUTH-06</code></span>
+</div>
+<div class="mk-bar">
+  <span>Preview at</span>
+  <button data-vp="desktop" aria-pressed="true">Desktop 1440</button>
+  <button data-vp="tablet" aria-pressed="false">Tablet 1024</button>
+  <button data-vp="mobile" aria-pressed="false">Mobile 390</button>
+</div>
+
+<div class="mk" data-vp="desktop">
+  <div class="mk-frame mk-frame--plain">
+    <div class="mk-app mk-app--guest"><header class="mk-pub"><div class="mk-pub-brand"><span class="mark">ISU</span><span><b>ISU OSAS Hub</b><small>Office of Student Affairs and Services</small></span></div><div class="mk-pub-right"><span class="mk-pub-help">Need help? <b>osas@isu.edu.ph</b></span><span class="mk-pub-flag">Official university system</span></div></header><div class="mk-main"><div class="mk-body">
+<div style="max-width:470px;margin:26px auto 0">
+ <div class="card">
+  <div class="card-b" style="text-align:center;padding:26px 22px">
+    <div style="width:52px;height:52px;border:1.5px solid var(--ink);border-radius:50%;
+         display:grid;place-items:center;margin:0 auto 14px;font-size:20px">&#9993;</div>
+    <h2 style="margin:0 0 6px;font-size:19px">Check your email</h2>
+    <p class="small muted" style="margin:0 0 20px">
+      We sent a six-digit passcode to <b class="mono" style="color:var(--ink)">m.santos@isu.edu.ph</b>.
+      It expires in 10 minutes.</p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:8px">
+      <div class="ctl" style="width:46px;height:52px;justify-content:center;
+           font:700 18px/1 var(--mono)">4</div>
+      <div class="ctl" style="width:46px;height:52px;justify-content:center;
+           font:700 18px/1 var(--mono)">1</div>
+      <div class="ctl" style="width:46px;height:52px;justify-content:center;
+           font:700 18px/1 var(--mono)">9</div>
+      <div class="ctl" style="width:46px;height:52px;justify-content:center;
+           font:700 18px/1 var(--mono)">2</div>
+      <div class="ctl" style="width:46px;height:52px;justify-content:center;
+           font:700 18px/1 var(--mono)">&nbsp;</div>
+      <div class="ctl" style="width:46px;height:52px;justify-content:center;
+           font:700 18px/1 var(--mono)">&nbsp;</div>
+    </div>
+    <div class="ferr" style="margin-bottom:14px">! That code is incorrect. 4 attempts remaining.</div>
+    <button class="wf-btn primary" style="width:100%;justify-content:center">Verify email</button>
+    <div class="divider"></div>
+    <div class="small muted" style="display:grid;gap:6px">
+      <span>Didn't receive it? <b style="color:var(--ink)">Resend in 0:42</b></span>
+      <span>Wrong address? <b style="color:var(--ink)">Start over</b></span>
+    </div>
+  </div>
+ </div>
+</div></div></div></div>
+  </div>
+</div>
+<section class="mk-notes">
+  <h3>Design intent</h3>
+  <p>Require a six-digit one-time passcode sent to the registered address before the student panel becomes reachable.</p>
+  <h3>What this screen establishes</h3>
+  <ol><li>Six single-character inputs that advance focus automatically and accept a pasted code.</li><li>The masked email address is shown so the user can confirm the destination.</li><li>Resend is disabled during the cooldown and shows the remaining seconds.</li><li>Consuming the code invalidates it; a wrong code increments the attempt counter.</li></ol>
+  <p class="mk-notes-foot">Structural source: <code>WF-G-03</code> in the
+  wireframe set. The mockup restates the same information architecture in the
+  institutional palette, so a change to one is a change to both.</p>
+</section>
+<script>
+(function () {
+  var mk = document.querySelector('.mk');
+  document.querySelectorAll('.mk-bar button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.mk-bar button').forEach(function (x) {
+        x.setAttribute('aria-pressed', String(x === b));
+      });
+      mk.setAttribute('data-vp', b.dataset.vp);
+    });
+  });
+  var params = new URLSearchParams(location.search);
+  if (params.get('embed') === '1') { document.body.classList.add('embed'); }
+  var vp = params.get('vp');
+  if (vp) { mk.setAttribute('data-vp', vp); }
+})();
+</script>
+</body>
+</html>

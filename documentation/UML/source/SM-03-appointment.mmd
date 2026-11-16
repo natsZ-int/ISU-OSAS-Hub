@@ -1,0 +1,29 @@
+%% SM-03 Guidance Appointment state machine
+%% Transition table: GuidanceAppointmentWorkflowService::TRANSITIONS (verbatim)
+%% Values in [brackets] are the permitted actor for that transition.
+stateDiagram-v2
+    direction LR
+    [*] --> requested : student books slot (bookAppointment)
+
+    requested --> confirmed : [counselor] confirm
+    requested --> rejected : [counselor] reject (reason required)
+    requested --> cancelled : [student] cancel
+
+    confirmed --> completed : [counselor] mark completed
+    confirmed --> cancelled : [student] cancel (outside notice window)
+
+    completed --> [*]
+    cancelled --> [*]
+    rejected --> [*]
+
+    note right of requested
+        Blocking statuses = requested, confirmed.
+        Only these two occupy a time slot and
+        are checked for counselor/student conflict.
+    end note
+
+    note right of confirmed
+        Reminder: guidance:send-reminders stamps
+        reminder_sent_at before notifying, so an
+        appointment is reminded exactly once.
+    end note

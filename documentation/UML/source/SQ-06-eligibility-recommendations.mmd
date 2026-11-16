@@ -1,0 +1,48 @@
+%% SQ-06 Eligibility evaluation, weighted matching and ranking
+%% Services: ScholarshipEligibilityService, ScholarshipMatchingService,
+%%           ScholarshipRecommendationService
+sequenceDiagram
+    autonumber
+    actor S as Student
+    participant C as Student\ScholarshipController
+    participant MS as ScholarshipMatchingService
+    participant ES as ScholarshipEligibilityService
+    participant DB as MariaDB
+
+    S->>C: GET /student/scholarships/{scholarship}/eligibility
+    C->>ES: evaluate(profile, scholarship)
+    loop each of five criteria
+        ES->>ES: evaluateGwa / evaluateFamilyIncome / evaluateProgram / evaluateYearLevel / evaluateEnrollmentStatus
+        Note over ES: unconfigured criterion -> NOT_APPLICABLE (not a failure)
+        Note over ES: missing student value -> NOT_MET (mandatory)
+        Note over ES: otherwise MET / NOT_MET with student value, required value, reason
+    end
+    ES->>ES: overall = NOT_ELIGIBLE if any mandatory NOT_MET else ELIGIBLE
+    ES-->>C: EligibilityEvaluationResult (criteria[], overall, summary)
+    C-->>S: per-criterion explanation + overall verdict
+
+    S->>C: GET /student/scholarships/recommendations
+    C->>MS: recommendForStudent(profile)
+    MS->>DB: SELECT active matching weights (fallback to defaults)
+    MS->>DB: SELECT availableForStudents() with requirements
+    MS->>DB: SELECT student's existing applications (document readiness)
+
+    loop each available scholarship
+        MS->>ES: evaluate(profile, scholarship, application)
+        alt overall NOT_ELIGIBLE
+            MS->>MS: classify = NOT_ELIGIBLE, attach failing mandatory reasons
+        else ELIGIBLE
+            MS->>MS: factor scores — academic, financial, program, year level (binary)
+            MS->>MS: factor score — document readiness = ready / required
+            Note over MS: during document_verification / approved only verified docs count as ready
+            MS->>MS: score = sum(factor x weight) / sum(applicable weights)
+            MS->>MS: match_percentage = round(score x 100, 2)
+            MS->>MS: classify = ELIGIBLE_RECOMMENDATION | POTENTIAL_MATCH
+        end
+    end
+
+    MS->>MS: sort score desc, deadline asc, title asc, id asc
+    MS-->>C: ranked ScholarshipMatchResult collection
+    C-->>S: recommendation cards + full match list
+
+    Note over C,MS: Weights must total 100 (tolerance 0.01) or the<br/>admin configuration is refused before it is stored (FR-MATCH-03).

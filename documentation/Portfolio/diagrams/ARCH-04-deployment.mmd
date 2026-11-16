@@ -1,0 +1,22 @@
+%% ARCH-04 - Deployment of the environment that was actually verified.
+%% One Windows workstation hosts the application, the database and the files;
+%% every box below is a node that exists on that machine. No campus deployment
+%% is drawn because none has been provisioned.
+flowchart TB
+    N1["&laquo;device&raquo;<br/>Client workstation<br/>Chrome, Edge, Firefox or Safari<br/>viewport 390 to 1920 px"]
+
+    N2["&laquo;execution environment&raquo;<br/>Application server<br/>PHP 8.2.12 and Laravel 12<br/>php artisan serve on port 8000"]
+
+    N3[("&laquo;database&raquo;<br/>MariaDB 10.4<br/>isu_osas_hub on TCP 3306")]
+    N4[("&laquo;file store&raquo;<br/>Local disk<br/>storage/app/private")]
+    N5["&laquo;log file&raquo;<br/>storage/logs/laravel.log<br/>mail transport set to log"]
+
+    N1 -->|"HTTP request and HTML response"| N2
+    N2 -->|"PDO / SQL"| N3
+    N2 -->|"read and write<br/>authorised downloads"| N4
+    N2 -->|"write"| N5
+
+    classDef store fill:#fbf5e2,stroke:#c9a227,color:#3f3006
+    classDef ext fill:#f4f7f5,stroke:#9ca3af,color:#1f2937
+    class N3,N4 store
+    class N5 ext

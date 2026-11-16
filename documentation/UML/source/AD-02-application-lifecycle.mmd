@@ -1,0 +1,36 @@
+%% AD-02 Scholarship application lifecycle (student and administrator lanes)
+flowchart TD
+    classDef startend fill:#0b5d3b,stroke:#083f28,color:#fff,font-weight:bold
+    classDef proc fill:#f4f7f5,stroke:#0b5d3b,color:#1f2937
+    classDef dec fill:#fff8e6,stroke:#c9a227,color:#1f2937
+    classDef admin fill:#eaf1fb,stroke:#1d4ed8,color:#1f2937
+    classDef term fill:#fdeaea,stroke:#b91c1c,color:#1f2937
+
+    A([Student browses open scholarships]):::startend --> B[Open scholarship detail]:::proc
+    B --> C{Eligible?}:::dec
+    C -- No --> C1[Show failing criteria and reasons]:::proc
+    C1 --> A
+    C -- Yes --> D{Existing application?}:::dec
+    D -- Yes --> D1[Open existing application]:::proc
+    D -- No --> E[Create draft + generate SCH-YYYY-NNNNNN]:::proc
+    E --> F[Upload required documents while draft]:::proc
+    F --> G{All required documents uploaded?}:::dec
+    G -- No --> F
+    G -- Yes --> H[Submit application]:::proc
+    H --> I[Status submitted, history recorded, student notified]:::proc
+
+    I --> J[Admin opens review queue]:::admin
+    J --> K[Move to under_review]:::admin
+    K --> L{Decision?}:::dec
+    L -- Verify documents --> M[Status document_verification]:::admin
+    M --> N[Verify or reject each document]:::admin
+    N --> O{Every required document verified?}:::dec
+    O -- No --> N
+    O -- Yes --> P{Admin approves?}:::dec
+    P -- Approve --> Q[Status approved, student notified]:::proc
+    P -- Reject --> R[Status rejected with remarks, student notified]:::proc
+    L -- Reject --> R
+
+    Q --> S([Terminal]):::startend
+    R --> S
+    S --> T[No reapplication permitted — unique index]:::term

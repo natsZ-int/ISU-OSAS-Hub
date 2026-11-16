@@ -1,0 +1,30 @@
+%% SM-01 Scholarship Application state machine
+%% Transition table: ScholarshipApplicationWorkflowService::TRANSITIONS (verbatim)
+stateDiagram-v2
+    direction LR
+    [*] --> draft : student starts application
+
+    draft --> submitted : student submits (submitApplication)
+
+    submitted --> under_review : admin begins review
+    under_review --> document_verification : admin requests document verification
+    under_review --> rejected : admin rejects (remarks required)
+    document_verification --> approved : approve — ALL required documents verified
+    document_verification --> rejected : admin rejects (remarks required)
+
+    approved --> [*]
+    rejected --> [*]
+
+    note right of document_verification
+        Guard: checkApprovalReadiness()
+        Every required requirement must have a
+        document with verification_status = verified.
+        Otherwise the transition is refused.
+    end note
+
+    note left of draft
+        Documents may be uploaded or deleted
+        only in draft (allowsDocumentUpload()).
+        draft is created on "Apply" and never
+        re-entered once submitted.
+    end note

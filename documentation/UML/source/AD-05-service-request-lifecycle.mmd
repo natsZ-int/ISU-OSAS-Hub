@@ -1,0 +1,32 @@
+%% AD-05 Student service request lifecycle
+flowchart TD
+    classDef startend fill:#0b5d3b,stroke:#083f28,color:#fff,font-weight:bold
+    classDef proc fill:#f4f7f5,stroke:#0b5d3b,color:#1f2937
+    classDef dec fill:#fff8e6,stroke:#c9a227,color:#1f2937
+    classDef adm fill:#eaf1fb,stroke:#1d4ed8,color:#1f2937
+    classDef term fill:#fdeaea,stroke:#b91c1c,color:#1f2937
+
+    A([Student opens service catalogue]):::startend --> B[Select service type and read instructions]:::proc
+    B --> C[Submit description and attachments]:::proc
+    C --> D{Description >= 10 chars and files valid?}:::dec
+    D -- No --> C
+    D -- Yes --> E[Generate SR-YYYY-NNNNNN, status submitted]:::proc
+    E --> F[Administrator notified]:::proc
+
+    F --> G{Admin action}:::dec
+    G -- Assign and start --> H[Assign handler, status processing]:::adm
+    G -- Need more info --> I[Status requires_information with remarks]:::adm
+    G -- Cancel --> J[Status cancelled]:::term
+    H --> K{Further action}:::dec
+    K -- Need more info --> I
+    K -- Complete --> L[Status completed with remarks]:::adm
+    K -- Cancel --> J
+    I --> M{Student supplies information}:::dec
+    M -- Yes --> H
+    M -- No --> N{Student cancels?}:::dec
+    N -- Yes --> J
+    N -- No --> I
+
+    L --> O([Terminal, student notified]):::startend
+    J --> O
+    O --> P[History retained, printed or reviewed in analytics]:::term

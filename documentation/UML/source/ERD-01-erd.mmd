@@ -1,0 +1,336 @@
+%% ERD-01 Entity Relationship Diagram — 22 business tables
+%% Derived from database/migrations and app/Models. Framework tables
+%% (sessions, cache, jobs, password_reset_tokens, …) are excluded.
+erDiagram
+    ROLES {
+        bigint id PK
+        varchar name UK
+        varchar label
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    USERS {
+        bigint id PK
+        bigint role_id FK
+        varchar name
+        varchar email UK
+        timestamp email_verified_at
+        varchar password
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    STUDENT_PROFILES {
+        bigint id PK
+        bigint user_id FK,UK
+        varchar student_number UK
+        varchar first_name
+        varchar last_name
+        varchar middle_name
+        varchar contact_number
+        varchar college
+        varchar program
+        tinyint year_level
+        decimal gwa
+        decimal family_income
+        text address
+        varchar profile_passcode_hash
+        varchar enrollment_status
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    STUDENT_ENROLLMENT_VERIFICATIONS {
+        bigint id PK
+        bigint student_profile_id FK
+        varchar academic_year
+        varchar semester
+        varchar status
+        bigint verified_by FK
+        timestamp verified_at
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SCHOLARSHIPS {
+        bigint id PK
+        varchar title
+        text description
+        varchar provider
+        varchar scholarship_type
+        decimal minimum_gwa
+        decimal maximum_family_income
+        json eligible_programs
+        json eligible_year_levels
+        varchar required_enrollment_status
+        date application_start_date
+        date application_deadline
+        varchar status
+        bigint created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SCHOLARSHIP_REQUIREMENTS {
+        bigint id PK
+        bigint scholarship_id FK
+        varchar requirement_name
+        text description
+        boolean is_required
+        smallint display_order
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SCHOLARSHIP_MATCHING_WEIGHTS {
+        bigint id PK
+        decimal academic_weight
+        decimal financial_weight
+        decimal program_weight
+        decimal year_level_weight
+        decimal document_readiness_weight
+        boolean is_active
+        bigint updated_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SCHOLARSHIP_APPLICATIONS {
+        bigint id PK
+        varchar application_number UK
+        bigint student_profile_id FK
+        bigint scholarship_id FK
+        varchar status
+        timestamp submitted_at
+        text remarks
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    APPLICATION_DOCUMENTS {
+        bigint id PK
+        bigint scholarship_application_id FK
+        bigint scholarship_requirement_id FK
+        varchar file_path
+        varchar original_filename
+        varchar mime_type
+        bigint file_size
+        varchar verification_status
+        text verification_remarks
+        bigint verified_by FK
+        timestamp verified_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    APPLICATION_STATUS_HISTORIES {
+        bigint id PK
+        bigint scholarship_application_id FK
+        varchar previous_status
+        varchar new_status
+        bigint changed_by FK
+        text remarks
+        timestamp created_at
+    }
+
+    COUNSELOR_AVAILABILITIES {
+        bigint id PK
+        bigint counselor_id FK
+        tinyint day_of_week
+        time start_time
+        time end_time
+        boolean is_available
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    GUIDANCE_APPOINTMENT_TYPES {
+        bigint id PK
+        varchar name
+        varchar description
+        int duration_minutes
+        boolean is_active
+        int display_order
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    GUIDANCE_SCHEDULING_SETTINGS {
+        bigint id PK
+        time office_start_time
+        time office_end_time
+        int default_appointment_duration_minutes
+        int minimum_booking_notice_minutes
+        int student_cancellation_notice_minutes
+        int maximum_future_booking_days
+        boolean is_active
+        bigint updated_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    GUIDANCE_APPOINTMENTS {
+        bigint id PK
+        bigint student_profile_id FK
+        bigint counselor_id FK
+        bigint appointment_type_id FK
+        varchar appointment_type
+        date appointment_date
+        time start_time
+        time end_time
+        text reason
+        varchar status
+        text rejection_reason
+        text counselor_notes
+        text student_notes
+        timestamp cancelled_at
+        bigint cancelled_by FK
+        timestamp reminder_sent_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SERVICE_TYPES {
+        bigint id PK
+        varchar name
+        text description
+        text instructions
+        boolean is_active
+        int display_order
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SERVICE_TYPE_REQUIREMENTS {
+        bigint id PK
+        bigint service_type_id FK
+        varchar name
+        text description
+        boolean is_required
+        int display_order
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    STUDENT_SERVICE_REQUESTS {
+        bigint id PK
+        varchar request_number UK
+        bigint student_profile_id FK
+        bigint service_type_id FK
+        text description
+        varchar status
+        timestamp submitted_at
+        timestamp completed_at
+        timestamp cancelled_at
+        bigint cancelled_by FK
+        text remarks
+        text internal_remarks
+        bigint handled_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    SERVICE_REQUEST_DOCUMENTS {
+        bigint id PK
+        bigint student_service_request_id FK
+        bigint service_type_requirement_id FK
+        varchar file_path
+        varchar original_filename
+        varchar mime_type
+        bigint file_size
+        bigint uploaded_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    STUDENT_SERVICE_REQUEST_HISTORIES {
+        bigint id PK
+        bigint student_service_request_id FK
+        varchar previous_status
+        varchar new_status
+        bigint changed_by FK
+        text remarks
+        timestamp created_at
+    }
+
+    NOTIFICATIONS {
+        bigint id PK
+        bigint user_id FK
+        varchar type
+        varchar title
+        text message
+        varchar related_type
+        bigint related_id
+        json data
+        timestamp read_at
+        timestamp emailed_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    AUDIT_LOGS {
+        bigint id PK
+        bigint user_id FK
+        varchar action
+        varchar module
+        varchar record_type
+        bigint record_id
+        text description
+        varchar ip_address
+        varchar user_agent
+        timestamp created_at
+    }
+
+    OTP_VERIFICATIONS {
+        bigint id PK
+        bigint user_id FK
+        varchar email
+        varchar code
+        tinyint attempts
+        timestamp expires_at
+        timestamp consumed_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ROLES ||--o{ USERS : "assigns"
+    USERS ||--o| STUDENT_PROFILES : "owns"
+    USERS ||--o{ OTP_VERIFICATIONS : "receives"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    USERS ||--o{ AUDIT_LOGS : "performs"
+    USERS ||--o{ COUNSELOR_AVAILABILITIES : "publishes"
+    USERS ||--o{ GUIDANCE_APPOINTMENTS : "counsels"
+    USERS ||--o{ GUIDANCE_APPOINTMENTS : "cancels"
+    USERS ||--o{ SCHOLARSHIPS : "creates"
+    USERS ||--o{ SCHOLARSHIP_MATCHING_WEIGHTS : "updates"
+    USERS ||--o{ GUIDANCE_SCHEDULING_SETTINGS : "updates"
+    USERS ||--o{ STUDENT_SERVICE_REQUESTS : "handles"
+    USERS ||--o{ STUDENT_SERVICE_REQUESTS : "cancels"
+    USERS ||--o{ APPLICATION_DOCUMENTS : "verifies"
+    USERS ||--o{ APPLICATION_STATUS_HISTORIES : "changes"
+    USERS ||--o{ STUDENT_ENROLLMENT_VERIFICATIONS : "verifies"
+    USERS ||--o{ SERVICE_REQUEST_DOCUMENTS : "uploads"
+    USERS ||--o{ STUDENT_SERVICE_REQUEST_HISTORIES : "changes"
+
+    STUDENT_PROFILES ||--o{ STUDENT_ENROLLMENT_VERIFICATIONS : "has"
+    STUDENT_PROFILES ||--o{ SCHOLARSHIP_APPLICATIONS : "submits"
+    STUDENT_PROFILES ||--o{ GUIDANCE_APPOINTMENTS : "attends"
+    STUDENT_PROFILES ||--o{ STUDENT_SERVICE_REQUESTS : "raises"
+
+    SCHOLARSHIPS ||--o{ SCHOLARSHIP_REQUIREMENTS : "demands"
+    SCHOLARSHIPS ||--o{ SCHOLARSHIP_APPLICATIONS : "receives"
+
+    SCHOLARSHIP_REQUIREMENTS ||--o{ APPLICATION_DOCUMENTS : "fulfilled by"
+    SCHOLARSHIP_APPLICATIONS ||--o{ APPLICATION_DOCUMENTS : "contains"
+    SCHOLARSHIP_APPLICATIONS ||--o{ APPLICATION_STATUS_HISTORIES : "logs"
+
+    GUIDANCE_APPOINTMENT_TYPES ||--o{ GUIDANCE_APPOINTMENTS : "classifies"
+
+    SERVICE_TYPES ||--o{ SERVICE_TYPE_REQUIREMENTS : "demands"
+    SERVICE_TYPES ||--o{ STUDENT_SERVICE_REQUESTS : "classifies"
+    SERVICE_TYPE_REQUIREMENTS ||--o{ SERVICE_REQUEST_DOCUMENTS : "fulfilled by"
+    STUDENT_SERVICE_REQUESTS ||--o{ SERVICE_REQUEST_DOCUMENTS : "contains"
+    STUDENT_SERVICE_REQUESTS ||--o{ STUDENT_SERVICE_REQUEST_HISTORIES : "logs"

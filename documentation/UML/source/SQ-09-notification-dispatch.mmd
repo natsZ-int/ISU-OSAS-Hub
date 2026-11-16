@@ -1,0 +1,48 @@
+%% SQ-09 Notification creation, duplicate suppression, queued email and reminders
+%% Services: NotificationService; Job: SendNotificationEmail;
+%%          Command: guidance:send-reminders
+sequenceDiagram
+    autonumber
+    participant EV as Originating event
+    participant NS as NotificationService
+    participant DB as MariaDB
+    participant Q as jobs (database queue)
+    participant WK as Queue worker
+    participant MA as SMTP transport
+    actor U as Recipient
+
+    EV->>NS: notifyUser(user, type, data) / notifyMultiple(users, type, data)
+    NS->>DB: SELECT unread notification WHERE user, type, related_type, related_id
+    alt identical unread notification exists
+        NS-->>EV: existing notification reused (no insert)
+    else none
+        NS->>DB: INSERT notifications (type, title, message, related, data, read_at = null)
+        NS->>Q: dispatch SendNotificationEmail(notification)
+        NS-->>EV: notification
+    end
+
+    WK->>Q: reserve next job
+    WK->>DB: SELECT notification WHERE emailed_at IS NULL
+    alt already emailed
+        WK->>WK: skip (idempotent)
+    else not yet emailed
+        WK->>MA: send mailable (title, message, action link)
+        WK->>DB: UPDATE notifications.emailed_at = now()
+    end
+
+    U->>DB: GET /notifications
+    DB-->>U: notification centre (unread count in topbar)
+
+    U->>DB: POST /notifications/{id}/read  |  POST /notifications/read-all
+    DB-->>U: read state updated, unread count decremented
+
+    Note over EV,MA: Example producers — application submitted, under review,<br/>document verified, application approved/rejected, service request<br/>status change, appointment confirmed/rejected/cancelled/completed.
+
+    Note over WK,MA: Scheduler path
+    Note over WK,MA: guidance:send-reminders --hours=24
+    WK->>DB: SELECT confirmed appointments WHERE reminder_sent_at IS NULL AND date <= windowEnd
+    loop each due appointment
+        WK->>DB: UPDATE reminder_sent_at = now()   (stamped BEFORE notify)
+        WK->>NS: notifyUser(student and counselor, appointment.reminder)
+        Note over WK,DB: stamp-before-send guarantees exactly-once across reruns
+    end

@@ -1,0 +1,32 @@
+%% SM-05 Enrollment Verification state machine
+%% Values: App\Enums\EnrollmentVerificationStatus. Decision recorded by
+%% Staff\EnrollmentVerificationController::update.
+stateDiagram-v2
+    direction LR
+    [*] --> pending : verification record exists for term
+
+    pending --> verified : staff marks enrolled
+    pending --> rejected : staff marks not enrolled (reason required)
+    pending --> unable_to_verify : staff cannot confirm (reason required)
+
+    verified --> [*]
+    rejected --> [*]
+    unable_to_verify --> [*]
+
+    note right of verified
+        Maps profile.enrollment_status to enrolled.
+        verified + current academic_year + semester
+        satisfies the enrollment.verified middleware.
+    end note
+
+    note right of rejected
+        Maps profile.enrollment_status to not_enrolled.
+        Blocks application submission, document upload,
+        booking and service request submission.
+    end note
+
+    note left of pending
+        GAP-01: no route creates a pending record.
+        Records must be inserted out of band until
+        an intake screen is delivered.
+    end note

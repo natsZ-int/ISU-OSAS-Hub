@@ -1,0 +1,25 @@
+%% SM-02 Student Service Request state machine
+%% Transition table: StudentServiceRequestWorkflowService::$transitions (verbatim)
+stateDiagram-v2
+    direction LR
+    [*] --> submitted : student submits request
+
+    submitted --> processing : admin assigns handler and starts processing
+    submitted --> requires_information : admin requests more information
+    submitted --> cancelled : student or admin cancels
+
+    processing --> requires_information : admin requests more information
+    processing --> completed : admin completes (remarks required)
+    processing --> cancelled : student or admin cancels
+
+    requires_information --> processing : student supplies information, admin resumes
+    requires_information --> cancelled : student or admin cancels
+
+    completed --> [*]
+    cancelled --> [*]
+
+    note right of requires_information
+        Remarks are mandatory when moving
+        into requires_information or completed
+        (workflow service validation).
+    end note

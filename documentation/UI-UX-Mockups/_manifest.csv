@@ -1,0 +1,47 @@
+mockup,title,folder,base_wireframe,route,module,requirements,file,screenshot
+MK-01,Login,shared,WF-G-01,login,M01,"FR-AUTH-01, FR-AUTH-02, FR-AUTH-07, FR-AUTH-08, NFR-ACC-02",screens/shared/MK-01.html,export/MK-01--desktop.png
+MK-02,Application shell (sidebar and top bar),shared,WF-G-06,"— (layouts/app, components/navigation/*)",M16,"FR-AUTH-03, FR-RBAC-03, FR-RBAC-06, FR-NOTIF-06, FR-SEARCH-01, NFR-USA-01, NFR-MAINT-03, NFR-PORT-01, NFR-ACC-01, NFR-ACC-04",screens/shared/MK-02.html,export/MK-02--desktop.png
+MK-03,Student registration,shared,WF-G-02,register,M01,"FR-AUTH-04, FR-PROF-01, NFR-USA-02",screens/shared/MK-03.html,export/MK-03--desktop.png
+MK-04,Email verification (OTP),shared,WF-G-03,verification.notice,M01,"FR-AUTH-05, FR-AUTH-06",screens/shared/MK-04.html,export/MK-04--desktop.png
+MK-11,User create and edit,admin,WF-A-03,admin.users.create / admin.users.edit,M03,"FR-RBAC-01, FR-PROF-06, FR-PROF-08",screens/admin/MK-11.html,export/MK-11--desktop.png
+MK-05,Access denied and not found,shared,WF-G-04,"— (errors/403, errors/404)",M02,FR-RBAC-02,screens/shared/MK-05.html,export/MK-05--desktop.png
+MK-14,Enrollment verification queue,counselor,WF-C-05,enrollment-verifications.index,M05,"FR-RBAC-04, FR-ENR-01, FR-ENR-04",screens/counselor/MK-14.html,export/MK-14--desktop.png
+MK-09,Application detail and documents,student,WF-S-11,student.applications.show,"M09, M10","FR-RBAC-05, FR-APP-04, FR-APP-05, FR-APP-09, FR-DOC-01, FR-DOC-02, FR-DOC-05",screens/student/MK-09.html,export/MK-09--desktop.png
+MK-06,My profile (view),student,WF-S-02,student.profile.show,"M03, M04, M05","FR-PROF-02, FR-PASS-03, FR-ENR-05",screens/student/MK-06.html,export/MK-06--desktop.png
+MK-07,Edit profile,student,WF-S-03,student.profile.edit,M03,FR-PROF-03,screens/student/MK-07.html,export/MK-07--desktop.png
+MK-12,Student profiles,admin,WF-A-05,admin.student-profiles.index,"M03, M05",FR-PROF-04,screens/admin/MK-12.html,export/MK-12--desktop.png
+MK-13,Student profile detail,admin,WF-A-06,admin.student-profiles.show,"M03, M04, M05, M07","FR-PROF-05, FR-PASS-04",screens/admin/MK-13.html,export/MK-13--desktop.png
+MK-10,User accounts,admin,WF-A-02,admin.users.index,M03,FR-PROF-07,screens/admin/MK-10.html,export/MK-10--desktop.png
+MK-08,Profile security and passcode,student,WF-S-04,student.profile.security,M04,"FR-PASS-01, FR-PASS-02",screens/student/MK-08.html,export/MK-08--desktop.png
+MK-15,Enrollment verification review,counselor,WF-C-06,enrollment-verifications.show,M05,FR-ENR-03,screens/counselor/MK-15.html,export/MK-15--desktop.png
+MK-16,Scholarship create and edit,admin,WF-A-09,admin.scholarships.create / admin.scholarships.edit,M06,"FR-SCH-01, FR-SCH-02",screens/admin/MK-16.html,export/MK-16--desktop.png
+MK-17,Scholarships,admin,WF-A-08,admin.scholarships.index,M06,"FR-SCH-03, FR-SCH-04, FR-SCH-08",screens/admin/MK-17.html,export/MK-17--desktop.png
+MK-18,Scholarship requirements manager,admin,WF-A-10,admin.scholarships.requirements.index,"M06, M10",FR-SCH-05,screens/admin/MK-18.html,export/MK-18--desktop.png
+MK-19,Browse scholarships,student,WF-S-05,student.scholarships.index,"M06, M16","FR-SCH-06, FR-SCH-07, FR-SEARCH-02",screens/student/MK-19.html,export/MK-19--desktop.png
+MK-20,Scholarship detail,student,WF-S-06,student.scholarships.show,"M06, M09","FR-SCH-09, FR-APP-01, FR-APP-03",screens/student/MK-20.html,export/MK-20--desktop.png
+MK-21,Eligibility preview,student,WF-S-07,student.scholarships.eligibility,M07,"FR-ELIG-01, FR-ELIG-02, FR-ELIG-03, FR-ELIG-04",screens/student/MK-21.html,export/MK-21--desktop.png
+MK-22,Full match list,student,WF-S-09,student.scholarships.matches,M08,"FR-MATCH-01, FR-MATCH-04, FR-MATCH-05, FR-MATCH-06",screens/student/MK-22.html,export/MK-22--desktop.png
+MK-23,Matching weights,admin,WF-A-11,admin.scholarship-matching.weights.edit,M08,"FR-MATCH-02, FR-MATCH-03",screens/admin/MK-23.html,export/MK-23--desktop.png
+MK-24,My applications,student,WF-S-10,student.applications.index,M09,FR-APP-02,screens/student/MK-24.html,export/MK-24--desktop.png
+MK-25,Notification centre,shared,WF-G-05,notifications.index,M13,"FR-APP-06, FR-APP-10, FR-GUID-12, FR-NOTIF-01, FR-NOTIF-03, FR-NOTIF-04, FR-NOTIF-05",screens/shared/MK-25.html,export/MK-25--desktop.png
+MK-26,Application review detail,admin,WF-A-13,admin.scholarship-applications.show,"M09, M10","FR-APP-07, FR-APP-08, FR-DOC-03, FR-DOC-04",screens/admin/MK-26.html,export/MK-26--desktop.png
+MK-27,Weekly availability,counselor,WF-C-02,counselor.guidance.availability,M11,"FR-GUID-01, FR-GUID-02",screens/counselor/MK-27.html,export/MK-27--desktop.png
+MK-28,Guidance appointment types,admin,WF-A-14,admin.guidance.types,M11,FR-GUID-03,screens/admin/MK-28.html,export/MK-28--desktop.png
+MK-29,Guidance scheduling settings,admin,WF-A-15,admin.guidance.settings,M11,FR-GUID-04,screens/admin/MK-29.html,export/MK-29--desktop.png
+MK-30,Guidance counselors,student,WF-S-12,student.guidance.counselors,M11,FR-GUID-05,screens/student/MK-30.html,export/MK-30--desktop.png
+MK-31,Appointment slots and booking,student,WF-S-13,student.guidance.slots,M11,"FR-GUID-06, FR-GUID-07, FR-GUID-08",screens/student/MK-31.html,export/MK-31--desktop.png
+MK-32,Appointment detail and decisions,counselor,WF-C-04,counselor.guidance.appointments.show,M11,FR-GUID-09,screens/counselor/MK-32.html,export/MK-32--desktop.png
+MK-33,Appointment detail,student,WF-S-15,student.guidance.appointments.show,M11,FR-GUID-10,screens/student/MK-33.html,export/MK-33--desktop.png
+MK-34,Guidance oversight,admin,WF-A-16,admin.guidance.appointments,M11,FR-GUID-11,screens/admin/MK-34.html,export/MK-34--desktop.png
+MK-35,Service catalogue,student,WF-S-16,student.services.catalog,M12,FR-SVC-01,screens/student/MK-35.html,export/MK-35--desktop.png
+MK-36,Service types,admin,WF-A-18,admin.service-types.index,M12,FR-SVC-02,screens/admin/MK-36.html,export/MK-36--desktop.png
+MK-37,New service request,student,WF-S-17,student.services.create,M12,FR-SVC-03,screens/student/MK-37.html,export/MK-37--desktop.png
+MK-38,Service request detail,student,WF-S-19,student.services.show,M12,"FR-SVC-04, FR-SVC-05, FR-SVC-08, FR-SVC-09",screens/student/MK-38.html,export/MK-38--desktop.png
+MK-39,Service request detail and assignment,admin,WF-A-21,admin.student-service-requests.show,M12,"FR-SVC-06, FR-SVC-07",screens/admin/MK-39.html,export/MK-39--desktop.png
+MK-40,Analytics overview,admin,WF-A-24,admin.analytics.index,M14,"FR-ANLYT-01, FR-ANLYT-05, FR-ANLYT-06",screens/admin/MK-40.html,export/MK-40--desktop.png
+MK-41,Analytics — scholarships,admin,WF-A-25,admin.analytics.scholarships,M14,FR-ANLYT-02,screens/admin/MK-41.html,export/MK-41--desktop.png
+MK-42,Analytics — guidance,admin,WF-A-26,admin.analytics.guidance,M14,FR-ANLYT-03,screens/admin/MK-42.html,export/MK-42--desktop.png
+MK-43,Analytics — student services,admin,WF-A-27,admin.analytics.services,M14,FR-ANLYT-04,screens/admin/MK-43.html,export/MK-43--desktop.png
+MK-44,Audit log,admin,WF-A-22,admin.audit-logs.index,M15,"FR-AUDIT-01, FR-AUDIT-02, FR-AUDIT-03",screens/admin/MK-44.html,export/MK-44--desktop.png
+MK-45,Audit log detail,admin,WF-A-23,admin.audit-logs.show,M15,FR-AUDIT-04,screens/admin/MK-45.html,export/MK-45--desktop.png
+MK-46,Responsive behaviour across three widths,student,WF-S-01,student.dashboard,"M03, M09, M11, M12",NFR-PORT-01,screens/student/MK-46.html,export/MK-46--desktop.png

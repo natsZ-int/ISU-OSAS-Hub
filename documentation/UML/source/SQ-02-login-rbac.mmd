@@ -1,0 +1,47 @@
+%% SQ-02 Login, session establishment and role-based access control
+%% Controllers: Auth\LoginController; middleware: EnsureRole, EnsureActive
+%% Service: AuditLogService
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant L as LoginController
+    participant A as Auth guard (session)
+    participant DB as MariaDB
+    participant AU as AuditLogService
+    participant M as EnsureRole / EnsureActive
+    participant C as Role controller
+
+    U->>L: POST /login (email, password, remember?)
+    Note over L: throttle: 5 attempts / minute
+    L->>A: attempt(credentials, remember)
+    A->>DB: SELECT user by email
+    alt user missing or password mismatch
+        A-->>L: false
+        L->>AU: log("login_failed", email, ip, user agent)
+        L-->>U: 302 back, generic "These credentials do not match our records"
+    else credentials valid but is_active = false
+        A-->>L: authenticated, active = false
+        L->>A: logout + invalidate session
+        L->>AU: log("login_blocked_inactive")
+        L-->>U: 403 / inactive message
+    else credentials valid and active
+        A-->>L: authenticated
+        L->>A: session()->regenerate()
+        L->>AU: log("login")
+        L-->>U: redirect to /dashboard
+    end
+
+    U->>C: GET /dashboard
+    C->>M: EnsureRole + EnsureActive
+    alt role mismatch on a prefixed route
+        M-->>U: 403 access denied page
+    else role matches and account active
+        M->>C: allow
+        C->>DB: load role dashboard metrics
+        C-->>U: 200 role dashboard
+    end
+
+    U->>C: POST /logout
+    C->>A: logout + invalidate + regenerateToken
+    C->>AU: log("logout")
+    C-->>U: redirect to /login

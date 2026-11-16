@@ -1,0 +1,32 @@
+%% AD-01 Student onboarding: registration, OTP verification, profile completion
+flowchart TD
+    classDef startend fill:#0b5d3b,stroke:#083f28,color:#fff,font-weight:bold
+    classDef proc fill:#f4f7f5,stroke:#0b5d3b,color:#1f2937
+    classDef dec fill:#fff8e6,stroke:#c9a227,color:#1f2937
+    classDef term fill:#fdeaea,stroke:#b91c1c,color:#1f2937
+
+    A([Guest opens registration]):::startend --> B[Submit registration form]:::proc
+    B --> C{Valid input?}:::dec
+    C -- No --> C1[Show field errors, preserve input]:::proc
+    C1 --> B
+    C -- Yes --> D[Create User role=student + StudentProfile]:::proc
+    D --> E[Issue 6-digit OTP, email it]:::proc
+    E --> F[Show verification notice]:::proc
+    F --> G[Enter OTP]:::proc
+    G --> H{Code valid and unexpired?}:::dec
+    H -- No --> H1{Attempts left?}:::dec
+    H1 -- Yes --> G
+    H1 -- No --> H2[Invalidate code, offer resend after cooldown]:::proc
+    H2 --> G
+    H -- Yes --> I[Mark email verified, start session]:::proc
+    I --> J[Redirect to role dashboard]:::proc
+    J --> K{Student profile complete?}:::dec
+    K -- No --> K1[Edit permitted fields, GWA, income]:::proc
+    K1 --> K
+    K -- Yes --> L{Enrollment verified for current term?}:::dec
+    L -- No records at all --> N[Legacy pass-through allowed]:::term
+    L -- Yes --> M[Enrollment-gated actions enabled]:::proc
+    L -- Pending or rejected --> O[Blocked until staff decides]:::term
+    N --> P([Onboarding complete]):::startend
+    M --> P
+    O --> P

@@ -1,0 +1,379 @@
+%% CL-01 Class Diagram — domain model
+%% Derived from app/Models and database/migrations. Framework base classes omitted.
+classDiagram
+  direction LR
+
+  class Role {
+    +int id
+    +string name
+    +string label
+    +users() HasMany
+    ADMIN$ = admin
+    COUNSELOR$ = counselor
+    STUDENT$ = student
+  }
+
+  class User {
+    +int id
+    +int role_id
+    +string name
+    +string email
+    +timestamp email_verified_at
+    +string password
+    +bool is_active
+    +role() BelongsTo
+    +studentProfile() HasOne
+    +hasRole(string) bool
+    +isAdmin() bool
+    +isCounselor() bool
+    +isStudent() bool
+    +isActive() bool
+    +hasVerifiedEnrollmentForCurrentTerm() bool
+    +markEmailAsVerified() void
+  }
+
+  class StudentProfile {
+    +int id
+    +int user_id
+    +string student_number
+    +string first_name
+    +string last_name
+    +string middle_name
+    +string contact_number
+    +string college
+    +string program
+    +int year_level
+    +string enrollment_status
+    +decimal gwa
+    +decimal family_income
+    +text address
+    +string profile_passcode_hash
+    +hasProfilePasscode() bool
+    +scholarshipApplications() HasMany
+    +guidanceAppointments() HasMany
+    +serviceRequests() HasMany
+    +enrollmentVerifications() HasMany
+  }
+
+  class StudentEnrollmentVerification {
+    +int id
+    +int student_profile_id
+    +string academic_year
+    +string semester
+    +string status
+    +int verified_by
+    +timestamp verified_at
+    +text notes
+    +studentProfile() BelongsTo
+    +verifier() BelongsTo
+  }
+
+  class Scholarship {
+    +int id
+    +string title
+    +text description
+    +string provider
+    +string scholarship_type
+    +decimal minimum_gwa
+    +decimal maximum_family_income
+    +array eligible_programs
+    +array eligible_year_levels
+    +string required_enrollment_status
+    +date application_start_date
+    +date application_deadline
+    +string status
+    +int created_by
+    +requirements() HasMany
+    +requiredRequirements() HasMany
+    +applications() HasMany
+    +isOpenForApplication() bool
+    +scopeOpen()
+    +scopeAvailableForStudents()
+  }
+
+  class ScholarshipRequirement {
+    +int id
+    +int scholarship_id
+    +string requirement_name
+    +text description
+    +bool is_required
+    +int display_order
+    +scholarship() BelongsTo
+    +documents() HasMany
+  }
+
+  class ScholarshipMatchingWeight {
+    +int id
+    +decimal academic_weight
+    +decimal financial_weight
+    +decimal program_weight
+    +decimal year_level_weight
+    +decimal document_readiness_weight
+    +bool is_active
+    +int updated_by
+    +total() float
+    +toDecimalArray() array
+    +activeOrDefault()$ ScholarshipMatchingWeight
+    +defaults()$ ScholarshipMatchingWeight
+  }
+
+  class ScholarshipApplication {
+    +int id
+    +string application_number
+    +int student_profile_id
+    +int scholarship_id
+    +string status
+    +timestamp submitted_at
+    +text remarks
+    +studentProfile() BelongsTo
+    +scholarship() BelongsTo
+    +documents() HasMany
+    +statusHistories() HasMany
+    +isDraft() bool
+    +allowsDocumentUpload() bool
+    +hasAllRequiredDocuments() bool
+    +fsmStatus() ScholarshipApplicationStatus
+  }
+
+  class ApplicationDocument {
+    +int id
+    +int scholarship_application_id
+    +int scholarship_requirement_id
+    +string file_path
+    +string original_filename
+    +string mime_type
+    +int file_size
+    +string verification_status
+    +text verification_remarks
+    +int verified_by
+    +timestamp verified_at
+    +application() BelongsTo
+    +requirement() BelongsTo
+    +verifier() BelongsTo
+  }
+
+  class ApplicationStatusHistory {
+    +int id
+    +int scholarship_application_id
+    +string previous_status
+    +string new_status
+    +int changed_by
+    +text remarks
+    +timestamp created_at
+    +application() BelongsTo
+    +changedBy() BelongsTo
+  }
+
+  class CounselorAvailability {
+    +int id
+    +int counselor_id
+    +int day_of_week
+    +time start_time
+    +time end_time
+    +bool is_available
+    +counselor() BelongsTo
+    +overlapsWith(string, string) bool
+    +getDayName() string
+    +scopeActive()
+    +scopeForDay(int)
+  }
+
+  class GuidanceAppointmentType {
+    +int id
+    +string name
+    +string description
+    +int duration_minutes
+    +bool is_active
+    +int display_order
+    +appointments() HasMany
+    +isInUse() bool
+    +scopeActive()
+  }
+
+  class GuidanceSchedulingSettings {
+    +int id
+    +time office_start_time
+    +time office_end_time
+    +int default_appointment_duration_minutes
+    +int minimum_booking_notice_minutes
+    +int student_cancellation_notice_minutes
+    +int maximum_future_booking_days
+    +bool is_active
+    +int updated_by
+    +getActive()$ GuidanceSchedulingSettings
+  }
+
+  class GuidanceAppointment {
+    +int id
+    +int student_profile_id
+    +int counselor_id
+    +int appointment_type_id
+    +date appointment_date
+    +time start_time
+    +time end_time
+    +string appointment_type
+    +text reason
+    +string status
+    +text rejection_reason
+    +text counselor_notes
+    +text student_notes
+    +timestamp cancelled_at
+    +int cancelled_by
+    +timestamp reminder_sent_at
+    +studentProfile() BelongsTo
+    +counselor() BelongsTo
+    +appointmentType() BelongsTo
+    +isBlocking() bool
+    +isTerminal() bool
+  }
+
+  class ServiceType {
+    +int id
+    +string name
+    +text description
+    +text instructions
+    +bool is_active
+    +int display_order
+    +requirements() HasMany
+    +serviceRequests() HasMany
+  }
+
+  class ServiceTypeRequirement {
+    +int id
+    +int service_type_id
+    +string name
+    +text description
+    +bool is_required
+    +int display_order
+    +serviceType() BelongsTo
+    +documents() HasMany
+  }
+
+  class StudentServiceRequest {
+    +int id
+    +string request_number
+    +int student_profile_id
+    +int service_type_id
+    +text description
+    +string status
+    +timestamp submitted_at
+    +timestamp completed_at
+    +timestamp cancelled_at
+    +int cancelled_by
+    +text remarks
+    +text internal_remarks
+    +int handled_by
+    +studentProfile() BelongsTo
+    +serviceType() BelongsTo
+    +handler() BelongsTo
+    +documents() HasMany
+    +histories() HasMany
+    +isTerminal() bool
+  }
+
+  class ServiceRequestDocument {
+    +int id
+    +int student_service_request_id
+    +int service_type_requirement_id
+    +string file_path
+    +string original_filename
+    +string mime_type
+    +int file_size
+    +int uploaded_by
+    +serviceRequest() BelongsTo
+    +requirement() BelongsTo
+    +uploader() BelongsTo
+  }
+
+  class StudentServiceRequestHistory {
+    +int id
+    +int student_service_request_id
+    +string previous_status
+    +string new_status
+    +int changed_by
+    +text remarks
+    +timestamp created_at
+    +serviceRequest() BelongsTo
+    +user() BelongsTo
+  }
+
+  class Notification {
+    +int id
+    +int user_id
+    +string type
+    +string title
+    +text message
+    +string related_type
+    +int related_id
+    +json data
+    +timestamp read_at
+    +timestamp emailed_at
+    +user() BelongsTo
+    +isUnread() bool
+    +markAsRead() void
+    +getDetailUrl() string
+    +scopeUnread()
+  }
+
+  class AuditLog {
+    +int id
+    +int user_id
+    +string action
+    +string module
+    +string record_type
+    +int record_id
+    +text description
+    +string ip_address
+    +string user_agent
+    +timestamp created_at
+    +user() BelongsTo
+    +scopeSearch(string)
+    +scopeForModule(string)
+    +distinctModules()$ array
+  }
+
+  class OtpVerification {
+    +int id
+    +int user_id
+    +string email
+    +string code
+    +int attempts
+    +timestamp expires_at
+    +timestamp consumed_at
+    +user() BelongsTo
+    +scopeActive()
+  }
+
+  Role "1" --> "0..*" User : assigns
+  User "1" --> "0..1" StudentProfile : owns
+  User "1" --> "0..*" OtpVerification : receives
+  User "1" --> "0..*" Notification : receives
+  User "1" --> "0..*" AuditLog : performs
+  User "1" --> "0..*" CounselorAvailability : publishes
+  User "1" --> "0..*" GuidanceAppointment : counsels
+  User "1" --> "0..*" StudentServiceRequest : handles
+  User "1" --> "0..*" Scholarship : creates
+
+  StudentProfile "1" --> "0..*" StudentEnrollmentVerification : has
+  StudentProfile "1" --> "0..*" ScholarshipApplication : submits
+  StudentProfile "1" --> "0..*" GuidanceAppointment : attends
+  StudentProfile "1" --> "0..*" StudentServiceRequest : raises
+
+  Scholarship "1" --> "0..*" ScholarshipRequirement : demands
+  Scholarship "1" --> "0..*" ScholarshipApplication : receives
+
+  ScholarshipRequirement "1" --> "0..*" ApplicationDocument : fulfilled_by
+  ScholarshipApplication "1" --> "0..*" ApplicationDocument : contains
+  ScholarshipApplication "1" --> "0..*" ApplicationStatusHistory : logs
+
+  CounselorAvailability "0..*" --> "1" GuidanceAppointment : enables
+  GuidanceAppointmentType "1" --> "0..*" GuidanceAppointment : classifies
+
+  ServiceType "1" --> "0..*" ServiceTypeRequirement : demands
+  ServiceType "1" --> "0..*" StudentServiceRequest : classifies
+  ServiceTypeRequirement "1" --> "0..*" ServiceRequestDocument : fulfilled_by
+  StudentServiceRequest "1" --> "0..*" ServiceRequestDocument : contains
+  StudentServiceRequest "1" --> "0..*" StudentServiceRequestHistory : logs
+
+  ScholarshipMatchingWeight ..> Scholarship : scores
+  GuidanceSchedulingSettings ..> GuidanceAppointment : constrains

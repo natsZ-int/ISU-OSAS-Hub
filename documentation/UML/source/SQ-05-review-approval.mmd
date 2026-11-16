@@ -1,0 +1,56 @@
+%% SQ-05 Administrative review, document verification and approval guard
+%% Controllers: Admin\ApplicationReviewController, Admin\DocumentVerificationController
+%% Service: ScholarshipApplicationWorkflowService
+sequenceDiagram
+    autonumber
+    actor A as Administrator
+    participant RC as ApplicationReviewController
+    participant WF as ApplicationWorkflowService
+    participant DB as MariaDB
+    participant DV as DocumentVerificationController
+    participant FS as Private storage
+    participant NS as NotificationService
+
+    A->>RC: GET /admin/scholarship-applications?status=submitted
+    RC->>DB: SELECT applications with student, scholarship, status
+    RC-->>A: paginated review queue + filters
+
+    A->>RC: GET /admin/scholarship-applications/{app}
+    RC->>DB: load application, documents, status histories
+    RC-->>A: detail with allowed transitions and document actions
+
+    A->>DV: PATCH /admin/documents/{doc}/verify (status, remarks)
+    DV->>DV: VerifyDocumentRequest — remarks required on reject
+    DV->>DB: UPDATE application_documents (verification_status, remarks, verified_by, verified_at)
+    DV->>NS: notify student (document_approved / document_rejected)
+    DV-->>A: refreshed document list
+
+    A->>RC: POST /admin/scholarship-applications/{app}/transition (to, remarks)
+    RC->>WF: transition(application, target, actor, remarks)
+    WF->>WF: getAllowedTransitions(current)
+    alt target not in transition table (SM-01)
+        WF-->>RC: WorkflowTransitionException
+        RC-->>A: 302 back with "transition not allowed" message
+    else target = approved
+        WF->>DB: checkApprovalReadiness(app)
+        alt any required requirement lacks a verified document
+            WF-->>RC: reasons[]
+            RC-->>A: approval refused with per-requirement reasons
+        else all required documents verified
+            WF->>DB: BEGIN transaction
+            WF->>DB: UPDATE status = approved (row lock)
+            WF->>DB: INSERT application_status_histories
+            WF->>DB: COMMIT
+            WF->>NS: notify student application_approved
+            RC-->>A: redirect to detail, status approved
+        end
+    else other permitted target
+        WF->>DB: BEGIN transaction
+        WF->>DB: UPDATE status (row lock)
+        WF->>DB: INSERT application_status_histories (previous, new, actor, remarks)
+        WF->>DB: COMMIT
+        WF->>NS: notify student of the new status
+        RC-->>A: redirect to detail
+    end
+
+    Note over A,DV: Downloading a document streams from private storage<br/>only after the policy confirms admin or owner (FR-DOC-03).

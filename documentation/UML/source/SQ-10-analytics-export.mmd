@@ -1,0 +1,45 @@
+%% SQ-10 Analytics query, filtering and CSV export
+%% Service: AnalyticsService; Controller: Admin\AnalyticsController
+sequenceDiagram
+    autonumber
+    actor A as Administrator
+    participant C as Admin\AnalyticsController
+    participant VS as AnalyticsService
+    participant DB as MariaDB
+    participant R as HTTP response stream
+
+    A->>C: GET /admin/analytics?start_date=&end_date=
+    C->>VS: validateFilters(start, end)
+    alt invalid range (start > end or unparsable)
+        VS-->>C: validation errors
+        C-->>A: 302 back with errors, filters otherwise normalised
+    else valid
+        C->>VS: getSummaryCards(filters)
+        VS->>DB: aggregate counts — students, scholarships, applications, appointments, requests
+        C->>VS: getScholarshipAnalytics / getGuidanceAnalytics / getServiceAnalytics
+        VS->>DB: grouped counts and outcomes by scholarship, provider, status, type, counselor, period
+        VS-->>C: datasets ready for the charts
+        C-->>A: overview with tabs and period filter
+    end
+
+    A->>C: GET /admin/analytics/scholarships
+    C->>VS: getScholarshipAnalytics(filters)
+    VS-->>C: application volume and outcomes by scholarship/provider/status
+    C-->>A: scholarship analytics tab
+
+    A->>C: GET /admin/analytics/guidance
+    C->>VS: getGuidanceAnalytics(filters)
+    VS-->>C: appointment volume by type/counselor/status
+    C-->>A: guidance analytics tab
+
+    A->>C: GET /admin/analytics/services
+    C->>VS: getServiceAnalytics(filters)
+    VS-->>C: request volume by service type/status
+    C-->>A: services analytics tab
+
+    A->>C: GET /admin/analytics/export?start_date=&end_date=
+    C->>VS: validateFilters + getExportData(filters)
+    VS->>DB: SELECT the same filtered dataset used on screen
+    VS-->>C: rows
+    C->>R: stream CSV with header row and Content-Disposition: attachment
+    R-->>A: file download (figures match the on-screen view)

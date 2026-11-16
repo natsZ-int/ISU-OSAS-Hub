@@ -1,0 +1,21 @@
+%% AD-03 Document verification sub-process
+flowchart TD
+    classDef startend fill:#0b5d3b,stroke:#083f28,color:#fff,font-weight:bold
+    classDef proc fill:#f4f7f5,stroke:#0b5d3b,color:#1f2937
+    classDef dec fill:#fff8e6,stroke:#c9a227,color:#1f2937
+    classDef term fill:#fdeaea,stroke:#b91c1c,color:#1f2937
+
+    A([Document uploaded, status pending]):::startend --> B[Admin opens application detail]:::proc
+    B --> C[Open document from private storage via policy-checked route]:::proc
+    C --> D{Document correct and legible?}:::dec
+    D -- Yes --> E[Mark verified]:::proc
+    D -- No --> F[Enter rejection remarks]:::proc
+    F --> G[Mark rejected with remarks]:::proc
+    E --> H[Stamp verified_by and verified_at]:::proc
+    G --> H
+    H --> I[Notify student of the outcome]:::proc
+    I --> J{Any required document still unverified?}:::dec
+    J -- Yes --> K[Approval remains blocked]:::term
+    J -- No --> L[Approval readiness satisfied]:::proc
+    K --> B
+    L --> M([Admin may approve the application]):::startend

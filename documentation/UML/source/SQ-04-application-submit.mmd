@@ -1,0 +1,57 @@
+%% SQ-04 Application start, document upload and submission
+%% Controllers: Student\ApplicationController, Student\DocumentController
+%% Services: ApplicationNumberGenerator, UploadDocumentRequest
+sequenceDiagram
+    autonumber
+    actor S as Student
+    participant AC as Student\ApplicationController
+    participant DB as MariaDB
+    participant G as ApplicationNumberGenerator
+    participant DC as Student\DocumentController
+    participant FS as Private storage
+    participant NS as NotificationService
+
+    S->>AC: POST /student/scholarships/{scholarship}/apply
+    AC->>DB: SELECT open scholarship + existing application
+    alt scholarship not open, or window closed
+        AC-->>S: 404 not found
+    else application already exists
+        AC-->>S: redirect to existing application (BR-09)
+    else no application
+        AC->>G: generate()
+        G->>DB: SELECT max application_number LIKE 'SCH-<year>-%'
+        G-->>AC: SCH-YYYY-NNNNNN (recursive retry on collision)
+        AC->>DB: INSERT scholarship_applications (status = draft, number, student, scholarship)
+        AC-->>S: redirect to application detail (draft)
+    end
+
+    loop for each required document
+        S->>DC: POST /student/applications/{app}/documents (file, requirement_id)
+        DC->>DC: UploadDocumentRequest — mimes:pdf,jpg,jpeg,png and max 5120 KB
+        alt file invalid
+            DC-->>S: 302 back with field error, nothing stored
+        else file valid and application is draft
+            DC->>FS: store on private disk
+            DC->>DB: INSERT application_documents (path, name, mime, size, verification_status = pending)
+            DC-->>S: document listed as pending
+        end
+    end
+
+    opt student removes a wrong upload
+        S->>DC: DELETE /student/applications/{app}/documents/{doc}
+        DC->>DC: authorize owner AND application->isDraft()
+        DC->>FS: delete file
+        DC->>DB: DELETE application_documents
+        DC-->>S: document removed
+    end
+
+    S->>AC: POST /student/applications/{app}/submit
+    AC->>AC: authorize ownership, require status = draft
+    AC->>DB: BEGIN transaction
+    AC->>DB: UPDATE status = submitted, submitted_at = now()
+    AC->>DB: INSERT application_status_histories (draft -> submitted, actor, remarks)
+    AC->>DB: COMMIT
+    AC->>NS: notifyUser(student, scholarship.application_submitted)
+    NS->>DB: INSERT notifications (dedup on unread same type+record)
+    NS->>DB: queue SendNotificationEmail job
+    AC-->>S: redirect to detail, status submitted

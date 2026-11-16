@@ -1,0 +1,39 @@
+%% AD-04 Guidance appointment lifecycle (counselor and student lanes)
+flowchart TD
+    classDef startend fill:#0b5d3b,stroke:#083f28,color:#fff,font-weight:bold
+    classDef proc fill:#f4f7f5,stroke:#0b5d3b,color:#1f2937
+    classDef dec fill:#fff8e6,stroke:#c9a227,color:#1f2937
+    classDef cou fill:#eaf1fb,stroke:#1d4ed8,color:#1f2937
+    classDef term fill:#fdeaea,stroke:#b91c1c,color:#1f2937
+
+    A([Counselor publishes weekly availability]):::startend --> B{Overlaps existing block?}:::dec
+    B -- Yes --> A
+    B -- No --> C[Availability active]:::cou
+
+    C --> D[Student selects counselor]:::proc
+    D --> E[System generates bookable slots]:::proc
+    E --> F{Slots within horizon and office hours?}:::dec
+    F -- None --> G[Show empty state, suggest another date]:::proc
+    G --> D
+    F -- Yes --> H[Student selects slot and submits reason]:::proc
+    H --> I{Scheduling revalidation in transaction}:::dec
+    I -- Conflict or too late --> J[Reject booking with reason]:::term
+    J --> H
+    I -- Passes --> K[Create appointment status requested]:::proc
+    K --> L[Counselor notified]:::proc
+
+    L --> M{Counselor decision}:::dec
+    M -- Confirm --> N[Status confirmed, student notified]:::cou
+    M -- Reject --> O[Status rejected with reason, student notified]:::cou
+    M -- No response --> M
+
+    N --> P{Student cancels outside notice window?}:::dec
+    P -- Yes --> Q[Status cancelled, slot released]:::proc
+    P -- No --> R{Session held?}:::dec
+    R -- Yes --> S[Status completed]:::cou
+    R -- No --> R
+
+    O --> T([Terminal]):::startend
+    Q --> T
+    S --> T
+    T --> U[Reminder job fires once inside the reminder window]:::term

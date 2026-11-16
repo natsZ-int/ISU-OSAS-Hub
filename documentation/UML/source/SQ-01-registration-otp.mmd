@@ -1,0 +1,60 @@
+%% SQ-01 Student registration and OTP email verification
+%% Controllers: Auth\RegisterController, Auth\VerificationController
+%% Service: OtpVerificationService
+sequenceDiagram
+    autonumber
+    actor S as Student (guest)
+    participant R as RegisterController
+    participant V as RegisterStudentRequest
+    participant U as User / StudentProfile
+    participant O as OtpVerificationService
+    participant M as Mail transport
+    participant W as VerificationController
+    participant DB as MariaDB
+
+    S->>R: GET /register
+    R-->>S: registration form
+
+    S->>R: POST /register (student number, name, email, password, college, program, contact, GWA, income, address, consent)
+    R->>V: validate + authorize
+    alt validation fails
+        V-->>R: field errors
+        R-->>S: 302 back with errors and old input
+    else valid
+        R->>U: creates User (role = student, is_active = true)
+        R->>U: creates StudentProfile (one-to-one)
+        U->>DB: INSERT users, student_profiles (transaction)
+        R->>O: issue(user)
+        O->>DB: invalidate previous unconsumed codes
+        O->>DB: INSERT otp_verifications (6-digit code, expires_at)
+        O->>M: queue / send OTP mailable
+        R-->>S: redirect to verification.notice
+    end
+
+    S->>W: GET /email/verify
+    W-->>S: OTP entry form (resend cooldown shown)
+
+    S->>W: POST /email/verify (code)
+    W->>O: verify(user, code)
+    O->>DB: SELECT active code FOR the user
+    alt code expired / exhausted / mismatched
+        O-->>W: failure
+        W-->>S: 302 back with error (attempts incremented)
+    else code matches
+        O->>DB: stamp consumed_at
+        W->>U: markEmailAsVerified()
+        U->>DB: UPDATE users.email_verified_at
+        W-->>S: redirect to /dashboard (role-aware)
+    end
+
+    opt student requests a new code
+        S->>W: POST /email/verification-notification
+        W->>O: canResend(user)
+        alt inside cooldown
+            O-->>W: secondsUntilResend > 0
+            W-->>S: 429 / error with remaining seconds
+        else allowed
+            O->>O: issue(user)
+            W-->>S: new code sent
+        end
+    end

@@ -1,0 +1,58 @@
+%% SQ-07 Guidance slot generation and appointment booking
+%% Service: GuidanceAppointmentSchedulingService
+%% Controllers: Student\GuidanceController
+sequenceDiagram
+    autonumber
+    actor S as Student
+    participant GC as Student\GuidanceController
+    participant SS as GuidanceAppointmentSchedulingService
+    participant DB as MariaDB
+    participant NS as NotificationService
+    actor CO as Counselor
+
+    CO->>DB: publish availability (day_of_week, start, end, is_available)
+    Note over CO,DB: overlapping blocks for the same counselor are rejected
+
+    S->>GC: GET /student/guidance/counselors
+    GC->>DB: SELECT counselors with active availability
+    GC-->>S: counselor list
+
+    S->>GC: GET /student/guidance/counselors/{counselor}/slots?date=&type=
+    GC->>SS: getAvailableSlots(counselor, date, type)
+    SS->>DB: SELECT active scheduling settings
+    alt date in the past or beyond maximum_future_booking_days
+        SS-->>GC: [] (no slots)
+    else date is bookable
+        SS->>SS: duration = type.duration_minutes ?? settings.default_duration
+        SS->>DB: SELECT active availability for weekday
+        loop each availability window
+            SS->>SS: step cursor from window.start to window.end - duration
+            SS->>SS: keep only if inside office hours
+            SS->>SS: keep only if start >= now + minimum_booking_notice
+            SS->>DB: SELECT blocking appointments for counselor on date
+            SS->>SS: drop candidates overlapping requested | confirmed
+        end
+        SS-->>GC: candidate slots
+    end
+    GC-->>S: bookable slot grid
+
+    S->>GC: POST /student/guidance/appointments (counselor, date, slot, type, reason)
+    GC->>SS: bookAppointment(...)
+    SS->>DB: BEGIN transaction
+    SS->>SS: re-validate bookable date, office hours, notice
+    SS->>SS: isCounselorAvailable(counselor, date, slot)
+    SS->>SS: hasCounselorConflict(...)  and  hasStudentConflict(...)
+    alt any check fails
+        SS->>DB: ROLLBACK
+        SS-->>GC: validation exception
+        GC-->>S: 302 back with conflict / availability message
+    else all checks pass
+        SS->>DB: INSERT guidance_appointments (status = requested)
+        SS->>DB: COMMIT
+        SS->>NS: notify counselor (new appointment requested)
+        SS-->>GC: appointment
+        GC-->>S: redirect to appointment detail, status requested
+    end
+
+    CO->>DB: transition requested -> confirmed | rejected (SM-03)
+    Note over CO,DB: on confirm the student is notified and the slot becomes blocking

@@ -1,0 +1,94 @@
+%% ARCH-01 Layered system architecture
+%% Reflects the actual request lifecycle: middleware -> route -> controller ->
+%% form request / policy -> service -> Eloquent model -> database / storage / queue.
+flowchart TB
+    classDef client fill:#eaf1fb,stroke:#1d4ed8,color:#1f2937
+    classDef web fill:#f4f7f5,stroke:#0b5d3b,color:#1f2937
+    classDef mw fill:#fff8e6,stroke:#c9a227,color:#1f2937
+    classDef svc fill:#e8f2ec,stroke:#0b5d3b,color:#1f2937
+    classDef data fill:#f3e8f7,stroke:#7e22ce,color:#1f2937
+    classDef ext fill:#fdeaea,stroke:#b91c1c,color:#1f2937
+
+    subgraph CLIENT["Presentation tier — browser"]
+        B1["Blade-rendered HTML"]:::client
+        B2["app.css (single stylesheet)"]:::client
+        B3["app.js (progressive enhancement)"]:::client
+    end
+
+    subgraph WEB["Application tier — Laravel 12 / PHP 8.2"]
+        direction TB
+        R1["public/index.php front controller"]:::web
+        subgraph MWCHAIN["HTTP middleware chain"]
+            direction LR
+            M1["Session start + CSRF"]:::mw
+            M2["Authenticate"]:::mw
+            M3["EnsureActive"]:::mw
+            M4["verified.email"]:::mw
+            M5["role:student / counselor / admin"]:::mw
+            M6["enrollment.verified"]:::mw
+            M7["throttle"]:::mw
+        end
+        RT["Route groups — routes/web.php"]:::web
+        subgraph REQ["Request boundary"]
+            direction LR
+            FR["FormRequest validation"]:::web
+            GA["Gates — AuthServiceProvider"]:::web
+            PO["Policies — record ownership"]:::web
+        end
+        subgraph CTRL["Controllers"]
+            direction LR
+            CS["Student controllers"]:::web
+            CC["Counselor controllers"]:::web
+            CA["Admin controllers"]:::web
+            CSH["Staff enrollment controller"]:::web
+            CAU["Auth controllers"]:::web
+        end
+        subgraph SVC["Service layer — business rules"]
+            direction LR
+            S1["Eligibility / Matching"]:::svc
+            S2["Application / Service / Guidance workflows"]:::svc
+            S3["Scheduling"]:::svc
+            S4["Notification / Announcement"]:::svc
+            S5["Analytics / Dashboard"]:::svc
+            S6["Audit / OTP / Number generators / Search"]:::svc
+        end
+        subgraph DOM["Domain model — Eloquent"]
+            direction LR
+            D1["22 models + status enums"]:::web
+        end
+    end
+
+    subgraph DATA["Data tier"]
+        direction LR
+        DB[("MariaDB — isu_osas_hub")]:::data
+        FS[["Private document storage"]]:::data
+        SS[("sessions / cache tables")]:::data
+        JQ[("jobs — database queue")]:::data
+    end
+
+    subgraph EXT["External services"]
+        direction LR
+        SMTP["SMTP relay"]:::ext
+        SCH["OS scheduler"]:::ext
+        WRK["Queue worker"]:::ext
+    end
+
+    B1 --> R1
+    B2 --> B1
+    B3 --> B1
+    R1 --> MWCHAIN
+    MWCHAIN --> RT
+    RT --> REQ
+    REQ --> CTRL
+    CTRL --> SVC
+    SVC --> DOM
+    DOM --> DB
+    DOM --> FS
+    M1 --> SS
+    S4 --> JQ
+    S6 --> DB
+    JQ --> WRK
+    WRK --> SMTP
+    S4 --> SMTP
+    SCH --> WRK
+    WRK --> DB

@@ -1,0 +1,32 @@
+%% ARCH-03 - Logical architecture of the delivered ISU OSAS Hub.
+%% Every component below exists in the repository; no planned component is drawn.
+%% The internal layering is expanded in ARCH-01, so the application is one box here.
+flowchart TB
+    subgraph People["Actors"]
+        direction LR
+        S["Student"]
+        C["Counselor"]
+        A["Administrator"]
+    end
+
+    BR["Web browser<br/>HTML, CSS and JavaScript<br/>served from public/"]
+
+    APP["Laravel 12 application on PHP 8.2<br/>middleware, controllers, form requests,<br/>services, policies, Blade views"]
+
+    DB[("MariaDB 10.4<br/>isu_osas_hub")]
+    ST[("Private file storage<br/>uploaded documents")]
+    ML["SMTP mail<br/>one-time passcodes and notices"]
+
+    S --> BR
+    C --> BR
+    A --> BR
+    BR -->|"HTTP request"| APP
+    APP -->|"HTML response"| BR
+    APP -->|"PDO / SQL<br/>read and write"| DB
+    APP -->|"store and stream<br/>authorised downloads"| ST
+    APP -->|"queued email job"| ML
+
+    classDef store fill:#fbf5e2,stroke:#c9a227,color:#3f3006
+    classDef ext fill:#f4f7f5,stroke:#9ca3af,color:#1f2937
+    class DB,ST store
+    class ML ext

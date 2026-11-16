@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MK-01 &middot; Login &middot; ISU OSAS Hub mockup</title>
+<link rel="stylesheet" href="../../assets/mockup.css">
+</head>
+<body>
+<div class="mk-head">
+  <span class="id">MK-01</span>
+  <h1>Login</h1>
+</div>
+<div class="mk-meta">
+  <span><b>Role</b>Guest</span>
+  <span><b>Screen</b><code>WF-G-01</code></span>
+  <span><b>Route</b><code>login</code></span>
+  <span><b>Module</b>M01</span>
+  <span><b>Requirements</b><code>FR-AUTH-01, FR-AUTH-02, FR-AUTH-07, FR-AUTH-08, NFR-ACC-02</code></span>
+</div>
+<div class="mk-bar">
+  <span>Preview at</span>
+  <button data-vp="desktop" aria-pressed="true">Desktop 1440</button>
+  <button data-vp="tablet" aria-pressed="false">Tablet 1024</button>
+  <button data-vp="mobile" aria-pressed="false">Mobile 390</button>
+</div>
+
+<div class="mk" data-vp="desktop">
+  <div class="mk-frame mk-frame--plain">
+    <div class="mk-app mk-app--guest"><header class="mk-pub"><div class="mk-pub-brand"><span class="mark">ISU</span><span><b>ISU OSAS Hub</b><small>Office of Student Affairs and Services</small></span></div><div class="mk-pub-right"><span class="mk-pub-help">Need help? <b>osas@isu.edu.ph</b></span><span class="mk-pub-flag">Official university system</span></div></header><div class="mk-main"><div class="mk-body"><div class="split2"><div>
+<div class="auth-hero" style="min-height:430px;display:flex;flex-direction:column;
+     justify-content:center;padding:34px 30px;border:1px solid var(--line-2);
+     border-radius:8px;background:var(--fill)">
+  <div style="display:flex;gap:11px;align-items:center;margin-bottom:26px">
+    <span style="width:46px;height:46px;border:1.5px solid var(--ink);border-radius:9px;
+          display:grid;place-items:center;font:700 13px/1 var(--mono)">ISU</span>
+    <div><div style="font-weight:700;font-size:15px">ISU OSAS Hub</div>
+      <div style="font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+           color:var(--muted)">Student Affairs &amp; Services</div></div>
+  </div>
+  <h2 style="margin:0 0 8px;font-size:24px;line-height:1.25">
+    One portal for scholarships,<br>guidance and student services.</h2>
+  <p style="color:var(--muted);font-size:13px;margin:0 0 22px;max-width:44ch">
+    Isabela State University &mdash; Office of Student Affairs and Services.</p>
+  <ul style="margin:0;padding:0;list-style:none;display:grid;gap:9px;font-size:12.5px;
+      color:var(--ink-2)">
+    <li>&#10003;&nbsp;&nbsp; Screen scholarship eligibility before applying</li>
+    <li>&#10003;&nbsp;&nbsp; Book guidance appointments against published availability</li>
+    <li>&#10003;&nbsp;&nbsp; Track every service request from submission to completion</li>
+  </ul>
+</div></div><div>
+<div class="card">
+  <div class="card-h"><h3>Sign in</h3></div>
+  <div class="card-b">
+    <div class="field" style="margin-bottom:13px">
+      <label>Email address <span class="req">*</span></label>
+      <div class="ctl"><span class="ph">name@isu.edu.ph</span></div>
+    </div>
+    <div class="field" style="margin-bottom:10px">
+      <label>Password <span class="req">*</span></label>
+      <div class="ctl"><span class="ph">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span>
+        <span class="mono" style="font-size:10.5px;color:var(--muted)">Show</span></div>
+      <div class="fhelp">Minimum 8 characters.</div>
+    </div>
+    <div class="row small" style="margin:12px 0 16px">
+      <span style="width:14px;height:14px;border:1px solid var(--line);border-radius:3px;
+            display:inline-block"></span>
+      <span>Remember me on this device</span>
+    </div>
+    <button class="wf-btn primary" style="width:100%;justify-content:center">Log in</button>
+    <div class="divider"></div>
+    <div class="small" style="display:grid;gap:7px">
+      <span>No account yet? <b>Register as a student</b></span>
+      <span class="muted">Counselor and administrator accounts are issued by OSAS.</span>
+    </div>
+  </div>
+</div></div></div></div></div></div>
+  </div>
+</div>
+<section class="mk-notes">
+  <h3>Design intent</h3>
+  <p>Authenticate a registered account with email and password, with a remember-me option and a single non-revealing failure message.</p>
+  <h3>What this screen establishes</h3>
+  <ol><li>Single column form; labels sit above inputs and errors appear under the field.</li><li>Failure message is generic — it never states whether the email or the password was wrong.</li><li>Remember-me checkbox is optional and defaults to off.</li><li>Login is throttled to 5 attempts per minute per client; the throttle message appears here.</li></ol>
+  <p class="mk-notes-foot">Structural source: <code>WF-G-01</code> in the
+  wireframe set. The mockup restates the same information architecture in the
+  institutional palette, so a change to one is a change to both.</p>
+</section>
+<script>
+(function () {
+  var mk = document.querySelector('.mk');
+  document.querySelectorAll('.mk-bar button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.mk-bar button').forEach(function (x) {
+        x.setAttribute('aria-pressed', String(x === b));
+      });
+      mk.setAttribute('data-vp', b.dataset.vp);
+    });
+  });
+  var params = new URLSearchParams(location.search);
+  if (params.get('embed') === '1') { document.body.classList.add('embed'); }
+  var vp = params.get('vp');
+  if (vp) { mk.setAttribute('data-vp', vp); }
+})();
+</script>
+</body>
+</html>

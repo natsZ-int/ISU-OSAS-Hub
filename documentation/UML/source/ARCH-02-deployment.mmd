@@ -1,0 +1,54 @@
+%% ARCH-02 Deployment architecture
+%% Locally hosted, single-server baseline with optional split database host.
+flowchart TB
+    classDef dev fill:#eaf1fb,stroke:#1d4ed8,color:#1f2937
+    classDef srv fill:#f4f7f5,stroke:#0b5d3b,color:#1f2937
+    classDef data fill:#f3e8f7,stroke:#7e22ce,color:#1f2937
+    classDef ext fill:#fdeaea,stroke:#b91c1c,color:#1f2937
+    classDef zone fill:#ffffff,stroke:#9ca3af,color:#1f2937,stroke-dasharray: 4 4
+
+    subgraph USERS["Campus network"]
+        direction LR
+        ST["Student browser<br/>desktop / tablet / phone"]:::dev
+        CO["Counselor workstation"]:::dev
+        AD["OSAS administrator workstation"]:::dev
+    end
+
+    subgraph SERVER["Application server — Windows or Linux host"]
+        direction TB
+        HTTP["Apache 2.4 / Nginx<br/>document root = /public"]:::srv
+        PHP["PHP 8.2-FPM<br/>Laravel 12 application"]:::srv
+        STORE[["Private storage volume<br/>uploaded documents"]]:::data
+        SES[("sessions / cache")]:::data
+        subgraph ASYNC["Background processing"]
+            direction LR
+            QW["Queue worker<br/>php artisan queue:work"]:::srv
+            CRON["OS scheduler<br/>php artisan schedule:run"]:::srv
+        end
+    end
+
+    subgraph DBHOST["Database host — same server or dedicated"]
+        DB[("MariaDB 10.4+<br/>isu_osas_hub")]:::data
+        BKP[("Backup target")]:::data
+    end
+
+    subgraph EXTSVC["External services"]
+        direction LR
+        MX["SMTP relay<br/>OTP + notification mail"]:::ext
+    end
+
+    ST -->|HTTPS| HTTP
+    CO -->|HTTPS| HTTP
+    AD -->|HTTPS| HTTP
+    HTTP --> PHP
+    PHP --> STORE
+    PHP --> SES
+    PHP --> DB
+    PHP -->|dispatch job| DB
+    QW -->|reserve job| DB
+    QW --> MX
+    CRON --> QW
+    PHP --> MX
+    DB --> BKP
+
+    note1["Minimum deployment:<br/>1 quad-core / 8 GB server,<br/>100 GB SSD, UPS,<br/>synchronised clock"]:::zone

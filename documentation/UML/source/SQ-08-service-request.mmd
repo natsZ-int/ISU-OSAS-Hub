@@ -1,0 +1,58 @@
+%% SQ-08 Student service request submission, assignment and processing
+%% Controllers: Student\ServiceRequestController, Admin\ServiceRequestController
+%% Services: ServiceRequestNumberGenerator, StudentServiceRequestWorkflowService
+sequenceDiagram
+    autonumber
+    actor S as Student
+    participant SC as Student\ServiceRequestController
+    participant DB as MariaDB
+    participant NG as ServiceRequestNumberGenerator
+    participant NS as NotificationService
+    actor A as Administrator
+    participant AC as Admin\ServiceRequestController
+    participant WF as ServiceRequestWorkflowService
+
+    S->>SC: GET /student/services/catalog
+    SC->>DB: SELECT active service types + requirements
+    SC-->>S: catalogue with instructions and required attachments
+
+    S->>SC: POST /student/services/requests (service_type, description, files[])
+    SC->>SC: validate description min 10 chars, files mimes:pdf,jpg,jpeg,png max 5120
+    SC->>DB: BEGIN transaction
+    SC->>NG: generate() — SELECT ... FOR UPDATE on sequence, SR-YYYY-NNNNNN
+    SC->>DB: INSERT student_service_requests (status = submitted, number)
+    SC->>DB: INSERT service_request_documents (one per accepted file)
+    SC->>DB: COMMIT
+    SC->>NS: notify administrators (new request)
+    SC-->>S: redirect to request detail
+
+    A->>AC: GET /admin/student-service-requests?status=submitted
+    AC->>DB: SELECT requests with student, service type, handler
+    AC-->>A: processing queue + filters
+
+    A->>AC: PATCH /admin/student-service-requests/{request} (handled_by, remarks, internal_remarks)
+    AC->>DB: UPDATE assigned handler and remarks
+    AC-->>A: refreshed detail
+
+    A->>AC: POST /admin/student-service-requests/{request}/transition (to, remarks)
+    AC->>WF: transition(request, target, actor, remarks)
+    WF->>WF: getAllowedTransitions(current) — SM-02
+    alt transition not permitted
+        WF-->>AC: exception
+        AC-->>A: 302 back with message
+    else permitted
+        WF->>WF: require remarks when entering requires_information or completed
+        WF->>DB: BEGIN transaction
+        WF->>DB: UPDATE status (row lock)
+        WF->>DB: INSERT student_service_request_histories
+        WF->>DB: stamp completed_at / cancelled_at + cancelled_by as applicable
+        WF->>DB: COMMIT
+        WF->>NS: notify student of the new status
+        AC-->>A: redirect to detail
+    end
+
+    opt student cancels own request
+        S->>SC: POST /student/services/requests/{request}/cancel
+        SC->>WF: transition(request, cancelled, student)
+        SC-->>S: status cancelled
+    end

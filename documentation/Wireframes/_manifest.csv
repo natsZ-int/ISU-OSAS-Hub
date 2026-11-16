@@ -1,0 +1,59 @@
+id,title,role,route,module,requirements,file
+WF-G-01,Login,Guest,login,M01,"FR-AUTH-01, FR-AUTH-02, FR-AUTH-07, FR-AUTH-08, NFR-SEC-02, NFR-ACC-02",shared/WF-G-01.html
+WF-G-02,Student registration,Guest,register,M01,"FR-AUTH-04, FR-PROF-01, NFR-USA-02",shared/WF-G-02.html
+WF-G-03,Email verification (OTP),Guest,verification.notice,M01,"FR-AUTH-05, FR-AUTH-06, FR-AUTH-09, NFR-SEC-07",shared/WF-G-03.html
+WF-G-04,Access denied and not found,Guest,"— (errors/403, errors/404)",M02,"FR-RBAC-02, NFR-SEC-03",shared/WF-G-04.html
+WF-G-05,Notification centre,Student,notifications.index,M13,"FR-APP-10, FR-GUID-12, FR-NOTIF-01, FR-NOTIF-02, FR-NOTIF-03, FR-NOTIF-04, FR-NOTIF-05, NFR-PERF-04, NFR-ACC-03",shared/WF-G-05.html
+WF-G-06,Application shell (sidebar and top bar),Student,"— (layouts/app, components/navigation/*)",M16,"FR-AUTH-03, FR-RBAC-03, FR-RBAC-06, FR-NOTIF-06, FR-SEARCH-01, FR-SEARCH-03, NFR-USA-01, NFR-MAINT-03, NFR-PORT-01, NFR-ACC-01, NFR-ACC-04",shared/WF-G-06.html
+WF-S-01,Student dashboard,Student,student.dashboard,"M03, M09, M11, M12","FR-ENR-05, FR-ENR-06",student/WF-S-01.html
+WF-S-02,My profile (view),Student,student.profile.show,"M03, M04, M05","FR-PROF-02, FR-PASS-03, FR-ENR-02",student/WF-S-02.html
+WF-S-03,Edit profile,Student,student.profile.edit,M03,FR-PROF-03,student/WF-S-03.html
+WF-S-04,Profile security and passcode,Student,student.profile.security,M04,"FR-PASS-01, FR-PASS-02, FR-PASS-03, NFR-SEC-05",student/WF-S-04.html
+WF-S-05,Browse scholarships,Student,student.scholarships.index,"M06, M16","FR-SCH-06, FR-SCH-07, FR-SEARCH-02",student/WF-S-05.html
+WF-S-06,Scholarship detail,Student,student.scholarships.show,"M06, M09","FR-SCH-09, FR-APP-01, FR-APP-03",student/WF-S-06.html
+WF-S-07,Eligibility preview,Student,student.scholarships.eligibility,M07,"FR-ELIG-01, FR-ELIG-02, FR-ELIG-03, FR-ELIG-04",student/WF-S-07.html
+WF-S-08,Recommended scholarships,Student,student.scholarships.recommendations,M08,"FR-MATCH-04, FR-MATCH-05",student/WF-S-08.html
+WF-S-09,Full match list,Student,student.scholarships.matches,M08,"FR-MATCH-01, FR-MATCH-05, FR-MATCH-06",student/WF-S-09.html
+WF-S-10,My applications,Student,student.applications.index,M09,"FR-APP-02, NFR-USA-05, NFR-DATA-03",student/WF-S-10.html
+WF-S-11,Application detail and documents,Student,student.applications.show,"M09, M10","FR-RBAC-05, FR-APP-04, FR-APP-05, FR-APP-09, FR-APP-11, FR-DOC-01, FR-DOC-02, FR-DOC-05, NFR-SEC-04, NFR-SEC-06",student/WF-S-11.html
+WF-S-12,Guidance counselors,Student,student.guidance.counselors,M11,FR-GUID-05,student/WF-S-12.html
+WF-S-13,Appointment slots and booking,Student,student.guidance.slots,M11,"FR-GUID-06, FR-GUID-07, FR-GUID-08",student/WF-S-13.html
+WF-S-14,My appointments,Student,student.guidance.appointments,M11,"FR-GUID-07, FR-GUID-10, FR-GUID-12",student/WF-S-14.html
+WF-S-15,Appointment detail,Student,student.guidance.appointments.show,M11,"FR-GUID-10, FR-GUID-14",student/WF-S-15.html
+WF-S-16,Service catalogue,Student,student.services.catalog,M12,FR-SVC-01,student/WF-S-16.html
+WF-S-17,New service request,Student,student.services.create,M12,FR-SVC-03,student/WF-S-17.html
+WF-S-18,My service requests,Student,student.services.index,M12,"FR-SVC-04, FR-SVC-05",student/WF-S-18.html
+WF-S-19,Service request detail,Student,student.services.show,M12,"FR-SVC-05, FR-SVC-08, FR-SVC-09",student/WF-S-19.html
+WF-C-01,Counselor dashboard,Counselor,counselor.dashboard,"M11, M05, M12",FR-SVC-10,counselor/WF-C-01.html
+WF-C-02,Weekly availability,Counselor,counselor.guidance.availability,M11,"FR-GUID-01, FR-GUID-02",counselor/WF-C-02.html
+WF-C-03,Appointment queue,Counselor,counselor.guidance.appointments,M11,"FR-GUID-09, FR-GUID-11, NFR-PERF-03",counselor/WF-C-03.html
+WF-C-04,Appointment detail and decisions,Counselor,counselor.guidance.appointments.show,M11,"FR-GUID-09, FR-GUID-13",counselor/WF-C-04.html
+WF-C-05,Enrollment verification queue,Counselor,enrollment-verifications.index,M05,"FR-RBAC-04, FR-ENR-01, FR-ENR-04",counselor/WF-C-05.html
+WF-C-06,Enrollment verification review,Counselor,enrollment-verifications.show,M05,FR-ENR-03,counselor/WF-C-06.html
+WF-A-01,Administrator dashboard,Administrator,admin.dashboard,"M03, M06, M09, M11, M12, M14","FR-ANLYT-01, NFR-PERF-01",admin/WF-A-01.html
+WF-A-02,User accounts,Administrator,admin.users.index,M03,"FR-PROF-07, NFR-PERF-03",admin/WF-A-02.html
+WF-A-03,User create and edit,Administrator,admin.users.create / admin.users.edit,M03,"FR-RBAC-01, FR-PROF-06",admin/WF-A-03.html
+WF-A-04,Administrator-initiated password reset,Administrator,admin.users.reset-password,"M01, M03","FR-AUTH-10, FR-PROF-08",admin/WF-A-04.html
+WF-A-05,Student profiles,Administrator,admin.student-profiles.index,"M03, M05",FR-PROF-04,admin/WF-A-05.html
+WF-A-06,Student profile detail,Administrator,admin.student-profiles.show,"M03, M04, M05, M07","FR-PROF-05, FR-PASS-04",admin/WF-A-06.html
+WF-A-07,Student profile edit,Administrator,admin.student-profiles.edit,M03,FR-PROF-05,admin/WF-A-07.html
+WF-A-08,Scholarships,Administrator,admin.scholarships.index,M06,"FR-SCH-03, FR-SCH-04, FR-SCH-08",admin/WF-A-08.html
+WF-A-09,Scholarship create and edit,Administrator,admin.scholarships.create / admin.scholarships.edit,M06,"FR-SCH-01, FR-SCH-02",admin/WF-A-09.html
+WF-A-10,Scholarship requirements manager,Administrator,admin.scholarships.requirements.index,"M06, M10",FR-SCH-05,admin/WF-A-10.html
+WF-A-11,Matching weights,Administrator,admin.scholarship-matching.weights.edit,M08,"FR-MATCH-02, FR-MATCH-03",admin/WF-A-11.html
+WF-A-12,Application review queue,Administrator,admin.scholarship-applications.index,"M09, M10","FR-APP-06, NFR-PERF-02, NFR-USA-03",admin/WF-A-12.html
+WF-A-13,Application review detail,Administrator,admin.scholarship-applications.show,"M09, M10","FR-APP-07, FR-APP-08, FR-APP-09, FR-DOC-03, FR-DOC-04, NFR-USA-06, NFR-REL-03",admin/WF-A-13.html
+WF-A-14,Guidance appointment types,Administrator,admin.guidance.types,M11,FR-GUID-03,admin/WF-A-14.html
+WF-A-15,Guidance scheduling settings,Administrator,admin.guidance.settings,M11,FR-GUID-04,admin/WF-A-15.html
+WF-A-16,Guidance oversight,Administrator,admin.guidance.appointments,M11,FR-GUID-11,admin/WF-A-16.html
+WF-A-17,Guidance oversight detail,Administrator,admin.guidance.appointments.show,M11,FR-GUID-11,admin/WF-A-17.html
+WF-A-18,Service types,Administrator,admin.service-types.index,M12,FR-SVC-02,admin/WF-A-18.html
+WF-A-19,Service type create and edit,Administrator,admin.service-types.create / admin.service-types.edit,M12,FR-SVC-02,admin/WF-A-19.html
+WF-A-20,Service request queue,Administrator,admin.student-service-requests.index,M12,FR-SVC-06,admin/WF-A-20.html
+WF-A-21,Service request detail and assignment,Administrator,admin.student-service-requests.show,M12,"FR-SVC-06, FR-SVC-07, NFR-USA-04",admin/WF-A-21.html
+WF-A-22,Audit log,Administrator,admin.audit-logs.index,M15,"FR-AUDIT-01, FR-AUDIT-02, FR-AUDIT-03, FR-AUDIT-05, NFR-SEC-08",admin/WF-A-22.html
+WF-A-23,Audit log detail,Administrator,admin.audit-logs.show,M15,FR-AUDIT-04,admin/WF-A-23.html
+WF-A-24,Analytics overview,Administrator,admin.analytics.index,M14,"FR-ANLYT-01, FR-ANLYT-05, FR-ANLYT-06",admin/WF-A-24.html
+WF-A-25,Analytics — scholarships,Administrator,admin.analytics.scholarships,M14,FR-ANLYT-02,admin/WF-A-25.html
+WF-A-26,Analytics — guidance,Administrator,admin.analytics.guidance,M14,FR-ANLYT-03,admin/WF-A-26.html
+WF-A-27,Analytics — student services,Administrator,admin.analytics.services,M14,FR-ANLYT-04,admin/WF-A-27.html

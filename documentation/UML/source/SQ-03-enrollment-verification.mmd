@@ -1,0 +1,48 @@
+%% SQ-03 Enrollment verification gate and staff decision
+%% Middleware: EnsureCurrentEnrollmentVerified
+%% Model: User::hasVerifiedEnrollmentForCurrentTerm()
+%% Controller: Staff\EnrollmentVerificationController
+sequenceDiagram
+    autonumber
+    actor S as Student
+    participant MW as enrollment.verified middleware
+    participant U as User model
+    participant DB as MariaDB
+    participant SC as Student controller
+    actor ST as Counselor / Administrator
+    participant EV as EnrollmentVerificationController
+
+    S->>MW: POST /student/applications/{scholarship}/apply (or booking / service request)
+    MW->>U: hasVerifiedEnrollmentForCurrentTerm()
+    U->>DB: SELECT student_enrollment_verifications WHERE profile AND academic_year = config AND semester = config
+
+    alt no verification records at all
+        Note over U: GAP-02 — legacy safeguard, access permitted
+        U-->>MW: true
+        MW->>SC: allow request
+        SC-->>S: action proceeds
+    else record exists with status = verified
+        U-->>MW: true
+        MW->>SC: allow request
+        SC-->>S: action proceeds
+    else record pending / rejected / unable_to_verify, or only other terms
+        U-->>MW: false
+        MW-->>S: 403 "Enrollment must be verified for the current term"
+    end
+
+    Note over ST,EV: Staff side — review queue (GAP-01: no create route)
+    ST->>EV: GET /enrollment-verifications?status=pending
+    EV->>DB: SELECT records with student profile and user, filtered and paginated
+    EV-->>ST: queue table + filters
+    ST->>EV: GET /enrollment-verifications/{id}
+    EV->>DB: load record + student's verification history
+    EV-->>ST: detail with decision form
+
+    ST->>EV: PATCH /enrollment-verifications/{id} (status, notes)
+    EV->>EV: validate — notes required for rejected / unable_to_verify
+    EV->>DB: BEGIN transaction
+    EV->>DB: UPDATE record (status, verified_by, verified_at)
+    EV->>DB: UPDATE student_profiles.enrollment_status = enrolled | not_enrolled | unknown
+    EV->>DB: COMMIT
+    EV->>DB: INSERT notifications (student)
+    EV-->>ST: redirect with success banner

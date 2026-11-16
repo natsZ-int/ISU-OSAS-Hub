@@ -1,0 +1,27 @@
+%% SM-04 Scholarship lifecycle
+%% Values: Scholarship model status constants. There is no guard class;
+%% state is a free-form column constrained by constants and admin screens.
+stateDiagram-v2
+    direction LR
+    [*] --> draft : admin creates scholarship
+
+    draft --> open : publish / activate
+    open --> closed : deactivate
+    closed --> open : reactivate
+    open --> archived : archive
+    closed --> archived : archive
+    archived --> [*]
+
+    note right of open
+        Visible to students only when:
+          status = open
+          AND application_start_date <= today
+          AND today <= application_deadline
+        (Scholarship::scopeAvailableForStudents)
+    end note
+
+    note left of draft
+        draft is never visible to students.
+        Requirements and thresholds may be
+        edited freely while draft.
+    end note

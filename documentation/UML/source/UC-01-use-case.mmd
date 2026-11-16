@@ -1,0 +1,130 @@
+%%{init: {"flowchart": {"defaultRenderer": "elk", "nodeSpacing": 28, "rankSpacing": 70}, "theme": "base", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "13px"}}}%%
+%% UC-01 Use Case Diagram — ISU OSAS Hub
+%% Actors verified from Role model and routes/web.php. No Adviser, OSAS Staff
+%% or Super Admin role exists (see SRS §3.4).
+flowchart LR
+  classDef actor fill:#0b5d3b,stroke:#083f28,color:#ffffff,font-weight:bold
+  classDef uc fill:#f4f7f5,stroke:#0b5d3b,color:#1f2937
+  classDef ext fill:#fff8e6,stroke:#c9a227,color:#1f2937,stroke-dasharray:4 3
+
+  STU((("Student"))):::actor
+  COU((("Counselor"))):::actor
+  ADM((("Administrator"))):::actor
+  SCH[/"Scheduler /<br/>Queue Worker"/]:::actor
+
+  subgraph AUTH["Account and access"]
+    direction TB
+    UC01(["UC-01<br/>Register account"]):::uc
+    UC02(["UC-02<br/>Verify email with OTP"]):::uc
+    UC03(["UC-03<br/>Log in / log out"]):::uc
+    UC04(["UC-04<br/>Reset own password"]):::ext
+    UC05(["UC-05<br/>Manage user accounts"]):::uc
+  end
+
+  subgraph PROFILE["Profile and enrollment"]
+    direction TB
+    UC06(["UC-06<br/>Maintain own profile"]):::uc
+    UC07(["UC-07<br/>Maintain student profiles"]):::uc
+    UC08(["UC-08<br/>Protect profile with passcode"]):::uc
+    UC09(["UC-09<br/>Review enrollment verification"]):::uc
+  end
+
+  subgraph SCHOLAR["Scholarships"]
+    direction TB
+    UC10(["UC-10<br/>Manage scholarships and requirements"]):::uc
+    UC11(["UC-11<br/>Announce scholarship"]):::uc
+    UC12(["UC-12<br/>Browse and search scholarships"]):::uc
+    UC13(["UC-13<br/>Preview eligibility"]):::uc
+    UC14(["UC-14<br/>View recommendations"]):::uc
+    UC15(["UC-15<br/>Configure matching weights"]):::uc
+  end
+
+  subgraph APPLY["Applications and documents"]
+    direction TB
+    UC16(["UC-16<br/>Start application"]):::uc
+    UC17(["UC-17<br/>Upload or remove documents"]):::uc
+    UC18(["UC-18<br/>Submit application"]):::uc
+    UC19(["UC-19<br/>Review application"]):::uc
+    UC20(["UC-20<br/>Verify or reject documents"]):::uc
+  end
+
+  subgraph GUIDANCE["Guidance and counseling"]
+    direction TB
+    UC21(["UC-21<br/>Book guidance appointment"]):::uc
+    UC22(["UC-22<br/>Publish counselor availability"]):::uc
+    UC23(["UC-23<br/>Confirm, reject or complete appointment"]):::uc
+    UC24(["UC-24<br/>Configure guidance settings"]):::uc
+    UC25(["UC-25<br/>Oversee all appointments"]):::uc
+  end
+
+  subgraph SERVICE["Student services"]
+    direction TB
+    UC26(["UC-26<br/>Submit service request"]):::uc
+    UC27(["UC-27<br/>Track own service requests"]):::uc
+    UC28(["UC-28<br/>Process service request"]):::uc
+    UC29(["UC-29<br/>Manage service types"]):::uc
+  end
+
+  subgraph GOV["Governance"]
+    direction TB
+    UC30(["UC-30<br/>Receive notifications"]):::uc
+    UC31(["UC-31<br/>View analytics and export CSV"]):::uc
+    UC32(["UC-32<br/>View audit log"]):::uc
+    UC33(["UC-33<br/>Search records"]):::uc
+    UC34(["UC-34<br/>Send appointment reminders"]):::uc
+  end
+
+  STU --- UC01
+  STU --- UC02
+  STU --- UC03
+  STU --- UC06
+  STU --- UC08
+  STU --- UC12
+  STU --- UC13
+  STU --- UC14
+  STU --- UC16
+  STU --- UC18
+  STU --- UC21
+  STU --- UC26
+  STU --- UC27
+  STU --- UC30
+  STU --- UC33
+
+  COU --- UC02
+  COU --- UC03
+  COU --- UC09
+  COU --- UC22
+  COU --- UC23
+  COU --- UC30
+  COU --- UC33
+
+  ADM --- UC02
+  ADM --- UC03
+  ADM --- UC05
+  ADM --- UC07
+  ADM --- UC09
+  ADM --- UC10
+  ADM --- UC11
+  ADM --- UC15
+  ADM --- UC19
+  ADM --- UC20
+  ADM --- UC24
+  ADM --- UC25
+  ADM --- UC28
+  ADM --- UC29
+  ADM --- UC30
+  ADM --- UC31
+  ADM --- UC32
+  ADM --- UC33
+
+  SCH --- UC34
+
+  UC02 -.->|"«include»"| UC03
+  UC17 -.->|"«extend»"| UC16
+  UC16 -.->|"«include»"| UC13
+  UC18 -.->|"«include»"| UC09
+  UC20 -.->|"«include»"| UC30
+  UC23 -.->|"«include»"| UC30
+  UC28 -.->|"«include»"| UC30
+  UC34 -.->|"«include»"| UC30
+  UC04 -.->|"not implemented"| UC03

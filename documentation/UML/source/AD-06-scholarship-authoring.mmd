@@ -1,0 +1,32 @@
+%% AD-06 Scholarship authoring and publication
+flowchart TD
+    classDef startend fill:#0b5d3b,stroke:#083f28,color:#fff,font-weight:bold
+    classDef proc fill:#f4f7f5,stroke:#0b5d3b,color:#1f2937
+    classDef dec fill:#fff8e6,stroke:#c9a227,color:#1f2937
+    classDef term fill:#fdeaea,stroke:#b91c1c,color:#1f2937
+
+    A([Admin opens scholarship create]):::startend --> B[Enter title, provider, type, description]:::proc
+    B --> C[Set eligibility thresholds]:::proc
+    C --> D[Select eligible programs and year levels]:::proc
+    D --> E[Set application start and deadline]:::proc
+    E --> F{Deadline after start?}:::dec
+    F -- No --> E
+    F -- Yes --> G[Save as draft]:::proc
+
+    G --> H[Add document requirements]:::proc
+    H --> I[Set required/optional and display order]:::proc
+    I --> J{Another requirement?}:::dec
+    J -- Yes --> H
+    J -- No --> K{Ready to publish?}:::dec
+    K -- Not yet --> G
+    K -- Publish --> L[Status open]:::proc
+    L --> M{Today inside application window?}:::dec
+    M -- Yes --> N[Visible in student catalogue]:::proc
+    M -- No --> O[Hidden from students until window opens]:::term
+    N --> P[Admin may announce to eligible students]:::proc
+    P --> Q{Applications received?}:::dec
+    Q -- Yes --> R[Close when deadline passes or admin deactivates]:::proc
+    Q -- No --> R
+    R --> S[Status closed, then archived]:::proc
+    S --> T([Lifecycle complete]):::startend
+    O --> L

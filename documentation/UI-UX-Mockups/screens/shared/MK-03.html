@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MK-03 &middot; Student registration &middot; ISU OSAS Hub mockup</title>
+<link rel="stylesheet" href="../../assets/mockup.css">
+</head>
+<body>
+<div class="mk-head">
+  <span class="id">MK-03</span>
+  <h1>Student registration</h1>
+</div>
+<div class="mk-meta">
+  <span><b>Role</b>Guest</span>
+  <span><b>Screen</b><code>WF-G-02</code></span>
+  <span><b>Route</b><code>register</code></span>
+  <span><b>Module</b>M01</span>
+  <span><b>Requirements</b><code>FR-AUTH-04, FR-PROF-01, NFR-USA-02</code></span>
+</div>
+<div class="mk-bar">
+  <span>Preview at</span>
+  <button data-vp="desktop" aria-pressed="true">Desktop 1440</button>
+  <button data-vp="tablet" aria-pressed="false">Tablet 1024</button>
+  <button data-vp="mobile" aria-pressed="false">Mobile 390</button>
+</div>
+
+<div class="mk" data-vp="desktop">
+  <div class="mk-frame mk-frame--plain">
+    <div class="mk-app mk-app--guest"><header class="mk-pub"><div class="mk-pub-brand"><span class="mark">ISU</span><span><b>ISU OSAS Hub</b><small>Office of Student Affairs and Services</small></span></div><div class="mk-pub-right"><span class="mk-pub-help">Need help? <b>osas@isu.edu.ph</b></span><span class="mk-pub-flag">Official university system</span></div></header><div class="mk-main"><div class="mk-body"><div class="phead"><div class="t"><h2>Create a student account</h2><p>Use your official name and student number. Academic details cannot be changed later without OSAS approval.</p></div><div class="acts"><button class="wf-btn ghost">Already registered? Log in</button></div></div>
+<div class="card" style="max-width:860px">
+ <div class="card-b">
+  <div class="form-sec">
+    <div class="fh">1 &middot; Account credentials</div>
+    <div class="fgrid">
+      <div class="field span2"><label>Full name <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">As it appears on your enrolment record</span></div></div>
+      <div class="field"><label>Email address <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">name@isu.edu.ph</span></div>
+        <div class="ferr">! This email is already registered.</div></div>
+      <div class="field"><label>Student number <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">2023-00123</span></div>
+        <div class="fhelp">Letters, digits and dashes only.</div></div>
+      <div class="field"><label>Password <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span></div></div>
+      <div class="field"><label>Confirm password <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</span></div></div>
+    </div>
+  </div>
+  <div class="form-sec">
+    <div class="fh">2 &middot; Academic details</div>
+    <div class="fgrid">
+      <div class="field"><label>College <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">Select college</span><span class="car">&#9660;</span></div></div>
+      <div class="field"><label>Program <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">Select program</span><span class="car">&#9660;</span></div></div>
+      <div class="field"><label>Year level <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">Select year</span><span class="car">&#9660;</span></div></div>
+      <div class="field"><label>General weighted average <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">1.00 – 5.00</span></div>
+        <div class="fhelp">Philippine scale; 1.00 is highest.</div></div>
+    </div>
+  </div>
+  <div class="form-sec">
+    <div class="fh">3 &middot; Contact and household</div>
+    <div class="fgrid">
+      <div class="field"><label>Contact number <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">09XX XXX XXXX</span></div></div>
+      <div class="field"><label>Annual family income <span class="req">*</span></label>
+        <div class="ctl"><span class="ph">0.00</span></div>
+        <div class="fhelp">Used only for scholarship eligibility screening.</div></div>
+      <div class="field span2"><label>Home address <span class="req">*</span></label>
+        <div class="ctl area"><span class="ph">Street, barangay, municipality, province</span></div></div>
+      <div class="field span2">
+        <div class="row small"><span style="width:14px;height:14px;border:1px solid var(--line);
+          border-radius:3px;display:inline-block"></span>
+          <span>I consent to the collection and processing of these details for scholarship,
+          guidance and student-service purposes.</span></div></div>
+    </div>
+  </div>
+  <div class="facts"><button class="wf-btn primary">Create account</button>
+    <button class="wf-btn">Cancel</button></div>
+ </div>
+</div></div></div></div>
+  </div>
+</div>
+<section class="mk-notes">
+  <h3>Design intent</h3>
+  <p>Create a student account and its linked student profile in one submission, then require email verification before any student screen opens.</p>
+  <h3>What this screen establishes</h3>
+  <ol><li>Three sections: account credentials, academic details, and personal and financial details.</li><li>Student number is validated as unique, maximum 20 characters, letters/digits/dash only.</li><li>GWA accepts 1.00–5.00; family income accepts a non-negative amount with two decimals.</li><li>Password requires a confirmation field and a minimum of eight characters.</li></ol>
+  <p class="mk-notes-foot">Structural source: <code>WF-G-02</code> in the
+  wireframe set. The mockup restates the same information architecture in the
+  institutional palette, so a change to one is a change to both.</p>
+</section>
+<script>
+(function () {
+  var mk = document.querySelector('.mk');
+  document.querySelectorAll('.mk-bar button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.mk-bar button').forEach(function (x) {
+        x.setAttribute('aria-pressed', String(x === b));
+      });
+      mk.setAttribute('data-vp', b.dataset.vp);
+    });
+  });
+  var params = new URLSearchParams(location.search);
+  if (params.get('embed') === '1') { document.body.classList.add('embed'); }
+  var vp = params.get('vp');
+  if (vp) { mk.setAttribute('data-vp', vp); }
+})();
+</script>
+</body>
+</html>

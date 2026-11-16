@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ISU OSAS Hub &middot; Mockup gallery</title>
+<link rel="stylesheet" href="assets/mockup.css">
+<style>
+  body { background: #eef2f0; padding: 34px 28px 80px; }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  .hero { background: linear-gradient(150deg,#062e1d,#0d6642 72%); color:#fff;
+    border-radius:18px; padding:34px 36px; }
+  .hero .eyebrow { font-size:10.5px; text-transform:uppercase; letter-spacing:.12em;
+    color:#c9a227; font-weight:700; }
+  .hero h1 { margin:8px 0 10px; font-size:30px; letter-spacing:-.03em; }
+  .hero p { margin:0; max-width:70ch; color:#cfe3d9; font-size:13.5px; line-height:1.65; }
+  .hero .facts { display:flex; gap:26px; margin-top:22px; flex-wrap:wrap; }
+  .hero .facts div { font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:#93b7a5; }
+  .hero .facts b { display:block; font-size:22px; letter-spacing:-.02em; color:#fff;
+    text-transform:none; margin-bottom:2px; }
+  .toolbar { display:flex; gap:10px; margin:22px 0 0; flex-wrap:wrap; }
+  h2 { font-size:17px; margin:40px 0 4px; padding-bottom:8px;
+    border-bottom:1px solid #dfe5e1; }
+  h2 span { color:#6b7280; font-weight:500; font-size:13px; }
+  .g-lede { color:#6b7280; font-size:13px; margin:8px 0 18px; }
+  .g-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; }
+  @media (max-width:1000px) { .g-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media (max-width:640px) { .g-grid { grid-template-columns:1fr; } }
+  .g-card { display:block; text-decoration:none; color:inherit; background:#fff;
+    border:1px solid #e5e7eb; border-radius:14px; overflow:hidden;
+    box-shadow:0 1px 2px rgba(16,24,40,.05); transition:.18s; }
+  .g-card:hover { box-shadow:0 12px 28px rgba(6,46,29,.16); transform:translateY(-2px); }
+  .g-shot { height:170px; overflow:hidden; background:#f4f7f5;
+    border-bottom:1px solid #eef2f0; }
+  .g-shot img { width:100%; display:block; }
+  .g-body { padding:13px 15px 15px; }
+  .g-top { display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:6px; }
+  .g-id { font:700 10px/1 var(--mono); letter-spacing:.05em; color:#fff;
+    background:#0b5d3b; border-radius:5px; padding:5px 7px; }
+  .g-wf { font:600 10px/1 var(--mono); color:#6b7280; }
+  .g-body b { display:block; font-size:13.5px; line-height:1.35; }
+  .g-reqs { display:block; margin-top:6px; font-size:11px; color:#6b7280; }
+</style></head>
+<body><div class="wrap">
+<div class="hero">
+  <div class="eyebrow">High-fidelity mockups &middot; version 1.0</div>
+  <h1>ISU OSAS Hub &mdash; interface gallery</h1>
+  <p>Forty-six screens rendered in the institutional palette, each built from the same
+  declarative structure as its wireframe. Open any card for the full screen at desktop,
+  tablet and phone widths, with the design intent recorded underneath.</p>
+  <div class="facts">
+    <div><b>46</b>screens</div>
+    <div><b>3</b>viewports each</div>
+    <div><b>109</b>requirements traced</div>
+    <div><b>1</b>design system</div>
+  </div>
+</div>
+<div class="toolbar">
+  <a class="wf-btn primary" href="design-system.html">Open the design system</a>
+  <a class="wf-btn" href="index.md">Document source (Markdown)</a>
+</div>
+<h2>Shared and public <span>(6)</span></h2><p class="g-lede">Screens a signed-out visitor can reach, plus the shell itself.</p><div class="g-grid"><a class="g-card" href="screens/shared/MK-01.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-01 Login" 
+       src="export/MK-01--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-01</span>
+    <span class="g-wf">WF-G-01</span></div>
+    <b>Login</b>
+    <span class="g-reqs">5 requirements</span></div>
+</a><a class="g-card" href="screens/shared/MK-02.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-02 Application shell (sidebar and top bar)" 
+       src="export/MK-02--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-02</span>
+    <span class="g-wf">WF-G-06</span></div>
+    <b>Application shell (sidebar and top bar)</b>
+    <span class="g-reqs">10 requirements</span></div>
+</a><a class="g-card" href="screens/shared/MK-03.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-03 Student registration" 
+       src="export/MK-03--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-03</span>
+    <span class="g-wf">WF-G-02</span></div>
+    <b>Student registration</b>
+    <span class="g-reqs">3 requirements</span></div>
+</a><a class="g-card" href="screens/shared/MK-04.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-04 Email verification (OTP)" 
+       src="export/MK-04--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-04</span>
+    <span class="g-wf">WF-G-03</span></div>
+    <b>Email verification (OTP)</b>
+    <span class="g-reqs">2 requirements</span></div>
+</a><a class="g-card" href="screens/shared/MK-05.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-05 Access denied and not found" 
+       src="export/MK-05--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-05</span>
+    <span class="g-wf">WF-G-04</span></div>
+    <b>Access denied and not found</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/shared/MK-25.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-25 Notification centre" 
+       src="export/MK-25--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-25</span>
+    <span class="g-wf">WF-G-05</span></div>
+    <b>Notification centre</b>
+    <span class="g-reqs">7 requirements</span></div>
+</a></div><h2>Student <span>(16)</span></h2><p class="g-lede">The student portal, from profile to service request.</p><div class="g-grid"><a class="g-card" href="screens/student/MK-09.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-09 Application detail and documents" 
+       src="export/MK-09--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-09</span>
+    <span class="g-wf">WF-S-11</span></div>
+    <b>Application detail and documents</b>
+    <span class="g-reqs">7 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-06.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-06 My profile (view)" 
+       src="export/MK-06--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-06</span>
+    <span class="g-wf">WF-S-02</span></div>
+    <b>My profile (view)</b>
+    <span class="g-reqs">3 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-07.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-07 Edit profile" 
+       src="export/MK-07--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-07</span>
+    <span class="g-wf">WF-S-03</span></div>
+    <b>Edit profile</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-08.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-08 Profile security and passcode" 
+       src="export/MK-08--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-08</span>
+    <span class="g-wf">WF-S-04</span></div>
+    <b>Profile security and passcode</b>
+    <span class="g-reqs">2 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-19.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-19 Browse scholarships" 
+       src="export/MK-19--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-19</span>
+    <span class="g-wf">WF-S-05</span></div>
+    <b>Browse scholarships</b>
+    <span class="g-reqs">3 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-20.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-20 Scholarship detail" 
+       src="export/MK-20--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-20</span>
+    <span class="g-wf">WF-S-06</span></div>
+    <b>Scholarship detail</b>
+    <span class="g-reqs">3 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-21.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-21 Eligibility preview" 
+       src="export/MK-21--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-21</span>
+    <span class="g-wf">WF-S-07</span></div>
+    <b>Eligibility preview</b>
+    <span class="g-reqs">4 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-22.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-22 Full match list" 
+       src="export/MK-22--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-22</span>
+    <span class="g-wf">WF-S-09</span></div>
+    <b>Full match list</b>
+    <span class="g-reqs">4 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-24.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-24 My applications" 
+       src="export/MK-24--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-24</span>
+    <span class="g-wf">WF-S-10</span></div>
+    <b>My applications</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-30.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-30 Guidance counselors" 
+       src="export/MK-30--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-30</span>
+    <span class="g-wf">WF-S-12</span></div>
+    <b>Guidance counselors</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-31.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-31 Appointment slots and booking" 
+       src="export/MK-31--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-31</span>
+    <span class="g-wf">WF-S-13</span></div>
+    <b>Appointment slots and booking</b>
+    <span class="g-reqs">3 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-33.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-33 Appointment detail" 
+       src="export/MK-33--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-33</span>
+    <span class="g-wf">WF-S-15</span></div>
+    <b>Appointment detail</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-35.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-35 Service catalogue" 
+       src="export/MK-35--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-35</span>
+    <span class="g-wf">WF-S-16</span></div>
+    <b>Service catalogue</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-37.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-37 New service request" 
+       src="export/MK-37--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-37</span>
+    <span class="g-wf">WF-S-17</span></div>
+    <b>New service request</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-38.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-38 Service request detail" 
+       src="export/MK-38--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-38</span>
+    <span class="g-wf">WF-S-19</span></div>
+    <b>Service request detail</b>
+    <span class="g-reqs">4 requirements</span></div>
+</a><a class="g-card" href="screens/student/MK-46.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-46 Responsive behaviour across three widths" 
+       src="export/MK-46--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-46</span>
+    <span class="g-wf">WF-S-01</span></div>
+    <b>Responsive behaviour across three widths</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a></div><h2>Counselor <span>(4)</span></h2><p class="g-lede">The guidance caseload and enrollment decisions.</p><div class="g-grid"><a class="g-card" href="screens/counselor/MK-14.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-14 Enrollment verification queue" 
+       src="export/MK-14--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-14</span>
+    <span class="g-wf">WF-C-05</span></div>
+    <b>Enrollment verification queue</b>
+    <span class="g-reqs">3 requirements</span></div>
+</a><a class="g-card" href="screens/counselor/MK-15.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-15 Enrollment verification review" 
+       src="export/MK-15--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-15</span>
+    <span class="g-wf">WF-C-06</span></div>
+    <b>Enrollment verification review</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/counselor/MK-27.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-27 Weekly availability" 
+       src="export/MK-27--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-27</span>
+    <span class="g-wf">WF-C-02</span></div>
+    <b>Weekly availability</b>
+    <span class="g-reqs">2 requirements</span></div>
+</a><a class="g-card" href="screens/counselor/MK-32.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-32 Appointment detail and decisions" 
+       src="export/MK-32--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-32</span>
+    <span class="g-wf">WF-C-04</span></div>
+    <b>Appointment detail and decisions</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a></div><h2>Administrator <span>(20)</span></h2><p class="g-lede">Configuration, review queues, analytics and audit.</p><div class="g-grid"><a class="g-card" href="screens/admin/MK-11.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-11 User create and edit" 
+       src="export/MK-11--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-11</span>
+    <span class="g-wf">WF-A-03</span></div>
+    <b>User create and edit</b>
+    <span class="g-reqs">3 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-12.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-12 Student profiles" 
+       src="export/MK-12--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-12</span>
+    <span class="g-wf">WF-A-05</span></div>
+    <b>Student profiles</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-13.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-13 Student profile detail" 
+       src="export/MK-13--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-13</span>
+    <span class="g-wf">WF-A-06</span></div>
+    <b>Student profile detail</b>
+    <span class="g-reqs">2 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-10.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-10 User accounts" 
+       src="export/MK-10--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-10</span>
+    <span class="g-wf">WF-A-02</span></div>
+    <b>User accounts</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-16.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-16 Scholarship create and edit" 
+       src="export/MK-16--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-16</span>
+    <span class="g-wf">WF-A-09</span></div>
+    <b>Scholarship create and edit</b>
+    <span class="g-reqs">2 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-17.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-17 Scholarships" 
+       src="export/MK-17--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-17</span>
+    <span class="g-wf">WF-A-08</span></div>
+    <b>Scholarships</b>
+    <span class="g-reqs">3 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-18.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-18 Scholarship requirements manager" 
+       src="export/MK-18--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-18</span>
+    <span class="g-wf">WF-A-10</span></div>
+    <b>Scholarship requirements manager</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-23.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-23 Matching weights" 
+       src="export/MK-23--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-23</span>
+    <span class="g-wf">WF-A-11</span></div>
+    <b>Matching weights</b>
+    <span class="g-reqs">2 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-26.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-26 Application review detail" 
+       src="export/MK-26--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-26</span>
+    <span class="g-wf">WF-A-13</span></div>
+    <b>Application review detail</b>
+    <span class="g-reqs">4 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-28.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-28 Guidance appointment types" 
+       src="export/MK-28--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-28</span>
+    <span class="g-wf">WF-A-14</span></div>
+    <b>Guidance appointment types</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-29.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-29 Guidance scheduling settings" 
+       src="export/MK-29--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-29</span>
+    <span class="g-wf">WF-A-15</span></div>
+    <b>Guidance scheduling settings</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-34.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-34 Guidance oversight" 
+       src="export/MK-34--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-34</span>
+    <span class="g-wf">WF-A-16</span></div>
+    <b>Guidance oversight</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-36.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-36 Service types" 
+       src="export/MK-36--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-36</span>
+    <span class="g-wf">WF-A-18</span></div>
+    <b>Service types</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-39.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-39 Service request detail and assignment" 
+       src="export/MK-39--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-39</span>
+    <span class="g-wf">WF-A-21</span></div>
+    <b>Service request detail and assignment</b>
+    <span class="g-reqs">2 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-40.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-40 Analytics overview" 
+       src="export/MK-40--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-40</span>
+    <span class="g-wf">WF-A-24</span></div>
+    <b>Analytics overview</b>
+    <span class="g-reqs">3 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-41.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-41 Analytics — scholarships" 
+       src="export/MK-41--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-41</span>
+    <span class="g-wf">WF-A-25</span></div>
+    <b>Analytics — scholarships</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-42.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-42 Analytics — guidance" 
+       src="export/MK-42--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-42</span>
+    <span class="g-wf">WF-A-26</span></div>
+    <b>Analytics — guidance</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-43.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-43 Analytics — student services" 
+       src="export/MK-43--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-43</span>
+    <span class="g-wf">WF-A-27</span></div>
+    <b>Analytics — student services</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-44.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-44 Audit log" 
+       src="export/MK-44--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-44</span>
+    <span class="g-wf">WF-A-22</span></div>
+    <b>Audit log</b>
+    <span class="g-reqs">3 requirements</span></div>
+</a><a class="g-card" href="screens/admin/MK-45.html">
+  <div class="g-shot"><img loading="lazy" alt="MK-45 Audit log detail" 
+       src="export/MK-45--desktop.png"></div>
+  <div class="g-body"><div class="g-top"><span class="g-id">MK-45</span>
+    <span class="g-wf">WF-A-23</span></div>
+    <b>Audit log detail</b>
+    <span class="g-reqs">1 requirements</span></div>
+</a></div>
+</div></body></html>
